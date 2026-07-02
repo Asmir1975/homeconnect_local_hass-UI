@@ -165,8 +165,8 @@ class HCProfileDownloader:
         """Fetch appliance profiles using the access token."""
         async with aiohttp.ClientSession() as session:
             payload_b64 = access_token.split(".")[1]
-            payload_b64 += "=" * (4 - len(payload_b64) % 4)
-            hc_id = json.loads(base64.b64decode(payload_b64)).get("sub")
+            payload_b64 += "=" * (-len(payload_b64) % 4)
+            hc_id = json.loads(base64.urlsafe_b64decode(payload_b64)).get("sub")
             if not hc_id:
                 raise HCAuthError("Could not extract account ID from token")
             _LOGGER.debug("HC: hcId=%s", hc_id)
