@@ -16,7 +16,7 @@ The authentication uses the same Authorization Code + PKCE flow as the bruestel 
 
 1. Go to **HACS → Custom Repositories** and add:
    ```
-   https://github.com/SamJongenelen/homeconnect_local_hass_profiledownloader
+   https://github.com/Asmir1975/homeconnect_local_hass-UI
    ```
    as type **Integration**.
 2. Click **Download** to install.
