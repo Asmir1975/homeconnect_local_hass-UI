@@ -55,6 +55,12 @@ For issues specific to this fork (profile download / sign-in flow), [open an iss
 
 For issues with the core integration (entities, local connection, protocols), please check the upstream repo: [chris-mc1/homeconnect_local_hass](https://github.com/chris-mc1/homeconnect_local_hass).
 
+## Credits
+
+- [chris-mc1](https://github.com/chris-mc1) for the [Home Connect Local](https://github.com/chris-mc1/homeconnect_local_hass) integration and the [homeconnect-websocket](https://github.com/chris-mc1/homeconnect_websocket) library this fork is built on.
+- [bruestel](https://github.com/bruestel) for the [homeconnect-profile-downloader](https://github.com/bruestel/homeconnect-profile-downloader) and the Authorization Code + PKCE flow the built-in downloader reuses.
+- [SamJongenelen](https://github.com/SamJongenelen) for bringing the profile download into the setup flow (upstream PR 405).
+
 ## Debug logging
 
 ```yaml
