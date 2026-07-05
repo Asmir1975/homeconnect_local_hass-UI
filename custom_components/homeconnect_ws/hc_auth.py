@@ -33,6 +33,9 @@ REGION_MAP = {
 
 URLENCODED = {"Content-Type": "application/x-www-form-urlencoded"}
 
+# Config-flow dialogs block while these requests run; don't wait for aiohttp's 5 min default.
+REQUEST_TIMEOUT = aiohttp.ClientTimeout(total=60)
+
 
 class HCAuthError(Exception):
     """Raised on authentication failure."""
@@ -135,7 +138,7 @@ class HCProfileDownloader:
 
     async def async_get_access_token(self, code: str) -> str:
         """Exchange authorization code for access token."""
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(timeout=REQUEST_TIMEOUT) as session:
             async with session.post(
                 f"{self.api_base}/security/oauth/token",
                 data={
@@ -163,7 +166,7 @@ class HCProfileDownloader:
 
     async def async_get_appliances(self, access_token: str) -> list[HCAppliance]:
         """Fetch appliance profiles using the access token."""
-        async with aiohttp.ClientSession() as session:
+        async with aiohttp.ClientSession(timeout=REQUEST_TIMEOUT) as session:
             payload_b64 = access_token.split(".")[1]
             payload_b64 += "=" * (-len(payload_b64) % 4)
             hc_id = json.loads(base64.urlsafe_b64decode(payload_b64)).get("sub")
@@ -220,6 +223,11 @@ class HCProfileDownloader:
                     connection_type = "AES"
                     key = enc_data["aes"]["key"]
                     iv = enc_data["aes"].get("iv")
+                    if not iv:
+                        # AES appliances can't connect without an IV; keeping the profile
+                        # would only fail later in the flow with a misleading error.
+                        _LOGGER.warning("No AES IV for %s, skipping", ha_id)
+                        continue
                 else:
                     _LOGGER.warning("No encryption key for %s, skipping", ha_id)
                     continue
