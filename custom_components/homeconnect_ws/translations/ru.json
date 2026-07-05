@@ -54,7 +54,8 @@
       "profile_file_parser_error": "Неверный файл профиля: {error}",
       "appliance_not_in_profile_file": "Файл профиля не содержит данных для этого устройства",
       "all_setup": "Все устройства в этом файле профиля уже настроены",
-      "no_appliances": "No appliances found on this account."
+      "no_appliances": "No appliances found on this account.",
+      "download_failed": "Не удалось загрузить профиль: {error}"
     }
   },
   "entity": {
@@ -272,7 +273,7 @@
       },
       "sensor_elapsed_program_time": {
         "name": "Прошедшее время программы"
-      },      
+      },
       "sensor_program_progress": {
         "name": "Прогресс программы"
       },
@@ -308,7 +309,7 @@
       "sensor_active_program": {
         "name": "Активная программа",
         "state": {
-"cooking_oven_program_cleaning_drying": "Сушка",
+          "cooking_oven_program_cleaning_drying": "Сушка",
           "cooking_oven_program_cleaning_easyclean": "Легкая очистка",
           "cooking_oven_program_cleaning_pyrolysis": "Пиролиз",
           "cooking_oven_program_dish_automatic_conv_beefroulade": "Говяжий рулет",

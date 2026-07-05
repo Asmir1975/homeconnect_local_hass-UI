@@ -54,7 +54,8 @@
       "profile_file_parser_error": "Profile File is invalid: {error}",
       "appliance_not_in_profile_file": "Profile File dose not contain profile for this Appliance",
       "all_setup": "All Appliances in this Profile File are already setup",
-      "no_appliances": "No appliances found on this account."
+      "no_appliances": "No appliances found on this account.",
+      "download_failed": "Profile download failed: {error}"
     }
   },
   "entity": {
@@ -3356,11 +3357,11 @@
       "select_chiller_common_preset": {
         "name": "Chiller preset",
         "state": {
-          "meatfish": "29°F \uD83D\uDCA7 (Meat/Fish)",
-          "fruit": "32°F \uD83D\uDCA7 (Fruit)",
-          "vegetables": "32°F \uD83D\uDCA7\uD83D\uDCA7 (Vegetables)",
-          "beverages": "34°F \uD83D\uDCA7 (Beverages)",
-          "snacks": "40°F \uD83D\uDCA7 (Snacks/Misc.)",
+          "meatfish": "29°F 💧 (Meat/Fish)",
+          "fruit": "32°F 💧 (Fruit)",
+          "vegetables": "32°F 💧💧 (Vegetables)",
+          "beverages": "34°F 💧 (Beverages)",
+          "snacks": "40°F 💧 (Snacks/Misc.)",
           "custom": "Custom"
         }
       },

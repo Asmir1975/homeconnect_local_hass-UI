@@ -54,7 +54,8 @@
       "profile_file_parser_error": "Il Profile File non è valido: {error}",
       "appliance_not_in_profile_file": "Il Profile File non contiene un profilo per questo appareccho",
       "all_setup": "Tutti gli apparecchi in questo Profile File sono già impostati",
-      "no_appliances": "No appliances found on this account."
+      "no_appliances": "No appliances found on this account.",
+      "download_failed": "Download del profilo non riuscito: {error}"
     }
   },
   "entity": {

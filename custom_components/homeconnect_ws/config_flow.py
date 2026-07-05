@@ -258,10 +258,21 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
             if not self.appliances:
                 return self.async_abort(reason="no_appliances")
+            # Discovery shortcut, same as the upload path: use the discovered appliance
+            # directly so its keys stay paired with the discovered IP.
+            if self.unique_id:
+                return await self.async_step_set_data()
             return await self.async_step_device_select()
         except HCAuthError as err:
             _LOGGER.error("HC fetch error: %s", err)
-            return self.async_abort(reason="no_appliances")
+            return self.async_abort(
+                reason="download_failed", description_placeholders={"error": str(err)}
+            )
+        except Exception as err:  # noqa: BLE001
+            _LOGGER.exception("Unexpected error fetching appliances: %s", err)
+            return self.async_abort(
+                reason="download_failed", description_placeholders={"error": str(err)}
+            )
 
     async def async_step_upload(self, user_input: dict[str, Any] | None = None) -> FlowResult:
         """Handle profile file upload."""

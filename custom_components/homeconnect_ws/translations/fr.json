@@ -54,7 +54,8 @@
       "profile_file_parser_error": "Le fichier de profil est invalide : {error}",
       "appliance_not_in_profile_file": "Le fichier ne contient pas de profil pour cet appareil",
       "all_setup": "Tous les appareils contenus dans le fichier sont déjà configurés",
-      "no_appliances": "No appliances found on this account."
+      "no_appliances": "No appliances found on this account.",
+      "download_failed": "Échec du téléchargement du profil : {error}"
     }
   },
   "entity": {

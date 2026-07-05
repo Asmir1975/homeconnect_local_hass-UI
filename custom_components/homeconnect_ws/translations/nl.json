@@ -54,7 +54,8 @@
       "profile_file_parser_error": "Profielbestand is onjuist: {error}",
       "appliance_not_in_profile_file": "Profielbestand bevat geen profiel voor dit apparaat",
       "all_setup": "Alle apparaten in dit profielbestand zijn al ingesteld",
-      "no_appliances": "Geen apparaten gevonden op dit account."
+      "no_appliances": "Geen apparaten gevonden op dit account.",
+      "download_failed": "Profieldownload mislukt: {error}"
     }
   },
   "entity": {
@@ -276,7 +277,7 @@
       },
       "sensor_elapsed_program_time": {
         "name": "Verstreken tijd"
-      },      
+      },
       "sensor_program_progress": {
         "name": "Programmavoortgang"
       },

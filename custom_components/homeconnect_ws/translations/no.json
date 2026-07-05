@@ -54,7 +54,8 @@
       "profile_file_parser_error": "Profilfilen er ugyldig: {error}",
       "appliance_not_in_profile_file": "Profilfilen inneholder ikke profil for dette apparatet",
       "all_setup": "Alle apparater i denne profilfilen er allerede satt opp",
-      "no_appliances": "No appliances found on this account."
+      "no_appliances": "No appliances found on this account.",
+      "download_failed": "Nedlasting av profil mislyktes: {error}"
     }
   },
   "entity": {
