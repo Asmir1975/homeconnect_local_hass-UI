@@ -28,6 +28,9 @@ class HCEntity(CoordinatorEntity, Entity):
 
     entity_description: HCEntityDescription
     _attr_has_entity_name = True
+    # Fork: expose all profile entities enabled; users disable what they don't need.
+    # Overrides entity_registry_enabled_default=False set in entity descriptions.
+    _attr_entity_registry_enabled_default = True
     _entity: HcEntity | None = None
     _entities: list[HcEntity]
     _extra_attributes: list[ExtraAttributeDict]
