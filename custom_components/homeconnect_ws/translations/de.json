@@ -20,32 +20,32 @@
         }
       },
       "user": {
-        "title": "Add Home Connect Appliance",
-        "description": "Choose how to add your appliance.",
+        "title": "Home Connect Gerät hinzufügen",
+        "description": "Wählen Sie, wie Sie Ihr Gerät hinzufügen möchten.",
         "data": {
-          "method": "Setup method"
+          "method": "Einrichtungsmethode"
         }
       },
       "login": {
-        "title": "Home Connect Account",
-        "description": "Select your region to sign in with your Home Connect account.",
+        "title": "Home Connect Konto",
+        "description": "Wählen Sie Ihre Region, um sich mit Ihrem Home Connect Konto anzumelden.",
         "data": {
           "region": "Region"
         }
       },
       "authorize": {
-        "title": "Sign in to Home Connect",
-        "description": "Open the link below, log in with your Home Connect account, and approve access:\n\n{url}\n\nYour browser will then try to open a dead link (it will fail to load, that's expected). Copy that full URL from the address bar and paste it below.",
+        "title": "Bei Home Connect anmelden",
+        "description": "Öffnen Sie den Link unten, melden Sie sich mit Ihrem Home Connect Konto an und bestätigen Sie den Zugriff:\n\n{url}\n\nIhr Browser versucht danach, einen toten Link zu öffnen (er lädt nicht, das ist erwartet). Kopieren Sie die vollständige URL aus der Adresszeile und fügen Sie sie unten ein.",
         "data": {
-          "redirect_url": "Pasted URL from the failed page"
+          "redirect_url": "Eingefügte URL von der fehlgeschlagenen Seite"
         }
       }
     },
     "error": {
       "cannot_connect": "Verbindung zum Gerät fehlgeschlagen",
       "already_configured": "Dieses Gerät ist bereits konfiguriert",
-      "invalid_auth": "Could not sign in. Check the URL you pasted and try again.",
-      "required": "This field is required.",
+      "invalid_auth": "Anmeldung fehlgeschlagen. Prüfen Sie die eingefügte URL und versuchen Sie es erneut.",
+      "required": "Dieses Feld ist erforderlich.",
       "invalid_profile_file": "Profildatei ist ungültig"
     },
     "abort": {
@@ -55,7 +55,7 @@
       "profile_file_parser_error": "Profildatei ist ungültig: {error}",
       "appliance_not_in_profile_file": "Profildatei enthält kein Profil für dieses Gerät",
       "all_setup": "Alle Geräte in dieser Profildatei sind bereits eingerichtet",
-      "no_appliances": "No appliances found on this account.",
+      "no_appliances": "Keine Geräte in diesem Konto gefunden.",
       "download_failed": "Profil-Download fehlgeschlagen: {error}"
     }
   },
