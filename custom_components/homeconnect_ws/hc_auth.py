@@ -188,7 +188,7 @@ class HCProfileDownloader:
                 if resp.status != 200:
                     raise HCAuthError(f"paired-appliances failed ({resp.status}): {await resp.text()}")
                 data = await resp.json(content_type=None)
-                _LOGGER.debug("HC: paired-appliances response: %s", data)
+                _LOGGER.debug("HC: paired-appliances: %d found", len(data.get("appliances", [])))
 
             all_appliances = data.get("appliances", [])
             appliances = [a for a in all_appliances if not a.get("isDemo")]
@@ -208,7 +208,8 @@ class HCProfileDownloader:
                 ) as resp:
                     if resp.status == 200:
                         enc_data = await resp.json(content_type=None)
-                        _LOGGER.debug("HC: encryption data: %s", enc_data)
+                        # Do not log key material (TLS PSK / AES key+iv); only structure.
+                        _LOGGER.debug("HC: encryption info for %s: %s", ha_id, list(enc_data))
                     else:
                         _LOGGER.warning("No encryption data for %s (%s)", ha_id, resp.status)
 
