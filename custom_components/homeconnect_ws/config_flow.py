@@ -33,6 +33,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 from homeconnect_websocket import (
+    ConnectionFailedError,
     ConnectionState,
     DeviceDescription,
     HomeAppliance,
@@ -278,6 +279,7 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle profile file upload."""
         if user_input is not None:
             _LOGGER.debug("Got Profile file")
+            self.errors = {}
             try:
                 self.appliances = await self.hass.async_add_executor_job(
                     self._process_profile_file, user_input[CONF_FILE]
@@ -399,7 +401,7 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         except BinasciiError as ex:
             _LOGGER.debug("validate_config failed: %s", ex)
             return self.async_abort(reason="auth_failed")
-        except (TimeoutError, ClientConnectionError) as ex:
+        except (TimeoutError, ClientConnectionError, ConnectionFailedError) as ex:
             _LOGGER.debug("validate_config failed: %s", ex)
             self.errors["base"] = "cannot_connect"
         finally:

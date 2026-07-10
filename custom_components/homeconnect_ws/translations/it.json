@@ -45,7 +45,8 @@
       "cannot_connect": "La connessione all'apparecchio è fallita",
       "already_configured": "Questo apparecchio è già configurato",
       "invalid_auth": "Could not sign in. Check the URL you pasted and try again.",
-      "required": "This field is required."
+      "required": "This field is required.",
+      "invalid_profile_file": "Il Profile File non è valido"
     },
     "abort": {
       "auth_failed": "Autenticazione fallita",

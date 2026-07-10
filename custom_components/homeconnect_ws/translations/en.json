@@ -45,7 +45,8 @@
       "cannot_connect": "Connection to Appliance failed",
       "already_configured": "This Appliance is already configured",
       "invalid_auth": "Could not sign in. Check the URL you pasted and try again.",
-      "required": "This field is required."
+      "required": "This field is required.",
+      "invalid_profile_file": "Profile File is invalid"
     },
     "abort": {
       "auth_failed": "Authentication failed",

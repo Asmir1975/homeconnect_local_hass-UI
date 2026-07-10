@@ -45,7 +45,8 @@
       "cannot_connect": "Verbindung zum Gerät fehlgeschlagen",
       "already_configured": "Dieses Gerät ist bereits konfiguriert",
       "invalid_auth": "Could not sign in. Check the URL you pasted and try again.",
-      "required": "This field is required."
+      "required": "This field is required.",
+      "invalid_profile_file": "Profildatei ist ungültig"
     },
     "abort": {
       "auth_failed": "Authentifizierung fehlgeschlagen",

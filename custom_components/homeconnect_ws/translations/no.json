@@ -45,7 +45,8 @@
       "cannot_connect": "Tilkobling til apparatet mislyktes",
       "already_configured": "Dette apparatet er allerede konfigurert",
       "invalid_auth": "Could not sign in. Check the URL you pasted and try again.",
-      "required": "This field is required."
+      "required": "This field is required.",
+      "invalid_profile_file": "Profilfilen er ugyldig"
     },
     "abort": {
       "auth_failed": "Autentisering mislyktes",

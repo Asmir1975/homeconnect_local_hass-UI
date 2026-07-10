@@ -45,7 +45,8 @@
       "cannot_connect": "La connexion à l'appareil a échoué",
       "already_configured": "Cet appareil est déjà configuré",
       "invalid_auth": "Could not sign in. Check the URL you pasted and try again.",
-      "required": "This field is required."
+      "required": "This field is required.",
+      "invalid_profile_file": "Fichier de profil invalide"
     },
     "abort": {
       "auth_failed": "L'authentification a échouée",

@@ -45,7 +45,8 @@
       "cannot_connect": "Det gick inte att ansluta till apparaten",
       "already_configured": "Den här apparaten är redan konfigurerad",
       "invalid_auth": "Could not sign in. Check the URL you pasted and try again.",
-      "required": "This field is required."
+      "required": "This field is required.",
+      "invalid_profile_file": "Profilfilen är ogiltig"
     },
     "abort": {
       "auth_failed": "Autentisering misslyckades",

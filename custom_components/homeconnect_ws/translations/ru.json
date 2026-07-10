@@ -45,7 +45,8 @@
       "cannot_connect": "Не удалось подключиться к устройству",
       "already_configured": "Это устройство уже настроено",
       "invalid_auth": "Could not sign in. Check the URL you pasted and try again.",
-      "required": "This field is required."
+      "required": "This field is required.",
+      "invalid_profile_file": "Неверный файл профиля"
     },
     "abort": {
       "auth_failed": "Ошибка аутентификации",
