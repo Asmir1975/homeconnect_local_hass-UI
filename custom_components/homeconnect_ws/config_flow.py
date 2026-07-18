@@ -313,7 +313,7 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(
                     reason="profile_file_parser_error", description_placeholders={"error": str(exc)}
                 )
-            except BadZipFile, KeyError, ValueError:
+            except (BadZipFile, KeyError, ValueError):
                 self.errors["base"] = "invalid_profile_file"
             else:
                 if "config_entry" in self.appliances:
@@ -473,7 +473,7 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_NAME] = f"{appliance_info['brand']} {appliance_info['type']}"
 
             self._set_encryption_keys(appliance_info)
-        except KeyError, ValueError:
+        except (KeyError, ValueError):
             return self.async_abort(reason="invalid_profile_file")
 
         return await self.async_step_test_connection()
