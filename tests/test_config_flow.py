@@ -6,6 +6,7 @@ from binascii import Error as BinasciiError
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call
 from uuid import uuid4
+from zipfile import BadZipFile
 
 from aiohttp import ClientConnectionError, ClientConnectorSSLError
 from custom_components.homeconnect_ws import config_flow
@@ -16,6 +17,7 @@ from custom_components.homeconnect_ws.const import (
     CONF_PSK,
     DOMAIN,
 )
+from custom_components.homeconnect_ws.hc_auth import HCAppliance
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_DESCRIPTION, CONF_DEVICE, CONF_DEVICE_ID, CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResultType
@@ -42,6 +44,107 @@ if TYPE_CHECKING:
 UPLOADED_FILE = str(uuid4())
 
 
+async def async_start_upload_flow(hass: HomeAssistant) -> dict:
+    """Start a user flow and select manual profile upload."""
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+    return await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"method": "upload"}
+    )
+
+
+async def test_user_login_selection(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test selecting the built-in profile downloader and a region."""
+    managed_session = MagicMock()
+    get_session = Mock(return_value=managed_session)
+    monkeypatch.setattr(config_flow, "async_get_clientsession", get_session)
+
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["data_schema"].schema.get("method").config["options"] == ["login", "upload"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"method": "login"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "login"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"region": "na"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "authorize"
+    assert "api-rna.home-connect.com" in result["description_placeholders"]["url"]
+    get_session.assert_called_once_with(hass)
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+
+async def test_user_login_downloads_profile(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test the complete built-in profile download path."""
+    appliance = MockAppliance(MOCK_TLS_DEVICE_INFO)
+    monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
+    monkeypatch.setattr(
+        config_flow,
+        "parse_device_description",
+        Mock(return_value=MOCK_TLS_DEVICE_DESCRIPTION),
+    )
+    monkeypatch.setattr(config_flow.random, "randbytes", Mock(return_value=b"\x01\x02\x03\x04"))
+
+    downloaded = HCAppliance(
+        ha_id=MOCK_TLS_DEVICE_ID,
+        brand=MOCK_TLS_DEVICE_INFO["brand"],
+        vib=MOCK_TLS_DEVICE_INFO["vib"],
+        mac=MOCK_TLS_DEVICE_INFO["mac"],
+        appliance_type=MOCK_TLS_DEVICE_INFO["type"],
+        identifier=MOCK_TLS_DEVICE_ID,
+        connection_type="TLS",
+        key=MOCK_TLS_DEVICE_INFO["key"],
+        iv=None,
+        feature_mapping_filename="features.xml",
+        device_description_filename="description.xml",
+        device_description_xml=b"description",
+        feature_mapping_xml=b"features",
+    )
+    downloader = MagicMock()
+    downloader.get_authorize_url.return_value = "https://example.test/authorize"
+    downloader.extract_code_from_redirect.return_value = "code"
+    downloader.async_get_access_token = AsyncMock(return_value="token")
+    downloader.async_get_appliances = AsyncMock(return_value=[downloaded])
+    downloader_factory = Mock(return_value=downloader)
+    monkeypatch.setattr(config_flow, "HCProfileDownloader", downloader_factory)
+
+    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"method": "login"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"region": "eu"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={"redirect_url": "hcauth://auth/prod?code=code"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_PSK] == MOCK_TLS_DEVICE_INFO["key"]
+    assert result["data"][CONF_HOST] == f"Test_Brand-Test_TLS-{MOCK_TLS_DEVICE_ID}"
+    downloader.extract_code_from_redirect.assert_called_once()
+    downloader.async_get_access_token.assert_awaited_once_with("code")
+    downloader.async_get_appliances.assert_awaited_once_with("token")
+    mock_setup_entry.assert_awaited_once()
+
+
 async def test_user_init(
     hass: HomeAssistant,
     mock_process_profile_file: MagicMock,  # noqa: ARG001
@@ -52,7 +155,7 @@ async def test_user_init(
     appliance = MockAppliance(MOCK_TLS_DEVICE_INFO)
     monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "upload"
@@ -101,7 +204,7 @@ async def test_user_tls(
     randbytes.return_value = bytes.fromhex("01020304")
     monkeypatch.setattr(config_flow.random, "randbytes", randbytes)
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "upload"
@@ -163,7 +266,7 @@ async def test_user_aes(
     randbytes.return_value = bytes.fromhex("01020304")
     monkeypatch.setattr(config_flow.random, "randbytes", randbytes)
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "upload"
@@ -223,7 +326,7 @@ async def test_user_select_device(
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "upload"
@@ -279,7 +382,7 @@ async def test_user_select_device_one(
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "upload"
@@ -318,7 +421,7 @@ async def test_user_select_device_ignore(
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "upload"
@@ -362,7 +465,7 @@ async def test_user_set_host(
     monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
     appliance._connect.side_effect = ClientConnectionError()
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -439,7 +542,7 @@ async def test_user_auth_failed_ssl_error(
 
     appliance._connect.side_effect = ClientConnectorSSLError(MagicMock(), MagicMock())
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -474,7 +577,7 @@ async def test_user_auth_failed_binascii_error(
     monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
     appliance._connect.side_effect = BinasciiError()
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -507,7 +610,7 @@ async def test_user_connection_failed_timeout(
     monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
     appliance._connect.side_effect = TimeoutError()
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -542,7 +645,7 @@ async def test_user_connection_failed_connection_error(
     monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
     appliance._connect.side_effect = ClientConnectionError()
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -574,7 +677,7 @@ async def test_user_invalid_config_parser(
     """Test a config flow with error in config parser."""
     mock_process_profile_file.side_effect = ParserError("Test Error")
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -587,6 +690,28 @@ async def test_user_invalid_config_parser(
     mock_setup_entry.assert_not_awaited()
 
 
+async def test_user_invalid_zip(
+    hass: HomeAssistant,
+    mock_process_profile_file: MagicMock,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test an invalid ZIP returns a form error instead of crashing the flow."""
+    mock_process_profile_file.side_effect = BadZipFile
+
+    result = await async_start_upload_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_FILE: UPLOADED_FILE,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "upload"
+    assert result["errors"]["base"] == "invalid_profile_file"
+    mock_setup_entry.assert_not_awaited()
+
+
 async def test_user_invalid_profile_no_info(
     hass: HomeAssistant,
     mock_process_profile_file: MagicMock,
@@ -595,7 +720,7 @@ async def test_user_invalid_profile_no_info(
     """Test a reauthentication flow with no profile info."""
     mock_process_profile_file.return_value[MOCK_AES_DEVICE_ID] = {}
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -607,7 +732,7 @@ async def test_user_invalid_profile_no_info(
     assert result["reason"] == "invalid_profile_file"
     mock_setup_entry.assert_not_awaited()
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -628,7 +753,7 @@ async def test_user_invalid_profile_no_description(
     """Test a config flow with no description."""
     mock_process_profile_file.return_value[MOCK_AES_DEVICE_ID].pop("description")
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -656,7 +781,7 @@ async def test_user_invalid_profile_info(
     """Test a reauthentication flow with invalid info."""
     mock_process_profile_file.return_value[MOCK_AES_DEVICE_ID]["info"].pop("key")
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={
@@ -701,7 +826,7 @@ async def test_user_select_all_setup(
     )
     mock_config.add_to_hass(hass)
 
-    result = await hass.config_entries.flow.async_init(DOMAIN, context={"source": SOURCE_USER})
+    result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         user_input={

@@ -76,6 +76,13 @@ async def test_zeroconf_init(
         DOMAIN, context={"source": SOURCE_ZEROCONF}, data=MOCK_ZEROCONF_DATA
     )
     assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert not result["errors"]
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"method": "upload"}
+    )
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "upload"
     assert not result["errors"]
 
