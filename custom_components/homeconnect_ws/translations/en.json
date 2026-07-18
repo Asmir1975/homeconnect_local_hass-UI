@@ -59,6 +59,21 @@
       "download_failed": "Profile download failed: {error}"
     }
   },
+  "selector": {
+    "setup_method": {
+      "options": {
+        "login": "Sign in with Home Connect account",
+        "upload": "Upload profile ZIP manually"
+      }
+    },
+    "region": {
+      "options": {
+        "eu": "Europe (EU)",
+        "na": "North America (NA)",
+        "cn": "China (CN)"
+      }
+    }
+  },
   "entity": {
     "switch": {
       "switch_power_state": {

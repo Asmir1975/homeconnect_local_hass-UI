@@ -10,7 +10,7 @@ from asyncio import Event, wait_for
 from binascii import Error as BinasciiError
 from copy import deepcopy
 from typing import TYPE_CHECKING, Any
-from zipfile import ZipFile
+from zipfile import BadZipFile, ZipFile
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
 )
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     FileSelector,
     FileSelectorConfig,
@@ -77,26 +78,24 @@ CONFIG_HOST_SCHEMA = vol.Schema(
 
 def process_zip_file(config_path: Path) -> dict[str, dict[str, dict | DeviceDescription]]:
     """Process uploaded zip file."""
-    profile_file = ZipFile(config_path)
-
     appliances = {}
     re_info = re.compile(".*.json$")
-    infolist = profile_file.infolist()
-    for file in infolist:
-        if re_info.match(file.filename):
-            appliance_info = json.load(profile_file.open(file))
+    with ZipFile(config_path) as profile_file:
+        for file in profile_file.infolist():
+            if re_info.match(file.filename):
+                appliance_info = json.load(profile_file.open(file))
 
-            description_file_name = appliance_info["deviceDescriptionFileName"]
-            feature_file_name = appliance_info["featureMappingFileName"]
-            description_file = profile_file.open(description_file_name).read()
-            feature_file = profile_file.open(feature_file_name).read()
+                description_file_name = appliance_info["deviceDescriptionFileName"]
+                feature_file_name = appliance_info["featureMappingFileName"]
+                description_file = profile_file.open(description_file_name).read()
+                feature_file = profile_file.open(feature_file_name).read()
 
-            appliance_description = parse_device_description(description_file, feature_file)
-            appliances[appliance_info["haId"]] = {
-                "info": appliance_info,
-                "description": appliance_description,
-            }
-            _LOGGER.debug("Found Appliance %s", appliance_info["vib"])
+                appliance_description = parse_device_description(description_file, feature_file)
+                appliances[appliance_info["haId"]] = {
+                    "info": appliance_info,
+                    "description": appliance_description,
+                }
+                _LOGGER.debug("Found Appliance %s", appliance_info["vib"])
     return appliances
 
 
@@ -171,14 +170,16 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema({
-                vol.Required("method", default="login"): SelectSelector(
-                    SelectSelectorConfig(options=[
-                        SelectOptionDict(value="login", label="Sign in with Home Connect account"),
-                        SelectOptionDict(value="upload", label="Upload profile ZIP manually"),
-                    ])
-                ),
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Required("method", default="login"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=["login", "upload"],
+                            translation_key="setup_method",
+                        )
+                    ),
+                }
+            ),
         )
 
     async def async_step_login(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -187,23 +188,27 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             try:
-                self._downloader = HCProfileDownloader(region=user_input.get(CONF_REGION, "EU"))
+                self._downloader = HCProfileDownloader(
+                    async_get_clientsession(self.hass),
+                    region=user_input.get(CONF_REGION, "eu"),
+                )
                 return await self.async_step_authorize()
-            except Exception as err:  # noqa: BLE001
-                _LOGGER.exception("Unexpected error: %s", err)
+            except Exception:
+                _LOGGER.exception("Unexpected error while starting Home Connect sign-in")
                 errors["base"] = "cannot_connect"
 
         return self.async_show_form(
             step_id="login",
-            data_schema=vol.Schema({
-                vol.Optional(CONF_REGION, default="EU"): SelectSelector(
-                    SelectSelectorConfig(options=[
-                        SelectOptionDict(value="EU", label="Europe (EU)"),
-                        SelectOptionDict(value="NA", label="North America (NA)"),
-                        SelectOptionDict(value="CN", label="China (CN)"),
-                    ])
-                ),
-            }),
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(CONF_REGION, default="eu"): SelectSelector(
+                        SelectSelectorConfig(
+                            options=["eu", "na", "cn"],
+                            translation_key="region",
+                        )
+                    ),
+                }
+            ),
             errors=errors,
         )
 
@@ -221,10 +226,10 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._access_token = await self._downloader.async_get_access_token(code)
                     return await self.async_step_authorize_finish()
                 except HCAuthError as err:
-                    _LOGGER.error("HC auth error: %s", err)
+                    _LOGGER.warning("Home Connect authentication failed: %s", err)
                     errors["base"] = "invalid_auth"
-                except Exception as err:  # noqa: BLE001
-                    _LOGGER.exception("Unexpected error: %s", err)
+                except Exception:
+                    _LOGGER.exception("Unexpected Home Connect authentication error")
                     errors["base"] = "cannot_connect"
 
         authorize_url = self._downloader.get_authorize_url()
@@ -235,7 +240,9 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders={"url": authorize_url},
         )
 
-    async def async_step_authorize_finish(self, user_input: dict[str, Any] | None = None) -> FlowResult:
+    async def async_step_authorize_finish(
+        self, user_input: dict[str, Any] | None = None
+    ) -> FlowResult:
         """Fetch appliances after successful auth."""
         try:
             hc_appliances = await self._downloader.async_get_appliances(self._access_token)
@@ -243,7 +250,9 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 if not a.device_description_xml or not a.feature_mapping_xml:
                     _LOGGER.warning(
                         "Missing XML for %s (description=%d bytes, feature=%d bytes)",
-                        a.ha_id, len(a.device_description_xml), len(a.feature_mapping_xml)
+                        a.ha_id,
+                        len(a.device_description_xml),
+                        len(a.feature_mapping_xml),
                     )
                     continue
                 try:
@@ -265,14 +274,15 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_set_data()
             return await self.async_step_device_select()
         except HCAuthError as err:
-            _LOGGER.error("HC fetch error: %s", err)
+            _LOGGER.warning("Home Connect profile download failed: %s", err)
             return self.async_abort(
                 reason="download_failed", description_placeholders={"error": str(err)}
             )
-        except Exception as err:  # noqa: BLE001
-            _LOGGER.exception("Unexpected error fetching appliances: %s", err)
+        except Exception:
+            _LOGGER.exception("Unexpected error fetching Home Connect appliances")
             return self.async_abort(
-                reason="download_failed", description_placeholders={"error": str(err)}
+                reason="download_failed",
+                description_placeholders={"error": "Unexpected response from Home Connect"},
             )
 
     async def async_step_upload(self, user_input: dict[str, Any] | None = None) -> FlowResult:
@@ -303,7 +313,7 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_abort(
                     reason="profile_file_parser_error", description_placeholders={"error": str(exc)}
                 )
-            except (KeyError, ValueError):
+            except BadZipFile, KeyError, ValueError:
                 self.errors["base"] = "invalid_profile_file"
             else:
                 if "config_entry" in self.appliances:
@@ -463,7 +473,7 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             self.data[CONF_NAME] = f"{appliance_info['brand']} {appliance_info['type']}"
 
             self._set_encryption_keys(appliance_info)
-        except (KeyError, ValueError):
+        except KeyError, ValueError:
             return self.async_abort(reason="invalid_profile_file")
 
         return await self.async_step_test_connection()

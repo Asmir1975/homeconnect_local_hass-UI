@@ -59,6 +59,21 @@
       "download_failed": "Profil-Download fehlgeschlagen: {error}"
     }
   },
+  "selector": {
+    "setup_method": {
+      "options": {
+        "login": "Mit Home Connect Konto anmelden",
+        "upload": "Profil-ZIP manuell hochladen"
+      }
+    },
+    "region": {
+      "options": {
+        "eu": "Europa (EU)",
+        "na": "Nordamerika (NA)",
+        "cn": "China (CN)"
+      }
+    }
+  },
   "entity": {
     "switch": {
       "switch_power_state": {
