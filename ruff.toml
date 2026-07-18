@@ -1,6 +1,6 @@
 # The contents of this file is based on https://github.com/home-assistant/core/blob/dev/pyproject.toml
 
-target-version = "py313"
+target-version = "py314"
 line-length = 100
 
 [lint]
@@ -24,3 +24,13 @@ fixture-parentheses = false
 
 [lint.mccabe]
 max-complexity = 25
+
+[lint.per-file-ignores]
+"custom_components/homeconnect_ws/hc_auth.py" = [
+    "EM101",   # Authentication errors need concise user-facing messages.
+    "EM102",   # Dynamic HTTP status details are useful to the user.
+    "PLR0912", # The downloader mirrors one linear multi-endpoint API flow.
+    "PLR0915", # Splitting the flow would obscure how one appliance is assembled.
+    "TRY003",  # HCAuthError intentionally carries user-facing failure context.
+    "TRY301",  # Inline validation keeps parsing and its error adjacent.
+]
