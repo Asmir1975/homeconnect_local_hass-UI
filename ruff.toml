@@ -1,6 +1,8 @@
 # The contents of this file is based on https://github.com/home-assistant/core/blob/dev/pyproject.toml
 
-target-version = "py314"
+# Keep py313 like upstream: the py314 formatter unparenthesizes `except (A, B):`
+# (PEP 758), which breaks loading on Python <= 3.13 (upstream #382).
+target-version = "py313"
 line-length = 100
 
 [lint]
