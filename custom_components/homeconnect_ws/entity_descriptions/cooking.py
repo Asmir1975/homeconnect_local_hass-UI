@@ -149,6 +149,8 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
     descriptions = EntityDescriptions(sensor=[])
     for group in groups:
         group_name = f" {int(group[0])}"
+        zone_state = appliance.entities.get(f"Cooking.Hob.Status.Zone.{group[0]}.State")
+        force_disabled_default = zone_state is not None and zone_state.value == "NotSelectable"
 
         # State
         entity = f"Cooking.Hob.Status.Zone.{group[0]}.State"
@@ -161,6 +163,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     entity=entity,
                     device_class=SensorDeviceClass.ENUM,
                     has_state_translation=True,
+                    force_disabled_default=force_disabled_default,
                     extra_attributes=[
                         {
                             "name": "Type",
@@ -181,6 +184,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     entity=entity,
                     device_class=SensorDeviceClass.ENUM,
                     has_state_translation=True,
+                    force_disabled_default=force_disabled_default,
                 )
             )
 
@@ -195,6 +199,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     entity=entity,
                     device_class=SensorDeviceClass.ENUM,
                     has_state_translation=True,
+                    force_disabled_default=force_disabled_default,
                 )
             )
 
@@ -209,6 +214,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     entity=entity,
                     device_class=SensorDeviceClass.ENUM,
                     has_state_translation=True,
+                    force_disabled_default=force_disabled_default,
                 )
             )
 
@@ -223,6 +229,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     entity=entity,
                     device_class=SensorDeviceClass.TEMPERATURE,
                     native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+                    force_disabled_default=force_disabled_default,
                 )
             )
 
@@ -236,6 +243,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     translation_placeholders={"group_name": group_name},
                     entity=entity,
                     native_unit_of_measurement=PERCENTAGE,
+                    force_disabled_default=force_disabled_default,
                 )
             )
 
@@ -251,6 +259,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     device_class=SensorDeviceClass.DURATION,
                     native_unit_of_measurement=UnitOfTime.SECONDS,
                     suggested_unit_of_measurement=UnitOfTime.MINUTES,
+                    force_disabled_default=force_disabled_default,
                 )
             )
 
@@ -268,6 +277,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     native_unit_of_measurement=UnitOfTime.SECONDS,
                     suggested_unit_of_measurement=UnitOfTime.MINUTES,
                     extra_attributes=[{"name": "Auto Counting", "entity": extra_entity}],
+                    force_disabled_default=force_disabled_default,
                 )
             )
 
@@ -285,6 +295,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     native_unit_of_measurement=UnitOfTime.SECONDS,
                     suggested_unit_of_measurement=UnitOfTime.MINUTES,
                     extra_attributes=[{"name": "Auto Counting", "entity": extra_entity}],
+                    force_disabled_default=force_disabled_default,
                 )
             )
 
@@ -298,6 +309,7 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     translation_placeholders={"group_name": group_name},
                     entity=entity,
                     native_unit_of_measurement=PERCENTAGE,
+                    force_disabled_default=force_disabled_default,
                 )
             )
 

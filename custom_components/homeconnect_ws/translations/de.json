@@ -1189,6 +1189,9 @@
       "sensor_count_powder_coffee": {
         "name": "Anzahl Pulverkaffee"
       },
+      "sensor_machine_care_reminder": {
+        "name": "Maschinenpflege Erinnerung"
+      },
       "sensor_countdown_calc_n_clean": {
         "name": "calc'nClean notwendig"
       },

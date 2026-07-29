@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
-from unittest.mock import Mock
+from unittest.mock import MagicMock, Mock
 
-from custom_components.homeconnect_ws import entity_descriptions
+from custom_components.homeconnect_ws import HCData, entity_descriptions
+from custom_components.homeconnect_ws.entity import HCEntity
 from custom_components.homeconnect_ws.entity_descriptions import (
     HCBinarySensorEntityDescription,
     HCSelectEntityDescription,
@@ -16,8 +17,12 @@ from custom_components.homeconnect_ws.entity_descriptions.common import (
     generate_power_switch,
     generate_program,
 )
+from custom_components.homeconnect_ws.entity_descriptions.cooking import generate_hob_zones
+from custom_components.homeconnect_ws.entity_descriptions.dishcare import (
+    DISHCARE_ENTITY_DESCRIPTIONS,
+)
 from custom_components.homeconnect_ws.helpers import merge_dicts
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchDeviceClass
 from homeconnect_websocket.entities import Access, DeviceDescription, EntityDescription
 
@@ -32,6 +37,77 @@ def test_merge_dicts() -> None:
     dict2 = {"b": [5, 6], "c": [7, 8]}
     out_dict = merge_dicts(dict1, dict2)
     assert out_dict == {"a": [1, 2], "b": [3, 4, 5, 6], "c": [7, 8]}
+
+
+def test_machine_care_remaining_program_runs_description() -> None:
+    """Test the Machine Care remaining-runs sensor metadata."""
+    description = next(
+        item
+        for item in DISHCARE_ENTITY_DESCRIPTIONS["sensor"]
+        if item.key == "sensor_machine_care_reminder"
+    )
+
+    assert (
+        description.entity == "Dishcare.Dishwasher.Status.MachineCareReminder.RemainingProgramRuns"
+    )
+    assert description.native_unit_of_measurement is None
+    assert description.state_class is SensorStateClass.MEASUREMENT
+
+
+def test_not_selectable_hob_zones_disabled_by_default() -> None:
+    """Test that unavailable hob extension zones start disabled."""
+    appliance = MagicMock()
+    appliance.entities = {}
+    zone_sensors = (
+        "State",
+        "OperationState",
+        "PowerLevel",
+        "FryingSensorLevel",
+        "Duration",
+        "ElapsedProgramTime",
+        "RemainingProgramTime",
+        "ProgramProgress",
+    )
+    extension_zones = {"120", "121", "201", "301", "340", "341"}
+    for zone in {"100", *extension_zones}:
+        for sensor in zone_sensors:
+            entity = MagicMock()
+            entity.value = (
+                "NotSelectable" if zone in extension_zones and sensor == "State" else None
+            )
+            if zone == "100" and sensor == "State":
+                entity.value = "Off"
+            appliance.entities[f"Cooking.Hob.Status.Zone.{zone}.{sensor}"] = entity
+
+    descriptions = generate_hob_zones(appliance)["sensor"]
+    disabled = [item for item in descriptions if item.force_disabled_default]
+    enabled = [item for item in descriptions if not item.force_disabled_default]
+
+    assert len(disabled) == 48
+    assert len(enabled) == 8
+    assert all("_100_" in item.key for item in enabled)
+
+
+def test_force_disabled_default_overrides_fork_default() -> None:
+    """Test the narrow exception to the fork's enabled-by-default policy."""
+    appliance = MagicMock()
+    appliance.info = {"deviceID": "test_device_id"}
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=MagicMock(),
+        coordinator=MagicMock(),
+    )
+
+    entity = HCEntity(
+        HCSensorEntityDescription(
+            key="sensor_hob_zone_120_state",
+            force_disabled_default=True,
+        ),
+        runtime_data,
+    )
+
+    assert not entity.entity_registry_enabled_default
 
 
 MOCK_ENTITY_DESCRIPTIONS = {

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import logging
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectionResetError
@@ -22,6 +23,10 @@ if TYPE_CHECKING:
     from .entity_descriptions.descriptions_definitions import HCSensorEntityDescription
 
 PARALLEL_UPDATES = 0
+
+# HCWiFI is the only polling entity on this platform. The appliance is
+# stationary, so an hourly signal-strength refresh is sufficient.
+SCAN_INTERVAL = timedelta(hours=1)
 
 
 async def async_setup_entry(
@@ -114,9 +119,12 @@ class HCActiveProgram(HCSensor):
 
 
 class HCWiFI(HCEntity, SensorEntity):
-    """WiFi signal Sensor Entity with push-like updates."""
+    """WiFi signal sensor polled from the appliance network endpoint."""
 
-    _attr_should_poll = True
+    @property
+    def should_poll(self) -> bool:
+        """Enable polling despite HCEntity inheriting CoordinatorEntity."""
+        return True
 
     def __init__(
         self,
@@ -125,7 +133,16 @@ class HCWiFI(HCEntity, SensorEntity):
     ) -> None:
         super().__init__(entity_description, runtime_data)
 
+    async def async_added_to_hass(self) -> None:
+        """Fetch the first value immediately after the entity is added."""
+        await super().async_added_to_hass()
+        await self.async_update()
+        self.async_write_ha_state()
+
     async def async_update(self) -> None:
+        if not self._runtime_data.appliance.session.connected:
+            _LOGGER.debug("WiFi update skipped: not connected")
+            return
         try:
             network_info = await self._runtime_data.appliance.get_network_config()
             if network_info and isinstance(network_info, list) and "rssi" in network_info[0]:

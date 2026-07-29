@@ -37,6 +37,7 @@ class HCEntityDescription(EntityDescription, frozen_or_thawed=True):
     entities: list[str] | None = None
     available_access: tuple[Access] | None = None
     extra_attributes: list[ExtraAttributeDict] = None
+    force_disabled_default: bool = False
 
 
 class HCSelectEntityDescription(

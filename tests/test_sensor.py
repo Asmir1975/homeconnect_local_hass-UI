@@ -3,7 +3,13 @@
 from __future__ import annotations
 
 from typing import TYPE_CHECKING
+from unittest.mock import AsyncMock, MagicMock
 
+from custom_components.homeconnect_ws import HCData
+from custom_components.homeconnect_ws.entity_descriptions.descriptions_definitions import (
+    HCSensorEntityDescription,
+)
+from custom_components.homeconnect_ws.sensor import HCWiFI
 from homeassistant.components.sensor import ATTR_OPTIONS
 from homeassistant.const import ATTR_FRIENDLY_NAME
 
@@ -145,3 +151,50 @@ async def test_update_active_program(
 
     state = hass.states.get(entity_id)
     assert state.state == "Named Favorite"
+
+
+async def test_wifi_update() -> None:
+    """Test the fallback WiFi sensor polling path."""
+    appliance = MagicMock()
+    appliance.info = {"deviceID": "test_device_id"}
+    appliance.session.connected = True
+    appliance.get_network_config = AsyncMock(return_value=[{"rssi": -62}])
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=MagicMock(),
+        coordinator=MagicMock(),
+    )
+    entity = HCWiFI(
+        HCSensorEntityDescription(key="sensor_wifi_signal_strength"),
+        runtime_data,
+    )
+
+    assert entity.should_poll
+    await entity.async_update()
+
+    assert entity.native_value == -62
+    appliance.get_network_config.assert_awaited_once()
+
+
+async def test_wifi_update_skips_when_not_connected() -> None:
+    """Test that WiFi polling is skipped while disconnected."""
+    appliance = MagicMock()
+    appliance.info = {"deviceID": "test_device_id"}
+    appliance.session.connected = False
+    appliance.get_network_config = AsyncMock()
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=MagicMock(),
+        coordinator=MagicMock(),
+    )
+    entity = HCWiFI(
+        HCSensorEntityDescription(key="sensor_wifi_signal_strength"),
+        runtime_data,
+    )
+
+    await entity.async_update()
+
+    assert entity.native_value is None
+    appliance.get_network_config.assert_not_awaited()

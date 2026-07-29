@@ -1049,6 +1049,9 @@
       "sensor_count_powder_coffee": {
         "name": "Aantal Poederkoffie"
       },
+      "sensor_machine_care_reminder": {
+        "name": "Machineonderhoud herinnering"
+      },
       "sensor_countdown_calc_n_clean": {
         "name": "Aantal Calc & Clean benodigd"
       },

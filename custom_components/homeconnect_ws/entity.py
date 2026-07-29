@@ -46,6 +46,8 @@ class HCEntity(CoordinatorEntity, Entity):
         self.entity_description = entity_description
         self._attr_unique_id = f"{runtime_data.appliance.info['deviceID']}-{entity_description.key}"
         self._attr_device_info: DeviceInfo = runtime_data.device_info
+        if entity_description.force_disabled_default:
+            self._attr_entity_registry_enabled_default = False
         if entity_description.translation_key is None:
             self._attr_translation_key = entity_description.key
 

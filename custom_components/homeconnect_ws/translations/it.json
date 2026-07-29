@@ -737,6 +737,9 @@
       "sensor_oven_current_temperature": {
         "name": "Temperatura attuale"
       },
+      "sensor_machine_care_reminder": {
+        "name": "Promemoria cura lavastoviglie"
+      },
       "sensor_oven_current_meatprobe_temperature": {
         "name": "Temperatura attuale della sonda carne"
       },
