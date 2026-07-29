@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectionResetError
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.core import callback
 from homeconnect_websocket import NotConnectedError
 
 from .entity import HCEntity
@@ -132,10 +133,27 @@ class HCWiFI(HCEntity, SensorEntity):
         runtime_data: HCData,
     ) -> None:
         super().__init__(entity_description, runtime_data)
+        self._was_connected = runtime_data.appliance.session.connected
 
     async def async_added_to_hass(self) -> None:
         """Fetch the first value immediately after the entity is added."""
         await super().async_added_to_hass()
+        await self.async_update()
+        self._was_connected = self._runtime_data.appliance.session.connected
+        self.async_write_ha_state()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Fetch WiFi data when the appliance finishes connecting."""
+        connected = self._runtime_data.appliance.session.connected
+        refresh_after_connect = connected and not self._was_connected
+        self._was_connected = connected
+        super()._handle_coordinator_update()
+        if refresh_after_connect:
+            self.hass.async_create_task(self._async_update_after_connect())
+
+    async def _async_update_after_connect(self) -> None:
+        """Refresh and write the WiFi state after connecting."""
         await self.async_update()
         self.async_write_ha_state()
 

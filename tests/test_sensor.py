@@ -198,3 +198,30 @@ async def test_wifi_update_skips_when_not_connected() -> None:
 
     assert entity.native_value is None
     appliance.get_network_config.assert_not_awaited()
+
+
+async def test_wifi_updates_when_coordinator_connects(hass: HomeAssistant) -> None:
+    """Test the first WiFi update after the appliance connects."""
+    appliance = MagicMock()
+    appliance.info = {"deviceID": "test_device_id"}
+    appliance.session.connected = False
+    appliance.get_network_config = AsyncMock(return_value=[{"rssi": -56}])
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=MagicMock(),
+        coordinator=MagicMock(),
+    )
+    entity = HCWiFI(
+        HCSensorEntityDescription(key="sensor_wifi_signal_strength"),
+        runtime_data,
+    )
+    entity.hass = hass
+    entity.async_write_ha_state = MagicMock()
+
+    appliance.session.connected = True
+    entity._handle_coordinator_update()
+    await hass.async_block_till_done()
+
+    assert entity.native_value == -56
+    appliance.get_network_config.assert_awaited_once()
