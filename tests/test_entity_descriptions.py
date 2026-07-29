@@ -16,6 +16,7 @@ from custom_components.homeconnect_ws.entity_descriptions import (
 from custom_components.homeconnect_ws.entity_descriptions.common import (
     generate_power_switch,
     generate_program,
+    generate_start_button,
 )
 from custom_components.homeconnect_ws.entity_descriptions.cooking import generate_hob_zones
 from custom_components.homeconnect_ws.entity_descriptions.dishcare import (
@@ -24,7 +25,12 @@ from custom_components.homeconnect_ws.entity_descriptions.dishcare import (
 from custom_components.homeconnect_ws.helpers import merge_dicts
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchDeviceClass
-from homeconnect_websocket.entities import Access, DeviceDescription, EntityDescription
+from homeconnect_websocket.entities import (
+    Access,
+    DeviceDescription,
+    EntityDescription,
+    Execution,
+)
 
 if TYPE_CHECKING:
     import pytest
@@ -223,6 +229,44 @@ async def test_power_switch(mock_homeconnect_appliance: MockApplianceType) -> No
         device_class=SwitchDeviceClass.SWITCH,
         value_mapping=("Standby", "Off"),
     )
+
+
+def test_read_only_hob_power_controls_disabled_by_default() -> None:
+    """Test that read-only hob power controls start disabled."""
+    appliance = MagicMock()
+    appliance.info = {"type": "Hob"}
+    power_state = MagicMock()
+    power_state.access = Access.READ
+    power_state.enum = {1: "Off", 2: "On"}
+    power_state.min = 1
+    power_state.max = 2
+    appliance.entities = {"BSH.Common.Setting.PowerState": power_state}
+
+    descriptions = generate_power_switch(appliance)
+
+    assert descriptions["switch"][0].force_disabled_default
+    assert descriptions["select"][0].force_disabled_default
+
+
+def test_start_button_disabled_only_for_read_only_hob() -> None:
+    """Test that only a read-only hob start button starts disabled."""
+    appliance = MagicMock()
+    appliance.programs = {
+        "program": MagicMock(execution=Execution.SELECT_AND_START),
+    }
+    active_program = MagicMock()
+    appliance.entities = {"BSH.Common.Root.ActiveProgram": active_program}
+
+    appliance.info = {"type": "Hob"}
+    active_program.access = Access.READ
+    assert generate_start_button(appliance).force_disabled_default
+
+    active_program.access = Access.READ_WRITE
+    assert not generate_start_button(appliance).force_disabled_default
+
+    appliance.info = {"type": "Dishwasher"}
+    active_program.access = Access.READ
+    assert not generate_start_button(appliance).force_disabled_default
 
 
 PROGRAM = DeviceDescription(

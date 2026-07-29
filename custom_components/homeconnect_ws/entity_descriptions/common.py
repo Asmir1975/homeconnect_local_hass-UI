@@ -21,7 +21,7 @@ from homeassistant.const import (
     EntityCategory,
     UnitOfTime,
 )
-from homeconnect_websocket.entities import Execution
+from homeconnect_websocket.entities import Access, Execution
 
 from .descriptions_definitions import (
     EntityDescriptions,
@@ -56,9 +56,15 @@ def generate_start_button(appliance: HomeAppliance) -> EntityDescriptions:
         )
     )
     if len(programs) > 0:
+        active_program = appliance.entities.get("BSH.Common.Root.ActiveProgram")
         return HCButtonEntityDescription(
             key="button_start_program",
             entity="BSH.Common.Root.ActiveProgram",
+            force_disabled_default=(
+                appliance.info.get("type") == "Hob"
+                and active_program is not None
+                and active_program.access == Access.READ
+            ),
         )
     return None
 
@@ -67,6 +73,9 @@ def generate_power_switch(appliance: HomeAppliance) -> EntityDescriptions:
     """Get Power switch description."""
     entity_descriptions = EntityDescriptions()
     if entity := appliance.entities.get("BSH.Common.Setting.PowerState"):
+        force_disabled_default = (
+            appliance.info.get("type") == "Hob" and entity.access == Access.READ
+        )
         if entity.min and entity.max:
             # has min/max
             settable_states = set()
@@ -86,6 +95,7 @@ def generate_power_switch(appliance: HomeAppliance) -> EntityDescriptions:
                             entity="BSH.Common.Setting.PowerState",
                             device_class=SwitchDeviceClass.SWITCH,
                             value_mapping=mapping,
+                            force_disabled_default=force_disabled_default,
                         )
                     ]
 
@@ -97,6 +107,7 @@ def generate_power_switch(appliance: HomeAppliance) -> EntityDescriptions:
                 has_state_translation=True,
                 # more then two power states
                 entity_registry_enabled_default=len(settable_states) > 2,
+                force_disabled_default=force_disabled_default,
             )
         ]
     return entity_descriptions
