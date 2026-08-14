@@ -253,6 +253,9 @@
       },
       "switch_extra_rinse": {
         "name": "Extra Rinse"
+      },
+      "switch_pretreatment": {
+        "name": "Pre-Treatment"
       }
     },
     "binary_sensor": {
@@ -261,6 +264,18 @@
       },
       "binary_sensor_door_state": {
         "name": "Door"
+      },
+      "binary_sensor_intensiv_zone_active": {
+        "name": "Intensive Zone Active"
+      },
+      "binary_sensor_half_load_active": {
+        "name": "Half Load Active"
+      },
+      "binary_sensor_hygiene_plus_active": {
+        "name": "Hygiene Plus Active"
+      },
+      "binary_sensor_pretreatment_active": {
+        "name": "Pre-Treatment Active"
       },
       "binary_sensor_eco_dry_active": {
         "name": "EcoDry Active"
@@ -527,6 +542,10 @@
           "favorite_008": "Favorite 8",
           "favorite_009": "Favorite 9",
           "favorite_010": "Favorite 10",
+          "cooking_common_program_hood_venting": "Fan Level",
+          "cooking_common_program_hood_automatic": "Automatic Mode",
+          "cooking_common_program_hood_interval": "Interval Ventilation",
+          "cooking_common_program_hood_delayedshutoff": "Fan Run-On",
           "cooking_hob_program_cookingsensor": "Cooking Sensor",
           "cooking_hob_program_dish_cookingsensor_beansinpressurecooker": "Cooking Sensor: Beans in Pressure Cooker",
           "cooking_hob_program_dish_cookingsensor_beefinpressurecooker": "Cooking Sensor: Beef in Pressure Cooker",
@@ -2015,6 +2034,10 @@
           "favorite_008": "Favorite 8",
           "favorite_009": "Favorite 9",
           "favorite_010": "Favorite 10",
+          "cooking_common_program_hood_venting": "Fan Level",
+          "cooking_common_program_hood_automatic": "Automatic Mode",
+          "cooking_common_program_hood_interval": "Interval Ventilation",
+          "cooking_common_program_hood_delayedshutoff": "Fan Run-On",
           "cooking_hob_program_cookingsensor": "Cooking Sensor",
           "cooking_hob_program_dish_cookingsensor_beansinpressurecooker": "Cooking Sensor: Beans in Pressure Cooker",
           "cooking_hob_program_dish_cookingsensor_beefinpressurecooker": "Cooking Sensor: Beef in Pressure Cooker",
@@ -3506,7 +3529,7 @@
         "name": "Carbon filter type",
         "state": {
           "none": "None",
-          "fahrenheit": "Basic Carbon filter",
+          "basiccarbonfilter": "Basic Carbon filter",
           "regenerativecarbonfilter": "Regenerative Carbon filter"
         }
       }

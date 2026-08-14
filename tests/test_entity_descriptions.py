@@ -60,6 +60,32 @@ def test_machine_care_remaining_program_runs_description() -> None:
     assert description.state_class is SensorStateClass.MEASUREMENT
 
 
+def test_dishwasher_active_option_descriptions() -> None:
+    """Test the read-only mirrors for active dishwasher options."""
+    descriptions = {item.key: item.entity for item in DISHCARE_ENTITY_DESCRIPTIONS["binary_sensor"]}
+
+    assert descriptions["binary_sensor_intensiv_zone_active"] == (
+        "Dishcare.Dishwasher.Option.IntensivZone"
+    )
+    assert descriptions["binary_sensor_half_load_active"] == ("Dishcare.Dishwasher.Option.HalfLoad")
+    assert descriptions["binary_sensor_hygiene_plus_active"] == (
+        "Dishcare.Dishwasher.Option.HygienePlus"
+    )
+    assert descriptions["binary_sensor_pretreatment_active"] == (
+        "Dishcare.Dishwasher.Option.Pretreatment"
+    )
+
+
+def test_dishwasher_pretreatment_switch_description() -> None:
+    """Test the writable dishwasher Pre-Treatment option."""
+    description = next(
+        item for item in DISHCARE_ENTITY_DESCRIPTIONS["switch"] if item.key == "switch_pretreatment"
+    )
+
+    assert description.entity == "Dishcare.Dishwasher.Option.Pretreatment"
+    assert description.device_class is SwitchDeviceClass.SWITCH
+
+
 def test_not_selectable_hob_zones_disabled_by_default() -> None:
     """Test that unavailable hob extension zones start disabled."""
     appliance = MagicMock()

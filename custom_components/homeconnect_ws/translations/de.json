@@ -249,6 +249,9 @@
       },
       "switch_extra_rinse": {
         "name": "Extra Spülen"
+      },
+      "switch_pretreatment": {
+        "name": "Vorspülen"
       }
     },
     "binary_sensor": {
@@ -257,6 +260,18 @@
       },
       "binary_sensor_door_state": {
         "name": "Tür"
+      },
+      "binary_sensor_intensiv_zone_active": {
+        "name": "Intensivzone aktiv"
+      },
+      "binary_sensor_half_load_active": {
+        "name": "Halbe Beladung aktiv"
+      },
+      "binary_sensor_hygiene_plus_active": {
+        "name": "Hygiene Plus aktiv"
+      },
+      "binary_sensor_pretreatment_active": {
+        "name": "Vorspülen aktiv"
       },
       "binary_sensor_eco_dry_active": {
         "name": "EcoDry Aktiv"
@@ -583,6 +598,10 @@
           "laundrycare_washerdryer_program_sportfitness_sportfitness": "Waschen & Trocknen - Sportbekleidung",
           "laundrycare_washerdryer_program_washanddry_60": "Waschen & Trocknen - 60'",
           "laundrycare_washerdryer_program_downduvet_down": "Waschen & Trocknen - Daunen",
+          "cooking_common_program_hood_venting": "Lüfterstufe",
+          "cooking_common_program_hood_automatic": "Automatikbetrieb",
+          "cooking_common_program_hood_interval": "Intervall-Lüftung",
+          "cooking_common_program_hood_delayedshutoff": "Lüfternachlauf",
           "cooking_hob_program_dish_fryingsensor_aubergines": "Auberginen",
           "cooking_hob_program_dish_fryingsensor_bacon": "Speck",
           "cooking_hob_program_dish_fryingsensor_bechamelsauce": "Béchamelsauce",
@@ -1499,6 +1518,10 @@
           "laundrycare_washerdryer_program_sportfitness_sportfitness": "Waschen & Trocknen - Sportbekleidung",
           "laundrycare_washerdryer_program_washanddry_60": "Waschen & Trocknen - 60'",
           "laundrycare_washerdryer_program_downduvet_down": "Waschen & Trocknen - Daunen",
+          "cooking_common_program_hood_venting": "Lüfterstufe",
+          "cooking_common_program_hood_automatic": "Automatikbetrieb",
+          "cooking_common_program_hood_interval": "Intervall-Lüftung",
+          "cooking_common_program_hood_delayedshutoff": "Lüfternachlauf",
           "cooking_hob_program_dish_fryingsensor_aubergines": "Auberginen",
           "cooking_hob_program_dish_fryingsensor_bacon": "Speck",
           "cooking_hob_program_dish_fryingsensor_bechamelsauce": "Béchamelsauce",
@@ -2544,7 +2567,7 @@
         "name": "Kohlefiltertyp",
         "state": {
           "none": "Keine",
-          "fahrenheit": "Standard-Kohlefilter",
+          "basiccarbonfilter": "Standard-Kohlefilter",
           "regenerativecarbonfilter": "Regenerierbarer Kohlefilter"
         }
       }
