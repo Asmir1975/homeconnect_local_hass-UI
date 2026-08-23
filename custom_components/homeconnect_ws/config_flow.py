@@ -14,7 +14,7 @@ from zipfile import BadZipFile, ZipFile
 
 import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
-from aiohttp import ClientConnectionError, ClientConnectorSSLError
+from aiohttp import ClientConnectionError, ClientConnectorSSLError, WSServerHandshakeError
 from homeassistant.components.file_upload import process_uploaded_file
 from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow
 from homeassistant.const import (
@@ -417,6 +417,9 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             ClientConnectionError,
             ConnectionFailedError,
             HCHandshakeError,
+            # WSServerHandshakeError is a ClientResponseError, not a
+            # ClientConnectionError, so the library lets it through unwrapped
+            WSServerHandshakeError,
         ) as ex:
             _LOGGER.debug("validate_config failed: %s", ex)
             self.errors["base"] = "cannot_connect"

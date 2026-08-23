@@ -8,7 +8,7 @@ from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call
 from uuid import uuid4
 from zipfile import BadZipFile
 
-from aiohttp import ClientConnectionError, ClientConnectorSSLError
+from aiohttp import ClientConnectionError, ClientConnectorSSLError, WSServerHandshakeError
 from custom_components.homeconnect_ws import config_flow
 from custom_components.homeconnect_ws.const import (
     CONF_AES_IV,
@@ -576,6 +576,43 @@ async def test_user_connection_failed_handshake_error(
     appliance = MockAppliance(MOCK_TLS_DEVICE_INFO)
     monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
     appliance._connect.side_effect = HCHandshakeError("Test Error")
+
+    result = await async_start_upload_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_FILE: UPLOADED_FILE,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE: MOCK_TLS_DEVICE_ID,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "host"
+    assert result["errors"]["base"] == "cannot_connect"
+
+    appliance._close.assert_awaited_once()
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    mock_setup_entry.assert_not_awaited()
+
+
+async def test_user_connection_failed_ws_handshake_error(
+    hass: HomeAssistant,
+    mock_process_profile_file: MagicMock,  # noqa: ARG001
+    mock_setup_entry: AsyncMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a config flow with WSServerHandshakeError."""
+    appliance = MockAppliance(MOCK_TLS_DEVICE_INFO)
+    monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
+    appliance._connect.side_effect = WSServerHandshakeError(
+        MagicMock(), (), status=404, message="Invalid response status"
+    )
 
     result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(
