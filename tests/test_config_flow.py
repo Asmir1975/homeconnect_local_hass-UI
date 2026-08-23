@@ -22,7 +22,7 @@ from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
 from homeassistant.const import CONF_DESCRIPTION, CONF_DEVICE, CONF_DEVICE_ID, CONF_HOST, CONF_NAME
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectOptionDict
-from homeconnect_websocket import ParserError
+from homeconnect_websocket import HCHandshakeError, ParserError
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from . import MockAppliance
@@ -541,6 +541,41 @@ async def test_user_auth_failed_ssl_error(
     monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
 
     appliance._connect.side_effect = ClientConnectorSSLError(MagicMock(), MagicMock())
+
+    result = await async_start_upload_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_FILE: UPLOADED_FILE,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_DEVICE: MOCK_TLS_DEVICE_ID,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "host"
+    assert result["errors"]["base"] == "cannot_connect"
+
+    appliance._close.assert_awaited_once()
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    mock_setup_entry.assert_not_awaited()
+
+
+async def test_user_connection_failed_handshake_error(
+    hass: HomeAssistant,
+    mock_process_profile_file: MagicMock,  # noqa: ARG001
+    mock_setup_entry: AsyncMock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test a config flow with HCHandshakeError."""
+    appliance = MockAppliance(MOCK_TLS_DEVICE_INFO)
+    monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
+    appliance._connect.side_effect = HCHandshakeError("Test Error")
 
     result = await async_start_upload_flow(hass)
     result = await hass.config_entries.flow.async_configure(

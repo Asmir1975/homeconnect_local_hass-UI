@@ -37,6 +37,7 @@ from homeconnect_websocket import (
     ConnectionFailedError,
     ConnectionState,
     DeviceDescription,
+    HCHandshakeError,
     HomeAppliance,
     ParserError,
     parse_device_description,
@@ -411,7 +412,12 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         except BinasciiError as ex:
             _LOGGER.debug("validate_config failed: %s", ex)
             return self.async_abort(reason="auth_failed")
-        except (TimeoutError, ClientConnectionError, ConnectionFailedError) as ex:
+        except (
+            TimeoutError,
+            ClientConnectionError,
+            ConnectionFailedError,
+            HCHandshakeError,
+        ) as ex:
             _LOGGER.debug("validate_config failed: %s", ex)
             self.errors["base"] = "cannot_connect"
         finally:
