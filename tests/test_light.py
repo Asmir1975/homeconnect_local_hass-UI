@@ -410,6 +410,44 @@ async def test_set_brightness_color_temp(
     )
 
 
+async def test_update_color_temp_unknown_value(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Test Color temp when the Appliance has not reported a value yet."""
+    mock_appliance.entities.pop("Cooking.Hood.Setting.ColorTemperature")
+    # Appliance never reported a value for this Setting
+    mock_appliance.entities["Test.LightingColorTempPercent"]._value = None
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingBrightness"].update({"value": 100})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fake_brand_homeappliance_light_3")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
+
+
+async def test_update_color_temp_inverted_unknown_value(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Test inverted Color temp when the Appliance has not reported a value yet."""
+    # Appliance never reported a value for this Setting
+    mock_appliance.entities["Test.LightingColorTempPercent"]._value = None
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingBrightness"].update({"value": 100})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fake_brand_homeappliance_light_3")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is None
+
+
 async def test_update_color_temp_inverted(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,

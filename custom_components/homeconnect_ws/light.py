@@ -138,6 +138,9 @@ class HCLight(HCEntity, LightEntity):
     @property
     def color_temp_kelvin(self) -> int | None:
         if self._color_temperature_entity is not None:
+            if self._color_temperature_entity.value is None:
+                # Appliance has not reported a value yet
+                return None
             if self._color_temp_inverted:
                 return scale_ranged_value_to_int_range(
                     (101, 0),
