@@ -23,6 +23,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     STATE_OFF,
     STATE_ON,
+    STATE_UNAVAILABLE,
 )
 from homeconnect_websocket.message import Action, Message
 
@@ -748,3 +749,86 @@ async def test_set_color(
         )
     )
     mock_appliance.session.send_sync.reset_mock()
+
+
+async def test_turn_on_when_brightness_is_unavailable(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Test an unavailable brightness value does not disable the light."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": False})
+    brightness = mock_appliance.entities["Test.LightingBrightness"]
+    brightness._value = None
+    await brightness.update({"available": False})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fake_brand_homeappliance_light_2")
+    assert state
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_BRIGHTNESS] is None
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.fake_brand_homeappliance_light_2",
+            ATTR_BRIGHTNESS_PCT: 100,
+        },
+        blocking=True,
+    )
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/values",
+            action=Action.POST,
+            data=[{"uid": 109, "value": 100}, {"uid": 108, "value": True}],
+        )
+    )
+
+
+async def test_turn_on_when_rgb_is_unavailable(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Test an unavailable RGB value does not block a plain turn on."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": False})
+    color = mock_appliance.entities["Test.LightingCustomColor"]
+    color._value = None
+    await color.update({"available": False})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fake_brand_homeappliance_light_4")
+    assert state
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.fake_brand_homeappliance_light_4"},
+        blocking=True,
+    )
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/values",
+            action=Action.POST,
+            data=[{"uid": 108, "value": True}],
+        )
+    )
+
+
+async def test_light_unavailable_when_power_is_unavailable(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Test availability still follows the power entity."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": False, "available": False})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fake_brand_homeappliance_light_2")
+    assert state
+    assert state.state == STATE_UNAVAILABLE

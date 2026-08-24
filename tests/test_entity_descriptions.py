@@ -11,6 +11,7 @@ from custom_components.homeconnect_ws import HCData, entity_descriptions
 from custom_components.homeconnect_ws.entity import HCEntity
 from custom_components.homeconnect_ws.entity_descriptions import (
     HCBinarySensorEntityDescription,
+    HCLightEntityDescription,
     HCSelectEntityDescription,
     HCSensorEntityDescription,
     HCSwitchEntityDescription,
@@ -24,11 +25,16 @@ from custom_components.homeconnect_ws.entity_descriptions.cooking import generat
 from custom_components.homeconnect_ws.entity_descriptions.dishcare import (
     DISHCARE_ENTITY_DESCRIPTIONS,
 )
+from custom_components.homeconnect_ws.entity_descriptions.refrigeration import (
+    generate_internal_light,
+    generate_internal_light_brightness,
+)
 from custom_components.homeconnect_ws.helpers import entity_is_available, merge_dicts
-from homeassistant.components.number import NumberDeviceClass
+from custom_components.homeconnect_ws.number import HCNumber
+from homeassistant.components.number import NumberDeviceClass, NumberMode
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.const import UnitOfTime
+from homeassistant.const import PERCENTAGE, UnitOfTime
 from homeconnect_websocket.entities import (
     Access,
     DeviceDescription,
@@ -366,6 +372,100 @@ async def test_program(mock_homeconnect_appliance: MockApplianceType) -> None:
     )
 
     appliance = await mock_homeconnect_appliance(description={})
+
+
+INTERNAL_LIGHT = DeviceDescription(
+    setting=[
+        EntityDescription(
+            uid=501,
+            name="Refrigeration.Common.Setting.Light.Internal.Power",
+            access=Access.READ_WRITE,
+            available=True,
+        ),
+        EntityDescription(
+            uid=502,
+            name="Refrigeration.Common.Setting.Light.Internal.Brightness",
+            access=Access.READ_WRITE,
+            available=True,
+            min=0,
+            max=100,
+        ),
+    ]
+)
+
+
+async def test_internal_light_with_brightness(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test power and brightness materialize as one dimmable light."""
+    appliance = await mock_homeconnect_appliance(description=INTERNAL_LIGHT)
+    appliance.info = {"deviceID": "test_device_id"}
+    available = entity_descriptions.get_available_entities(appliance)
+
+    lights = [item for item in available["light"] if item.key == "light_internal"]
+    assert lights == [
+        HCLightEntityDescription(
+            key="light_internal",
+            entity="Refrigeration.Common.Setting.Light.Internal.Power",
+            brightness_entity="Refrigeration.Common.Setting.Light.Internal.Brightness",
+        )
+    ]
+
+    brightness = next(
+        item for item in available["number"] if item.key == "number_light_internal_brightness"
+    )
+    assert brightness.force_disabled_default
+
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=available,
+        coordinator=MagicMock(),
+    )
+    number = HCNumber(brightness, runtime_data)
+    assert not number.entity_registry_enabled_default
+
+
+async def test_internal_light_with_power_only(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test power without brightness remains an on-off light."""
+    description = DeviceDescription(setting=[INTERNAL_LIGHT["setting"][0]])
+    appliance = await mock_homeconnect_appliance(description=description)
+
+    assert generate_internal_light(appliance) == HCLightEntityDescription(
+        key="light_internal",
+        entity="Refrigeration.Common.Setting.Light.Internal.Power",
+    )
+    assert generate_internal_light_brightness(appliance) is None
+
+
+async def test_internal_light_with_brightness_only(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test brightness without power remains an enabled number."""
+    description = DeviceDescription(setting=[INTERNAL_LIGHT["setting"][1]])
+    appliance = await mock_homeconnect_appliance(description=description)
+    appliance.info = {"deviceID": "test_device_id"}
+    available = entity_descriptions.get_available_entities(appliance)
+
+    assert generate_internal_light(appliance) is None
+    brightness = next(
+        item for item in available["number"] if item.key == "number_light_internal_brightness"
+    )
+    assert brightness == generate_internal_light_brightness(appliance)
+    assert brightness.native_unit_of_measurement == PERCENTAGE
+    assert brightness.mode is NumberMode.AUTO
+    assert not brightness.force_disabled_default
+
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=available,
+        coordinator=MagicMock(),
+    )
+    number = HCNumber(brightness, runtime_data)
+    assert number.entity_registry_enabled_default
 
 
 def test_static_descriptions_have_english_name() -> None:

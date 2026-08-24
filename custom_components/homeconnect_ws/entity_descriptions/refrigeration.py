@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from typing import TYPE_CHECKING
+
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.number import NumberDeviceClass, NumberMode
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
@@ -18,6 +20,43 @@ from .descriptions_definitions import (
     HCSwitchEntityDescription,
     _EntityDescriptionsDefinitionsType,
 )
+
+if TYPE_CHECKING:
+    from homeconnect_websocket import HomeAppliance
+
+
+def generate_internal_light(appliance: HomeAppliance) -> HCLightEntityDescription | None:
+    """Get internal light description."""
+    power = "Refrigeration.Common.Setting.Light.Internal.Power"
+    brightness = "Refrigeration.Common.Setting.Light.Internal.Brightness"
+    if power not in appliance.entities:
+        return None
+
+    return HCLightEntityDescription(
+        key="light_internal",
+        entity=power,
+        brightness_entity=brightness if brightness in appliance.entities else None,
+    )
+
+
+def generate_internal_light_brightness(
+    appliance: HomeAppliance,
+) -> HCNumberEntityDescription | None:
+    """Get internal light brightness description."""
+    power = "Refrigeration.Common.Setting.Light.Internal.Power"
+    brightness = "Refrigeration.Common.Setting.Light.Internal.Brightness"
+    if brightness not in appliance.entities:
+        return None
+
+    return HCNumberEntityDescription(
+        key="number_light_internal_brightness",
+        entity=brightness,
+        native_unit_of_measurement=PERCENTAGE,
+        mode=NumberMode.AUTO,
+        step=1,
+        force_disabled_default=power in appliance.entities,
+    )
+
 
 REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     "binary_sensor": [
@@ -331,13 +370,7 @@ REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             mode=NumberMode.AUTO,
             step=1,
         ),
-        HCNumberEntityDescription(
-            key="number_light_internal_brightness",
-            entity="Refrigeration.Common.Setting.Light.Internal.Brightness",
-            native_unit_of_measurement=PERCENTAGE,
-            mode=NumberMode.AUTO,
-            step=1,
-        ),
+        generate_internal_light_brightness,
     ],
     "switch": [
         HCSwitchEntityDescription(
@@ -469,10 +502,7 @@ REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         ),
     ],
     "light": [
-        HCLightEntityDescription(
-            key="light_internal",
-            entity="Refrigeration.Common.Setting.Light.Internal.Power",
-        ),
+        generate_internal_light,
         HCLightEntityDescription(
             key="light_logo",
             entity="Refrigeration.Common.Setting.Light.Logo.Power",
