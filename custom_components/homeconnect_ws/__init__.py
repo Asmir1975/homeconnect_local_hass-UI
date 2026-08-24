@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Never
 
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_DESCRIPTION
+from homeassistant.const import CONF_DESCRIPTION, CONF_HOST
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import (
     CONNECTION_NETWORK_MAC,
@@ -180,7 +180,7 @@ async def async_setup_entry(
         hw_version=appliance.info.get("hwVersion"),
         identifiers={(DOMAIN, config_entry.unique_id)},
         model=f"{appliance.info.get('type')}",
-        model_id=appliance.info.get("vib"),
+        model_id=f"{appliance.info.get('vib')} / Host: {config_entry.data[CONF_HOST]}",
         sw_version=appliance.info.get("swVersion"),
     )
 
