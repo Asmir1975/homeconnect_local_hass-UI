@@ -1,4 +1,14 @@
+<div align="center">
+
 # Home Connect Local with built-in Profile Downloader
+
+[![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=flat-square)](https://github.com/hacs/integration)
+[![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Integration-41BDF5?style=flat-square&logo=home-assistant&logoColor=white)](https://www.home-assistant.io/)
+[![Version](https://img.shields.io/github/v/release/Asmir1975/homeconnect_local_hass-UI?style=flat-square&logo=github&color=41BDF5&logoColor=white&cacheSeconds=15600)](https://github.com/Asmir1975/homeconnect_local_hass-UI/releases)
+
+[![GitHub stars](https://img.shields.io/github/stars/Asmir1975/homeconnect_local_hass-UI?style=flat-square&cacheSeconds=15600)](https://github.com/Asmir1975/homeconnect_local_hass-UI/stargazers)
+
+</div>
 
 > **Fork of [chris-mc1/homeconnect_local_hass](https://github.com/chris-mc1/homeconnect_local_hass)**
 >
