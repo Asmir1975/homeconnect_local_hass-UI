@@ -832,3 +832,150 @@ async def test_light_unavailable_when_power_is_unavailable(
     state = hass.states.get("light.fake_brand_homeappliance_light_2")
     assert state
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_color_temp_unavailable_falls_back_to_brightness(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """
+    Test an unusable color temperature Setting is not offered as a feature.
+
+    Upstream issue #451: the Neff D98IPT2S0 declares
+    Cooking.Hood.Setting.ColorTemperaturePercent as available="false" but with
+    initValue=50, so the Setting carries a value the appliance will not accept.
+    """
+    mock_appliance.entities.pop("Cooking.Hood.Setting.ColorTemperature")
+    color_temp = mock_appliance.entities["Test.LightingColorTempPercent"]
+    await color_temp.update({"available": False, "value": 50})
+
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingBrightness"].update({"value": 100})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fake_brand_homeappliance_light_3")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    # Home Assistant drops the attribute entirely once the mode no longer offers it
+    assert ATTR_COLOR_TEMP_KELVIN not in state.attributes
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+
+    # Home Assistant drops color temperature for a light that does not offer it,
+    # so nothing must reach the Setting the appliance marked unavailable.
+    mock_appliance.session.send_sync.reset_mock()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.fake_brand_homeappliance_light_3",
+            ATTR_COLOR_TEMP_KELVIN: 4000,
+        },
+        blocking=True,
+    )
+    sent = [
+        entry["uid"]
+        for call in mock_appliance.session.send_sync.await_args_list
+        for entry in call.args[0].data
+    ]
+    assert color_temp.uid not in sent
+
+
+async def test_brightness_unavailable_at_setup_keeps_dimming(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """
+    Test a brightness Setting that is only unavailable while the light is off.
+
+    Appliances report LightingBrightness as unavailable whenever the light is
+    off. The entity descriptions are built once per setup, so dimming must not
+    be dropped just because Home Assistant happened to start at that moment.
+    """
+    await mock_appliance.entities["Test.LightingBrightness"].update({"available": False})
+
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingBrightness"].update(
+        {"value": 100, "available": True}
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fake_brand_homeappliance_light_2")
+    assert state.state == STATE_ON
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_BRIGHTNESS] == 255
+
+
+async def test_color_temp_direct_turn_on_skips_unusable_setting(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """
+    Test a direct turn_on call does not reach an unusable color temperature Setting.
+
+    Home Assistant strips the parameter for a light reporting BRIGHTNESS, but the
+    entity must not build the payload when called directly either.
+    """
+    mock_appliance.entities.pop("Cooking.Hood.Setting.ColorTemperature")
+    color_temp = mock_appliance.entities["Test.LightingColorTempPercent"]
+    await color_temp.update({"available": False, "value": 50})
+
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingBrightness"].update({"value": 100})
+    await hass.async_block_till_done()
+
+    entity = hass.data["entity_components"][LIGHT_DOMAIN].get_entity(
+        "light.fake_brand_homeappliance_light_3"
+    )
+    mock_appliance.session.send_sync.reset_mock()
+    await entity.async_turn_on(**{ATTR_COLOR_TEMP_KELVIN: 4000})
+
+    sent = [
+        item["uid"]
+        for call in mock_appliance.session.send_sync.await_args_list
+        for item in call.args[0].data
+    ]
+    assert color_temp.uid not in sent
+
+
+async def test_color_temp_availability_changes_at_runtime(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Test the offered color mode follows the color temperature Setting at runtime."""
+    mock_appliance.entities.pop("Cooking.Hood.Setting.ColorTemperature")
+    color_temp = mock_appliance.entities["Test.LightingColorTempPercent"]
+    entity_id = "light.fake_brand_homeappliance_light_3"
+
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingBrightness"].update({"value": 100})
+    await color_temp.update({"value": 50})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is not None
+
+    await color_temp.update({"available": False})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
+    assert ATTR_COLOR_TEMP_KELVIN not in state.attributes
+
+    await color_temp.update({"available": True})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
+    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] is not None
