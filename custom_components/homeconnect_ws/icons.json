@@ -1,6 +1,9 @@
 {
     "entity": {
         "switch": {
+          "switch_refrigerator_dispenser_party_mode": {
+            "default": "mdi:party-popper"
+          },
             "switch_power_state": {
                 "default": "mdi:power"
             },
@@ -56,6 +59,66 @@
             }
         },
         "binary_sensor": {
+          "binary_sensor_water_expired": {
+            "default": "mdi:water-outline",
+            "state": {
+              "on": "mdi:water-alert"
+            }
+          },
+          "binary_sensor_water_filter_almost_full": {
+            "default": "mdi:water-check-outline",
+            "state": {
+              "on": "mdi:water-percent-alert"
+            }
+          },
+          "binary_sensor_water_filter_full": {
+            "default": "mdi:water-check-outline",
+            "state": {
+              "on": "mdi:water-alert-outline"
+            }
+          },
+          "binary_sensor_party_mode_empty_ice_hopper": {
+            "default": "mdi:party-popper",
+            "state": {
+              "on": "mdi:snowflake-off"
+            }
+          },
+          "binary_sensor_ice_expired": {
+            "default": "mdi:snowflake",
+            "state": {
+              "on": "mdi:snowflake-alert"
+            }
+          },
+          "binary_sensor_ice_hopper_full": {
+            "default": "mdi:snowflake",
+            "state": {
+              "on": "mdi:snowflake-check"
+            }
+          },
+          "binary_sensor_freezer_low_voltage": {
+            "default": "mdi:flash-outline",
+            "state": {
+              "on": "mdi:flash-alert-outline"
+            }
+          },
+          "binary_sensor_freezer_appliance_error": {
+            "default": "mdi:fridge-outline",
+            "state": {
+              "on": "mdi:fridge-alert-outline"
+            }
+          },
+          "binary_sensor_temperature_alarm_chiller_common": {
+            "default": "mdi:thermometer",
+            "state": {
+              "on": "mdi:thermometer-alert"
+            }
+          },
+          "binary_sensor_temperature_alarm_freezer": {
+            "default": "mdi:thermometer",
+            "state": {
+              "on": "mdi:thermometer-alert"
+            }
+          },
             "connection": {},
             "binary_sensor_door_state": {},
             "binary_sensor_intensiv_zone_active": {
@@ -104,6 +167,9 @@
             }
         },
         "sensor": {
+          "sensor_water_filter_saturation": {
+            "default": "mdi:water-percent"
+          },
             "sensor_laundry_load_recommendation": {
                 "default": "mdi:weight-kilogram"
             },
@@ -295,6 +361,9 @@
             }
         },
         "button": {
+          "button_water_filter_reset": {
+            "default": "mdi:restore"
+          },
             "button_abort_program": {
                 "default": "mdi:stop"
             },

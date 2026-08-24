@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+from pathlib import Path
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, Mock
 
@@ -22,9 +24,11 @@ from custom_components.homeconnect_ws.entity_descriptions.cooking import generat
 from custom_components.homeconnect_ws.entity_descriptions.dishcare import (
     DISHCARE_ENTITY_DESCRIPTIONS,
 )
-from custom_components.homeconnect_ws.helpers import merge_dicts
+from custom_components.homeconnect_ws.helpers import entity_is_available, merge_dicts
+from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchDeviceClass
+from homeassistant.const import UnitOfTime
 from homeconnect_websocket.entities import (
     Access,
     DeviceDescription,
@@ -362,3 +366,114 @@ async def test_program(mock_homeconnect_appliance: MockApplianceType) -> None:
     )
 
     appliance = await mock_homeconnect_appliance(description={})
+
+
+def test_static_descriptions_have_english_name() -> None:
+    """
+    Test every static entity description resolves to a name in en.json.
+
+    Entity names come from en.json keyed by translation_key, falling back to the
+    description key. A description without a matching string silently produces an
+    entity named after its object_id. Callable and dynamic descriptions are built
+    at runtime and are not covered here.
+    """
+    en_path = Path(entity_descriptions.__file__).parents[1] / "translations" / "en.json"
+    sections = json.loads(en_path.read_text(encoding="utf-8"))["entity"]
+
+    missing = [
+        (platform, key)
+        for platform, items in entity_descriptions.get_all_entity_description().items()
+        for item in items
+        if not callable(item)
+        and (key := item.translation_key or item.key)
+        and not any(key in section for section in sections.values())
+    ]
+
+    assert missing == []
+
+
+SILENCE_ON_DEMAND_PROFILE = {
+    "setting": [
+        {
+            "access": "readwrite",
+            "available": True,
+            "min": 60,
+            "max": 1800,
+            "stepSize": 60,
+            "uid": 4382,
+            "name": "Dishcare.Dishwasher.Setting.SilenceOnDemandDefaultTime",
+        },
+    ],
+    "status": [
+        {
+            "access": "read",
+            "available": True,
+            "uid": 4101,
+            "name": "Dishcare.Dishwasher.Status.SilenceOnDemandRemainingTime",
+        },
+    ],
+    "option": [
+        {
+            "access": "readwrite",
+            "available": True,
+            "uid": 5134,
+            "name": "Dishcare.Dishwasher.Option.EcoDry",
+        },
+    ],
+}
+
+
+async def test_dishwasher_additions_materialize(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """
+    Test the 1.10.5 dishwasher descriptions materialize on a real-profile shape.
+
+    uid/access values are taken verbatim from the reporter profiles of upstream
+    #351 and from the SX63HX52BE diagnostics.
+    """
+    appliance = await mock_homeconnect_appliance(description=SILENCE_ON_DEMAND_PROFILE)
+    available = entity_descriptions.get_available_entities(appliance)
+
+    number = next(
+        item for item in available["number"] if item.key == "number_silence_on_demand_default_time"
+    )
+    assert number.entity == "Dishcare.Dishwasher.Setting.SilenceOnDemandDefaultTime"
+    assert number.device_class is NumberDeviceClass.DURATION
+    assert number.native_unit_of_measurement == UnitOfTime.SECONDS
+    # min/max/step deliberately not hard coded: HCNumber reads them from the entity
+    assert number.native_min_value is None
+    assert number.native_max_value is None
+
+    sensor = next(
+        item
+        for item in available["sensor"]
+        if item.key == "sensor_silence_on_demand_remaining_time"
+    )
+    assert sensor.entity == "Dishcare.Dishwasher.Status.SilenceOnDemandRemainingTime"
+    assert sensor.device_class is SensorDeviceClass.DURATION
+
+    switch = next(item for item in available["switch"] if item.key == "switch_eco_dry")
+    assert switch.entity == "Dishcare.Dishwasher.Option.EcoDry"
+    assert switch.device_class is SwitchDeviceClass.SWITCH
+
+
+async def test_silence_on_demand_default_time_follows_access(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test the duration Number tracks a read-write -> read -> read-write change."""
+    appliance = await mock_homeconnect_appliance(description=SILENCE_ON_DEMAND_PROFILE)
+    entity = appliance.entities["Dishcare.Dishwasher.Setting.SilenceOnDemandDefaultTime"]
+    description = next(
+        item
+        for item in entity_descriptions.get_available_entities(appliance)["number"]
+        if item.key == "number_silence_on_demand_default_time"
+    )
+
+    assert entity_is_available(entity, description.available_access)
+
+    await entity.update({"access": Access.READ})
+    assert not entity_is_available(entity, description.available_access)
+
+    await entity.update({"access": Access.READ_WRITE})
+    assert entity_is_available(entity, description.available_access)

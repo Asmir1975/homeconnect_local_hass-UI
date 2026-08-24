@@ -76,6 +76,12 @@
   },
   "entity": {
     "switch": {
+      "switch_eco_dry": {
+        "name": "EcoDry"
+      },
+      "switch_refrigerator_dispenser_party_mode": {
+        "name": "Dispenser Party mode"
+      },
       "switch_power_state": {
         "name": "Power",
         "state": {
@@ -259,6 +265,30 @@
       }
     },
     "binary_sensor": {
+      "binary_sensor_release_rinse_hold_pending": {
+        "name": "Release rinse hold pending"
+      },
+      "binary_sensor_idos_open_tray": {
+        "name": "i-DOS tray open"
+      },
+      "binary_sensor_party_mode_empty_ice_hopper": {
+        "name": "Party mode ice hopper empty"
+      },
+      "binary_sensor_water_expired": {
+        "name": "Water expired"
+      },
+      "binary_sensor_ice_expired": {
+        "name": "Ice expired"
+      },
+      "binary_sensor_water_filter_almost_full": {
+        "name": "Water filter almost full"
+      },
+      "binary_sensor_ice_hopper_full": {
+        "name": "Ice hopper full"
+      },
+      "binary_sensor_temperature_alarm_chiller_common": {
+        "name": "Temperature alarm Chiller"
+      },
       "connection": {
         "name": "Connection"
       },
@@ -478,6 +508,12 @@
       }
     },
     "sensor": {
+      "sensor_silence_on_demand_remaining_time": {
+        "name": "Silence on Demand remaining"
+      },
+      "sensor_water_filter_saturation": {
+        "name": "Water filter saturation"
+      },
       "sensor_remaining_program_time": {
         "name": "Remaining Program Time"
       },
@@ -1870,6 +1906,9 @@
       }
     },
     "select": {
+      "select_hob_ventilation": {
+        "name": "Ventilation"
+      },
       "select_drying_assistant_all_programs": {
         "name": "Drying Assistant All Programs",
         "state": {
@@ -3535,6 +3574,9 @@
       }
     },
     "button": {
+      "button_water_filter_reset": {
+        "name": "Water filter reset"
+      },
       "button_abort_program": {
         "name": "Abort"
       },
@@ -3564,6 +3606,12 @@
       }
     },
     "number": {
+      "number_silence_on_demand_default_time": {
+        "name": "Silence on Demand duration"
+      },
+      "number_finish_in": {
+        "name": "Finish in"
+      },
       "number_fill_quantity": {
         "name": "Fill quantity"
       },

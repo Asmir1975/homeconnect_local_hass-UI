@@ -3,15 +3,17 @@
 from __future__ import annotations
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.number import NumberDeviceClass, NumberMode
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
 from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.const import EntityCategory
+from homeassistant.const import EntityCategory, UnitOfTime
 
 from .descriptions_definitions import (
     HCBinarySensorEntityDescription,
+    HCNumberEntityDescription,
     HCSelectEntityDescription,
     HCSensorEntityDescription,
     HCSwitchEntityDescription,
@@ -298,6 +300,12 @@ DISHCARE_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity_category=EntityCategory.DIAGNOSTIC,
             state_class=SensorStateClass.MEASUREMENT,
         ),
+        HCSensorEntityDescription(
+            key="sensor_silence_on_demand_remaining_time",
+            entity="Dishcare.Dishwasher.Status.SilenceOnDemandRemainingTime",
+            device_class=SensorDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+        ),
     ],
     "switch": [
         HCSwitchEntityDescription(
@@ -373,6 +381,21 @@ DISHCARE_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             key="switch_pretreatment",
             entity="Dishcare.Dishwasher.Option.Pretreatment",
             device_class=SwitchDeviceClass.SWITCH,
+        ),
+        HCSwitchEntityDescription(
+            key="switch_eco_dry",
+            entity="Dishcare.Dishwasher.Option.EcoDry",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+    ],
+    "number": [
+        HCNumberEntityDescription(
+            key="number_silence_on_demand_default_time",
+            entity="Dishcare.Dishwasher.Setting.SilenceOnDemandDefaultTime",
+            device_class=NumberDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.AUTO,
+            entity_category=EntityCategory.CONFIG,
         ),
     ],
 }
