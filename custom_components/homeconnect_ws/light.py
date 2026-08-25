@@ -24,7 +24,7 @@ from homeconnect_websocket.message import Action
 from homeconnect_websocket.message import Message as HC_Message
 
 from .entity import HCEntity
-from .helpers import create_entities, error_decorator
+from .helpers import create_entities, entity_is_available, error_decorator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -106,6 +106,36 @@ class HCLight(HCEntity, LightEntity):
             self._attr_color_mode = ColorMode.ONOFF
 
     @property
+    def _color_temp_usable(self) -> bool:
+        """
+        Whether the Appliance currently offers the color temperature Setting.
+
+        Some Appliances ship the Setting in their description but mark it
+        unavailable, so offering ColorTemp would advertise a feature the
+        Appliance rejects. Evaluated per state write rather than at setup,
+        because entity descriptions are built once per config entry.
+        """
+        if self._color_temperature_entity is None:
+            return False
+        return entity_is_available(
+            self._color_temperature_entity, self.entity_description.available_access
+        )
+
+    @property
+    def supported_color_modes(self) -> set[ColorMode] | None:
+        if self._attr_supported_color_modes == {ColorMode.COLOR_TEMP} and (
+            not self._color_temp_usable
+        ):
+            return {ColorMode.BRIGHTNESS}
+        return self._attr_supported_color_modes
+
+    @property
+    def color_mode(self) -> ColorMode | None:
+        if self._attr_color_mode == ColorMode.COLOR_TEMP and not self._color_temp_usable:
+            return ColorMode.BRIGHTNESS
+        return self._attr_color_mode
+
+    @property
     def is_on(self) -> bool | None:
         return bool(self._entity.value)
 
@@ -182,7 +212,9 @@ class HCLight(HCEntity, LightEntity):
             )
             message.data.append({"uid": self._brightness_entity.uid, "value": value_in_range})
 
-        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+        # Home Assistant already drops the parameter for a light that reports
+        # BRIGHTNESS, but a direct call must not reach the unusable Setting either.
+        if ATTR_COLOR_TEMP_KELVIN in kwargs and self._color_temp_usable:
             if self._color_temp_inverted:
                 value_in_range = int(
                     scale_ranged_value_to_int_range(
