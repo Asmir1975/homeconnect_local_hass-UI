@@ -60,6 +60,12 @@ def generate_start_button(appliance: HomeAppliance) -> EntityDescriptions:
         return HCButtonEntityDescription(
             key="button_start_program",
             entity="BSH.Common.Root.ActiveProgram",
+            # Availability also depends on the selected program.
+            entities=(
+                ["BSH.Common.Root.SelectedProgram"]
+                if "BSH.Common.Root.SelectedProgram" in appliance.entities
+                else None
+            ),
             force_disabled_default=(
                 appliance.info.get("type") == "Hob"
                 and active_program is not None
