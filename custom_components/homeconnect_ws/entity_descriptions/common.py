@@ -51,21 +51,30 @@ def generate_start_button(appliance: HomeAppliance) -> EntityDescriptions:
     """Get Start Button description."""
     programs = list(
         filter(
-            lambda program: program.execution == Execution.SELECT_AND_START,
+            lambda program: (
+                program.execution == Execution.SELECT_AND_START
+                or (
+                    program.execution == Execution.NONE
+                    and "BSH.Common.Root.SelectedProgram" in appliance.entities
+                )
+            ),
             appliance.programs.values(),
         )
     )
-    if len(programs) > 0:
+    if len(programs) > 0 and "BSH.Common.Root.ActiveProgram" in appliance.entities:
         active_program = appliance.entities.get("BSH.Common.Root.ActiveProgram")
         return HCButtonEntityDescription(
             key="button_start_program",
             entity="BSH.Common.Root.ActiveProgram",
-            # Availability also depends on the selected program.
-            entities=(
-                ["BSH.Common.Root.SelectedProgram"]
-                if "BSH.Common.Root.SelectedProgram" in appliance.entities
-                else None
-            ),
+            # Selection and execution updates can both change availability.
+            entities=[
+                *(
+                    ["BSH.Common.Root.SelectedProgram"]
+                    if "BSH.Common.Root.SelectedProgram" in appliance.entities
+                    else []
+                ),
+                *appliance.programs,
+            ],
             force_disabled_default=(
                 appliance.info.get("type") == "Hob"
                 and active_program is not None

@@ -83,7 +83,7 @@ async def test_start_button_only_subscribes_to_existing_roots(
     if not selected_root_present:
         del appliance.entities[SELECTED_PROGRAM]
     description = generate_start_button(appliance)
-    assert description.entities == ([SELECTED_PROGRAM] if selected_root_present else None)
+    assert (SELECTED_PROGRAM in description.entities) is selected_root_present
     button = HCStartButton(description, start_button_data)
     button.hass = hass
     await button.async_added_to_hass()
@@ -93,3 +93,6 @@ async def test_start_button_only_subscribes_to_existing_roots(
     finally:
         await button.async_will_remove_from_hass()
     assert button.callback not in selected_program._callbacks
+
+    for program in appliance.programs.values():
+        assert button.callback not in program._callbacks
