@@ -577,3 +577,58 @@ async def test_silence_on_demand_default_time_follows_access(
 
     await entity.update({"access": Access.READ_WRITE})
     assert entity_is_available(entity, description.available_access)
+
+
+def _speed_perfect_option(name: str, uid: int) -> dict:
+    return {
+        "access": "readwrite",
+        "available": True,
+        "uid": uid,
+        "name": name,
+    }
+
+
+COMMON_SPEED_PERFECT = "LaundryCare.Common.Option.SpeedPerfect"
+WASHER_SPEED_PERFECT = "LaundryCare.Washer.Option.SpeedPerfect"
+
+
+async def test_washer_only_speed_perfect_keeps_existing_key(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test a washer without the Common option keeps its established key."""
+    appliance = await mock_homeconnect_appliance(
+        description={"option": [_speed_perfect_option(WASHER_SPEED_PERFECT, 7001)]}
+    )
+    available = entity_descriptions.get_available_entities(appliance)
+
+    switch = next(item for item in available["switch"] if item.entity == WASHER_SPEED_PERFECT)
+    assert switch.key == "switch_laundry_speed_perfect"
+
+
+async def test_speed_perfect_descriptions_have_unique_keys(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """
+    Test a washer reporting both SpeedPerfect options gets two distinct switches.
+
+    Upstream issue #11: both static descriptions used the same key, so both
+    switches collided on the same unique_id and Home Assistant silently
+    dropped the second one.
+    """
+    appliance = await mock_homeconnect_appliance(
+        description={
+            "option": [
+                _speed_perfect_option(COMMON_SPEED_PERFECT, 7002),
+                _speed_perfect_option(WASHER_SPEED_PERFECT, 7003),
+            ]
+        }
+    )
+    available = entity_descriptions.get_available_entities(appliance)
+
+    speed_perfect = [
+        item
+        for item in available["switch"]
+        if item.entity in (COMMON_SPEED_PERFECT, WASHER_SPEED_PERFECT)
+    ]
+    assert len(speed_perfect) == 2
+    assert len({item.key for item in speed_perfect}) == 2

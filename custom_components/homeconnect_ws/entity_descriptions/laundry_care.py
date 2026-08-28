@@ -26,7 +26,30 @@ from .descriptions_definitions import (
 )
 
 if TYPE_CHECKING:
+    from homeconnect_websocket import HomeAppliance
+
     from .descriptions_definitions import _EntityDescriptionsDefinitionsType
+
+
+def generate_washer_speed_perfect(appliance: HomeAppliance) -> HCSwitchEntityDescription | None:
+    """
+    Get the Washer-specific SpeedPerfect switch description.
+
+    Distinct key only when the Common variant is also present, avoids the
+    unique_id collision from #11 without changing existing entity_ids.
+    """
+    if "LaundryCare.Washer.Option.SpeedPerfect" not in appliance.entities:
+        return None
+    key = "switch_laundry_speed_perfect"
+    if "LaundryCare.Common.Option.SpeedPerfect" in appliance.entities:
+        key = "switch_laundry_speed_perfect_washer"
+    return HCSwitchEntityDescription(
+        key=key,
+        translation_key="switch_laundry_speed_perfect",
+        entity="LaundryCare.Washer.Option.SpeedPerfect",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+
 
 LAUNDRY_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     "sensor": [
@@ -510,11 +533,7 @@ LAUNDRY_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity="LaundryCare.Washer.Option.SilentWash",
             device_class=SwitchDeviceClass.SWITCH,
         ),
-        HCSwitchEntityDescription(
-            key="switch_laundry_speed_perfect",
-            entity="LaundryCare.Washer.Option.SpeedPerfect",
-            device_class=SwitchDeviceClass.SWITCH,
-        ),
+        generate_washer_speed_perfect,
         HCSwitchEntityDescription(
             key="switch_laundry_soak",
             entity="LaundryCare.Washer.Option.Soak",
