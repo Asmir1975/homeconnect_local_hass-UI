@@ -31,6 +31,7 @@ from custom_components.homeconnect_ws.entity_descriptions.refrigeration import (
 )
 from custom_components.homeconnect_ws.helpers import entity_is_available, merge_dicts
 from custom_components.homeconnect_ws.number import HCNumber
+from custom_components.homeconnect_ws.sensor import HCEventSensor
 from homeassistant.components.number import NumberDeviceClass, NumberMode
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchDeviceClass
@@ -577,6 +578,70 @@ async def test_silence_on_demand_default_time_follows_access(
 
     await entity.update({"access": Access.READ_WRITE})
     assert entity_is_available(entity, description.available_access)
+
+
+OVEN_WATER_TANK_PROFILE = {
+    "status": [
+        {
+            "access": "read",
+            "available": True,
+            "uid": 8001,
+            "name": "Cooking.Oven.Status.WaterTankUnplugged",
+        },
+        {
+            "access": "read",
+            "available": True,
+            "uid": 8002,
+            "name": "Cooking.Oven.Status.WaterTankEmpty",
+        },
+    ],
+}
+
+
+async def test_oven_water_tank_is_an_event_sensor(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """
+    Test the oven water tank description does not crash as a plain sensor.
+
+    A static HCSensorEntityDescription with entities= instead of entity= leaves
+    HCEntity._entity as None. HCSensor.__init__ and HCSensor.native_value both
+    read self._entity directly, so the "sensor" platform crashes on setup and
+    again on every state read. Upstream chris-mc1/homeconnect_local_hass hit the
+    same class of bug (commit 3eaaac8). The fix here is architectural, not a
+    None-guard: the description belongs under "event_sensor", like its grouped
+    sibling generated in generate_hob_zones.
+    """
+    appliance = await mock_homeconnect_appliance(description=OVEN_WATER_TANK_PROFILE)
+    appliance.info = {"deviceID": "test_device_id"}
+    available = entity_descriptions.get_available_entities(appliance)
+
+    description = next(
+        item for item in available["event_sensor"] if item.key == "sensor_oven_water_tank"
+    )
+    assert not any(item.key == "sensor_oven_water_tank" for item in available["sensor"])
+
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=available,
+        coordinator=MagicMock(),
+    )
+    sensor = HCEventSensor(description, runtime_data)
+
+    unplugged = appliance.entities["Cooking.Oven.Status.WaterTankUnplugged"]
+    empty = appliance.entities["Cooking.Oven.Status.WaterTankEmpty"]
+
+    await unplugged.update({"value": True})
+    await empty.update({"value": False})
+    assert sensor.native_value == "unplugged"
+
+    await unplugged.update({"value": False})
+    await empty.update({"value": True})
+    assert sensor.native_value == "empty"
+
+    await empty.update({"value": False})
+    assert sensor.native_value == "ok"
 
 
 def _speed_perfect_option(name: str, uid: int) -> dict:
