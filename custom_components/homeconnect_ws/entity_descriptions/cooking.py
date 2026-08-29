@@ -412,15 +412,6 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             native_unit_of_measurement=PERCENTAGE,
         ),
         HCSensorEntityDescription(
-            key="sensor_oven_water_tank",
-            entities=(
-                "Cooking.Oven.Status.WaterTankUnplugged",
-                "Cooking.Oven.Status.WaterTankEmpty",
-            ),
-            device_class=SensorDeviceClass.ENUM,
-            options=["unplugged", "empty", "ok"],
-        ),
-        HCSensorEntityDescription(
             key="sensor_oven_current_temperature",
             entity="Cooking.Oven.Status.CurrentCavityTemperature",
             device_class=SensorDeviceClass.TEMPERATURE,
@@ -431,6 +422,18 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity="Cooking.Oven.Status.CurrentMeatprobeTemperature",
             device_class=SensorDeviceClass.TEMPERATURE,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        ),
+    ],
+    "event_sensor": [
+        HCSensorEntityDescription(
+            key="sensor_oven_water_tank",
+            translation_placeholders={"group_name": ""},
+            entities=(
+                "Cooking.Oven.Status.WaterTankUnplugged",
+                "Cooking.Oven.Status.WaterTankEmpty",
+            ),
+            device_class=SensorDeviceClass.ENUM,
+            options=["unplugged", "empty", "ok"],
         ),
     ],
     "dynamic": [
