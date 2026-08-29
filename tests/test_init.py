@@ -7,13 +7,16 @@ from unittest.mock import ANY, Mock
 
 from custom_components.homeconnect_ws import coordinator
 from custom_components.homeconnect_ws.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeconnect_websocket.testutils import MockAppliance
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
 from .const import DEVICE_DESCRIPTION, MOCK_CONFIG_DATA, MOCK_TLS_DEVICE_ID
 
 if TYPE_CHECKING:
+    from asyncio import Task
+    from collections.abc import Coroutine
+
     import pytest
     from homeassistant.core import HomeAssistant
 
@@ -55,3 +58,41 @@ async def test_load_unload_entry(
     assert entry.state is ConfigEntryState.NOT_LOADED
 
     appliance.session.close.assert_awaited_once()
+
+
+async def test_coordinator_connect_runs_as_background_task(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the initial connect is scheduled via async_create_background_task."""
+    appliance = MockAppliance(DEVICE_DESCRIPTION, "host", "mock_app", "mock_app_id", "PSK_KEY")
+    monkeypatch.setattr(coordinator, "HomeAppliance", Mock(return_value=appliance))
+
+    calls = []
+    original = ConfigEntry.async_create_background_task
+
+    def spy(
+        self: ConfigEntry,
+        hass: HomeAssistant,
+        target: Coroutine,
+        name: str,
+        *,
+        eager_start: bool = True,
+    ) -> Task:
+        calls.append(name)
+        return original(self, hass, target, name, eager_start=eager_start)
+
+    monkeypatch.setattr(ConfigEntry, "async_create_background_task", spy)
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA,
+        unique_id=MOCK_TLS_DEVICE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert calls == ["homeconnect_ws_Fake_vib"]
