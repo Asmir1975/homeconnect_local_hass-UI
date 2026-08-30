@@ -34,6 +34,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 from homeconnect_websocket import (
+    AuthenticationError,
     ConnectionFailedError,
     ConnectionState,
     DeviceDescription,
@@ -409,7 +410,7 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.errors["base"] = "cannot_connect"
             else:
                 return self.async_abort(reason="auth_failed")
-        except BinasciiError as ex:
+        except (BinasciiError, AuthenticationError) as ex:
             _LOGGER.debug("validate_config failed: %s", ex)
             return self.async_abort(reason="auth_failed")
         except (
