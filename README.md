@@ -71,6 +71,8 @@ For issues with the core integration (entities, local connection, protocols), pl
 - [bruestel](https://github.com/bruestel) for the [homeconnect-profile-downloader](https://github.com/bruestel/homeconnect-profile-downloader) and the Authorization Code + PKCE flow the built-in downloader reuses.
 - [SamJongenelen](https://github.com/SamJongenelen) for bringing the profile download into the setup flow (upstream PR 405).
 
+If you like this fork, please make sure to ⭐️ the repository. Thank you.
+
 ## Debug logging
 
 ```yaml
