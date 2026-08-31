@@ -5,19 +5,22 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.select import SelectEntity
-from homeconnect_websocket.entities import Execution
+from homeconnect_websocket.entities import Access, Execution
 
 from .entity import HCEntity
-from .helpers import create_entities, error_decorator
+from .helpers import create_entities, entity_is_available, error_decorator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
-    from homeconnect_websocket.entities import SelectedProgram
+    from homeconnect_websocket.entities import ActiveProgram, Program, SelectedProgram
 
     from . import HCConfigEntry, HCData
     from .entity_descriptions.descriptions_definitions import HCSelectEntityDescription
 PARALLEL_UPDATES = 0
+
+_ACTIVE_PROGRAM_ACCESS = (Access.READ_WRITE, Access.WRITE_ONLY)
+_SELECTED_PROGRAM_SUFFIX = ".SelectedProgram"
 
 
 async def async_setup_entry(
@@ -84,6 +87,7 @@ class HCProgram(HCSelect):
     """Program select Entity."""
 
     _entity: SelectedProgram
+    _active_program_entity: ActiveProgram | None = None
 
     def __init__(
         self,
@@ -93,17 +97,62 @@ class HCProgram(HCSelect):
         super().__init__(entity_description, runtime_data)
         self._programs = entity_description.mapping
         self._rev_programs = {value: key for key, value in self._programs.items()}
+        if entity_description.entity and entity_description.entity.endswith(
+            _SELECTED_PROGRAM_SUFFIX
+        ):
+            active_program_entity = (
+                f"{entity_description.entity.removesuffix(_SELECTED_PROGRAM_SUFFIX)}.ActiveProgram"
+            )
+            self._active_program_entity = runtime_data.appliance.entities.get(active_program_entity)
+            if self._active_program_entity:
+                self._entities.append(self._active_program_entity)
+        # Program.execution/available changes must reach this entity's callback too,
+        # or the available property below goes stale until an unrelated update fires.
+        for name in self._programs:
+            program = runtime_data.appliance.programs.get(name)
+            if program is not None and program not in self._entities:
+                self._entities.append(program)
 
     @property
     def options(self) -> list[str] | None:
         return list(self._programs.values())
 
     @property
-    def current_option(self) -> list[str] | None:
-        if self._runtime_data.appliance.selected_program:
-            if self._runtime_data.appliance.selected_program.name in self._programs:
-                return self._programs[self._runtime_data.appliance.selected_program.name]
-            return self._runtime_data.appliance.selected_program.name
+    def available(self) -> bool:
+        if super().available:
+            return True
+        conn = (
+            self._runtime_data.coordinator.connected
+            or self._runtime_data.appliance.session.connected
+        )
+        if not conn or self._active_program_entity is None:
+            return False
+        return (
+            entity_is_available(self._active_program_entity, _ACTIVE_PROGRAM_ACCESS)
+            and self._programs_are_start_only()
+        )
+
+    def _programs_are_start_only(self) -> bool:
+        programs: list[Program | None] = [
+            self._runtime_data.appliance.programs.get(program) for program in self._programs
+        ]
+        return bool(programs) and all(
+            program is not None
+            and program.available is not False
+            and program.execution == Execution.START_ONLY
+            for program in programs
+        )
+
+    @property
+    def current_option(self) -> str | None:
+        current_program = self._runtime_data.appliance.selected_program
+        if current_program is None and self._active_program_entity is not None:
+            current_program = self._runtime_data.appliance.active_program
+
+        if current_program:
+            if current_program.name in self._programs:
+                return self._programs[current_program.name]
+            return current_program.name
         return None
 
     @error_decorator
@@ -112,4 +161,13 @@ class HCProgram(HCSelect):
         if selected_program.execution in (Execution.SELECT_ONLY, Execution.SELECT_AND_START):
             await selected_program.select()
         elif selected_program.execution == Execution.START_ONLY:
-            await selected_program.start()
+            if entity_is_available(self._entity, self.entity_description.available_access):
+                # SelectedProgram is writable, this path already worked before the
+                # read-only fallback above existed. Leave its payload unchanged.
+                await selected_program.start()
+            else:
+                # Reached only via the read-only-SelectedProgram fallback. Suppresses
+                # the library's automatic READ_WRITE option shadows for this call
+                # (Program._build_options); scoped to this path so devices that
+                # already worked keep their existing payload.
+                await selected_program.start(override_options=True)
