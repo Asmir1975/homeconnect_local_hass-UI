@@ -2606,6 +2606,20 @@
           "basiccarbonfilter": "Standard-Kohlefilter",
           "regenerativecarbonfilter": "Regenerierbarer Kohlefilter"
         }
+      },
+      "select_hood_light_startup": {
+        "name": "Licht beim Einschalten",
+        "state": {
+          "turnonlight": "Einschalten",
+          "keeplightoff": "Aus lassen"
+        }
+      },
+      "select_hood_light_shutdown": {
+        "name": "Licht beim Ausschalten",
+        "state": {
+          "turnofflight": "Ausschalten",
+          "keeplighton": "An lassen"
+        }
       }
     },
     "button": {
