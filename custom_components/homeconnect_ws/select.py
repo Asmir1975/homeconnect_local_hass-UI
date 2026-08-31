@@ -161,8 +161,13 @@ class HCProgram(HCSelect):
         if selected_program.execution in (Execution.SELECT_ONLY, Execution.SELECT_AND_START):
             await selected_program.select()
         elif selected_program.execution == Execution.START_ONLY:
-            # Suppresses the library's automatic READ_WRITE option shadows for this
-            # call, not just None-valued ones (Program._build_options). Applies to
-            # every START_ONLY select on this entity, not only the read-only-
-            # SelectedProgram fallback case above.
-            await selected_program.start(override_options=True)
+            if entity_is_available(self._entity, self.entity_description.available_access):
+                # SelectedProgram is writable, this path already worked before the
+                # read-only fallback above existed. Leave its payload unchanged.
+                await selected_program.start()
+            else:
+                # Reached only via the read-only-SelectedProgram fallback. Suppresses
+                # the library's automatic READ_WRITE option shadows for this call
+                # (Program._build_options); scoped to this path so devices that
+                # already worked keep their existing payload.
+                await selected_program.start(override_options=True)

@@ -323,6 +323,9 @@ async def test_select_program(
         Message(
             resource="/ro/activeProgram",
             action=Action.POST,
-            data={"program": 502, "options": []},
+            data={
+                "program": 502,
+                "options": [{"uid": 401, "value": None}, {"uid": 402, "value": None}],
+            },
         )
     )
