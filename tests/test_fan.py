@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
@@ -19,6 +20,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeconnect_websocket.message import Action, Message
 
 from . import setup_config_entry
@@ -95,8 +97,9 @@ async def test_set_speed(
     mock_appliance: MockAppliance,
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
-    """Test setting a speed."""
+    """Test setting a speed starts the owning Program with the full option set."""
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -110,9 +113,17 @@ async def test_set_speed(
 
     mock_appliance.session.send_sync.assert_awaited_once_with(
         Message(
-            resource="/ro/values",
+            resource="/ro/activeProgram",
             action=Action.POST,
-            data=[{"uid": 403, "value": 1}, {"uid": 404, "value": 0}],
+            data={
+                "program": 504,
+                "options": [
+                    {"uid": 403, "value": 1},
+                    {"uid": 404, "value": 0},
+                    {"uid": 506, "value": 1},
+                    {"uid": 507, "value": 0},
+                ],
+            },
         )
     )
     mock_appliance.session.send_sync.reset_mock()
@@ -129,9 +140,96 @@ async def test_set_speed(
 
     mock_appliance.session.send_sync.assert_awaited_once_with(
         Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 504,
+                "options": [
+                    {"uid": 403, "value": 0},
+                    {"uid": 404, "value": 1},
+                    {"uid": 506, "value": 1},
+                    {"uid": 507, "value": 0},
+                ],
+            },
+        )
+    )
+
+
+async def test_set_speed_without_full_option_set_sends_known_options_only(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Appliances without the fullOptionSet flag keep the minimal payload."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    # Deliberate test-only introspection: no public API flips this after setup.
+    mock_appliance.programs["Test.Program.HoodVenting"]._full_option_set = False
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {
+            ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan",
+            ATTR_PERCENTAGE: 25,
+        },
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 504,
+                "options": [{"uid": 403, "value": 1}, {"uid": 404, "value": 0}],
+            },
+        )
+    )
+
+
+async def test_set_speed_aborts_when_required_option_has_no_value(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Guessing a value for an option the appliance never reported is unsafe."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            FAN_DOMAIN,
+            SERVICE_SET_PERCENTAGE,
+            {
+                ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan",
+                ATTR_PERCENTAGE: 25,
+            },
+            blocking=True,
+        )
+
+
+async def test_set_speed_zero_delegates_to_turn_off(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Setting percentage to 0 must go through the same PowerState-aware stop."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {
+            ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan",
+            ATTR_PERCENTAGE: 0,
+        },
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
             resource="/ro/values",
             action=Action.POST,
-            data=[{"uid": 403, "value": 0}, {"uid": 404, "value": 1}],
+            data={"uid": 205, "value": 1},
         )
     )
 

@@ -178,6 +178,7 @@ ENTITY_DESCRIPTIONS: _EntityDescriptionsType = {
             key="Test.Fan",
             name="Fan",
             entities=["Test.FanSpeed1", "Test.FanSpeed2"],
+            default_program="Test.Program.HoodVenting",
         )
     ],
     "light": [
@@ -443,6 +444,20 @@ DEVICE_DESCRIPTION = DeviceDescription(
             enumeration={"0": "Off", "1": "Speed1", "2": "Speed1"},
             default=0,
         ),
+        EntityDescription(
+            uid=506,
+            name="Test.HoodExtraOption",
+            available=True,
+            access=Access.READ_WRITE,
+            enumeration={"0": "Off", "1": "On"},
+            default=1,
+        ),
+        EntityDescription(
+            uid=507,
+            name="Test.HoodExtraOptionNoValue",
+            available=True,
+            access=Access.READ_WRITE,
+        ),
     ],
     program=[
         EntityDescription(
@@ -479,6 +494,17 @@ DEVICE_DESCRIPTION = DeviceDescription(
             uid=503,
             name="BSH.Common.Program.Favorite.002",
             available=True,
+        ),
+        EntityDescription(
+            uid=504,
+            name="Test.Program.HoodVenting",
+            fullOptionSet=True,
+            options=[
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=403),
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=404),
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=506),
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=507),
+            ],
         ),
     ],
     selectedProgram=EntityDescription(

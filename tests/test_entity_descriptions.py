@@ -11,6 +11,7 @@ from custom_components.homeconnect_ws import HCData, entity_descriptions
 from custom_components.homeconnect_ws.entity import HCEntity
 from custom_components.homeconnect_ws.entity_descriptions import (
     HCBinarySensorEntityDescription,
+    HCFanEntityDescription,
     HCLightEntityDescription,
     HCSelectEntityDescription,
     HCSensorEntityDescription,
@@ -21,7 +22,10 @@ from custom_components.homeconnect_ws.entity_descriptions.common import (
     generate_program,
     generate_start_button,
 )
-from custom_components.homeconnect_ws.entity_descriptions.cooking import generate_hob_zones
+from custom_components.homeconnect_ws.entity_descriptions.cooking import (
+    generate_hob_zones,
+    generate_hood_fan,
+)
 from custom_components.homeconnect_ws.entity_descriptions.dishcare import (
     DISHCARE_ENTITY_DESCRIPTIONS,
 )
@@ -41,6 +45,7 @@ from homeconnect_websocket.entities import (
     DeviceDescription,
     EntityDescription,
     Execution,
+    OptionDescription,
 )
 
 if TYPE_CHECKING:
@@ -373,6 +378,70 @@ async def test_program(mock_homeconnect_appliance: MockApplianceType) -> None:
     )
 
     appliance = await mock_homeconnect_appliance(description={})
+
+
+async def test_hood_fan_requires_venting_program(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Fan speed options without the owning Program must not create a fan entity."""
+    description = DeviceDescription(
+        option=[
+            EntityDescription(
+                uid=401, name="Cooking.Common.Option.Hood.VentingLevel", access=Access.READ_WRITE
+            ),
+        ],
+    )
+    appliance = await mock_homeconnect_appliance(description=description)
+
+    assert generate_hood_fan(appliance) is None
+
+
+async def test_hood_fan_requires_options_owned_by_venting_program(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Speed entities not part of the Venting Program's options must not create a fan."""
+    description = DeviceDescription(
+        option=[
+            EntityDescription(
+                uid=401, name="Cooking.Common.Option.Hood.VentingLevel", access=Access.READ_WRITE
+            ),
+        ],
+        program=[
+            EntityDescription(
+                uid=500,
+                name="Cooking.Common.Program.Hood.Venting",
+                options=[],
+            ),
+        ],
+    )
+    appliance = await mock_homeconnect_appliance(description=description)
+
+    assert generate_hood_fan(appliance) is None
+
+
+async def test_hood_fan_generated(mock_homeconnect_appliance: MockApplianceType) -> None:
+    """Fan speed options owned by an existing Venting Program create the fan entity."""
+    description = DeviceDescription(
+        option=[
+            EntityDescription(
+                uid=401, name="Cooking.Common.Option.Hood.VentingLevel", access=Access.READ_WRITE
+            ),
+        ],
+        program=[
+            EntityDescription(
+                uid=500,
+                name="Cooking.Common.Program.Hood.Venting",
+                options=[OptionDescription(refUID=401)],
+            ),
+        ],
+    )
+    appliance = await mock_homeconnect_appliance(description=description)
+
+    assert generate_hood_fan(appliance) == HCFanEntityDescription(
+        key="fan_hood",
+        entities=["Cooking.Common.Option.Hood.VentingLevel"],
+        default_program="Cooking.Common.Program.Hood.Venting",
+    )
 
 
 INTERNAL_LIGHT = DeviceDescription(
