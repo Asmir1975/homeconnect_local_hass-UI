@@ -251,12 +251,26 @@ DEVICE_DESCRIPTION = DeviceDescription(
             available=True,
             access=Access.READ,
         ),
+        EntityDescription(
+            uid=115,
+            name="BSH.Common.Status.OperationState",
+            enumeration={"0": "Inactive", "1": "Ready", "2": "Run"},
+            available=True,
+            access=Access.READ,
+        ),
     ],
     setting=[
         EntityDescription(
             uid=200,
             name="Test.PowerState",
             enumeration={"1": "Off", "2": "On"},
+            available=True,
+            access=Access.READ_WRITE,
+        ),
+        EntityDescription(
+            uid=205,
+            name="BSH.Common.Setting.PowerState",
+            enumeration={"0": "MainsOff", "1": "Off", "2": "On"},
             available=True,
             access=Access.READ_WRITE,
         ),

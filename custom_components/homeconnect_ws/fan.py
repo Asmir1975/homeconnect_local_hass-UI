@@ -12,6 +12,7 @@ from homeconnect_websocket.message import Action, Message
 
 from .const import DOMAIN
 from .entity import HCEntity
+from .entity_descriptions.common import POWER_OFF_STATE_NAMES
 from .helpers import create_entities, error_decorator
 
 if TYPE_CHECKING:
@@ -23,6 +24,10 @@ if TYPE_CHECKING:
     from .entity_descriptions.descriptions_definitions import HCFanEntityDescription
 
 PARALLEL_UPDATES = 0
+
+_OPERATION_STATE_ENTITY = "BSH.Common.Status.OperationState"
+_INACTIVE_OPERATION_STATES = frozenset({"inactive", "ready"})
+_POWER_STATE_ENTITY = "BSH.Common.Setting.PowerState"
 
 
 class SpeedMapping(NamedTuple):
@@ -77,6 +82,24 @@ class HCFan(HCEntity, FanEntity):
 
         self._speed_range = (1, self._attr_speed_count)
 
+        # OperationState changes must reach this entity's callback too, or is_on
+        # below goes stale until an unrelated update fires.
+        operation_state = self._runtime_data.appliance.entities.get(_OPERATION_STATE_ENTITY)
+        if operation_state is not None and operation_state not in self._entities:
+            self._entities.append(operation_state)
+
+    @property
+    def is_on(self) -> bool:
+        # Some hoods keep reporting a non-zero venting level after being switched
+        # off. OperationState is the authoritative signal in that case.
+        operation_state = self._runtime_data.appliance.entities.get(_OPERATION_STATE_ENTITY)
+        if (
+            operation_state is not None
+            and str(operation_state.value or "").lower() in _INACTIVE_OPERATION_STATES
+        ):
+            return False
+        return self.percentage is not None and self.percentage > 0
+
     @property
     def percentage(self) -> int | None:
         for speed in self._speed_mapping:
@@ -115,6 +138,23 @@ class HCFan(HCEntity, FanEntity):
 
     @error_decorator
     async def async_turn_off(self, **kwargs: Any) -> None:
+        # Writing 0 to the speed options is rejected by some hoods: the appliance
+        # echoes the option back at its old, non-zero value instead of accepting
+        # 0 (confirmed live via debug log, vemboy200/homeconnect_local_hass#17).
+        # Powering the appliance off is the confirmed working stop for those
+        # devices, so prefer it when available; keep the zero-write as a
+        # fallback for appliances without a switchable PowerState so nothing
+        # that works today regresses.
+        power_state = self._runtime_data.appliance.entities.get(_POWER_STATE_ENTITY)
+        off_value = None
+        if power_state is not None:
+            settable = set((power_state.enum or {}).values())
+            off_value = next((name for name in POWER_OFF_STATE_NAMES if name in settable), None)
+
+        if off_value is not None:
+            await power_state.set_value(off_value)
+            return
+
         data = [{"uid": entity.uid, "value": 0} for entity in self._speed_entities.values()]
         message = Message(
             resource="/ro/values",

@@ -3784,6 +3784,9 @@
     },
     "not_connected": {
       "message": "Client is not Connected"
+    },
+    "command_timeout": {
+      "message": "The appliance did not answer the command in time"
     }
   }
 }

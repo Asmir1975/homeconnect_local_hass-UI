@@ -2782,5 +2782,46 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "start_in_not_available": {
+      "message": "'Start in' ist an diesem Gerät nicht verfügbar"
+    },
+    "finish_in_not_available": {
+      "message": "'Fertig in' ist an diesem Gerät nicht verfügbar"
+    },
+    "start_program_error": {
+      "message": "Fehler {code} beim Starten des Programms, Ressource {resource}"
+    },
+    "no_program_selected": {
+      "message": "Kein Programm ausgewählt"
+    },
+    "auth_failed": {
+      "message": "Authentifizierung fehlgeschlagen {host}"
+    },
+    "cannot_connect": {
+      "message": "Verbindung zu {host} fehlgeschlagen"
+    },
+    "no_device_info": {
+      "message": "Gerät hat keine Geräteinformationen"
+    },
+    "speed_invalid": {
+      "message": "Geschwindigkeit {percentage} ist ungültig"
+    },
+    "not_appliance": {
+      "message": "Kein Home-Connect-Gerät"
+    },
+    "access_error": {
+      "message": "Entität ist nicht zugänglich"
+    },
+    "code_respons": {
+      "message": "Fehlerantwort vom Gerät: {message}"
+    },
+    "not_connected": {
+      "message": "Client ist nicht verbunden"
+    },
+    "command_timeout": {
+      "message": "Das Gerät hat den Befehl nicht rechtzeitig beantwortet"
+    }
   }
 }
