@@ -2824,7 +2824,7 @@
       "message": "Das Gerät hat den Befehl nicht rechtzeitig beantwortet"
     },
     "full_option_set_incomplete": {
-      "message": "Geschwindigkeit kann nicht gesetzt werden: Das Gerät hat noch keinen Wert für '{option}' gemeldet"
+      "message": "Geschwindigkeit kann nicht gesetzt werden: Das Gerät hat noch keinen Wert für {option} gemeldet"
     }
   }
 }
