@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.percentage import percentage_to_ranged_value, ranged_value_to_percentage
+from homeconnect_websocket.entities import Access
 from homeconnect_websocket.message import Action, Message
 
 from .const import DOMAIN
@@ -62,6 +63,9 @@ class HCFan(HCEntity, FanEntity):
         runtime_data: HCData,
     ) -> None:
         super().__init__(entity_description, runtime_data)
+        if entity_description.default_program is None:
+            msg = "HCFanEntityDescription.default_program is required"
+            raise ValueError(msg)
         self._attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_OFF
         self._speed_mapping = []
         self._speed_entities = {}
@@ -118,38 +122,64 @@ class HCFan(HCEntity, FanEntity):
     @error_decorator
     async def async_set_percentage(self, percentage: int) -> None:
         new_speed = math.ceil(percentage_to_ranged_value(self._speed_range, percentage))
-        new_speed_entity: str = None
-        new_speed_value: int = None
+        if new_speed == 0:
+            await self.async_turn_off()
+            return
+
+        new_speed_entity: str | None = None
+        new_speed_value: int | None = None
         for speed in self._speed_mapping:
             if speed.speed == new_speed:
                 new_speed_entity = speed.entity_name
                 new_speed_value = speed.entity_value
-        if new_speed_entity or new_speed == 0:
-            data = []
-            for entity in self._speed_entities.values():
-                if entity.name == new_speed_entity:
-                    data.append({"uid": entity.uid, "value": new_speed_value})
-                else:
-                    data.append({"uid": entity.uid, "value": 0})
-            message = Message(
-                resource="/ro/values",
-                action=Action.POST,
-                data=data,
-            )
-            await self._runtime_data.appliance.session.send_sync(message)
-        else:
+        if new_speed_entity is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="speed_invalid",
-                translation_placeholders={"percentage", percentage},
+                translation_placeholders={"percentage": str(percentage)},
             )
+
+        # Speed options are children of a Program; writing them via /ro/values
+        # is rejected once no program is active. /ro/activeProgram
+        # (Program.start) is the correct resource regardless of whether a
+        # program is already running.
+        program = self._runtime_data.appliance.programs[self.entity_description.default_program]
+        options = {
+            entity.uid: (new_speed_value if entity.name == new_speed_entity else 0)
+            for entity in self._speed_entities.values()
+        }
+        if program.full_option_set:
+            # Some appliances validate a program write against the program's
+            # complete option set and reject a partial one. Fill in every
+            # other writable option with its current value so the write is
+            # not rejected and unrelated settings are not overwritten. value
+            # (not value_raw) resolves enum options to their display name,
+            # not the protocol value, so only value_shadow/value_raw are
+            # usable here.
+            for option in program.options:
+                if option.uid in options or option.access != Access.READ_WRITE:
+                    continue
+                value = option.value_shadow
+                if value is None:
+                    value = option.value_raw
+                if value is None:
+                    # Never reported by the appliance yet; guessing (e.g. a
+                    # minimum) could silently change a setting the user never
+                    # touched. Fail clearly instead.
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="full_option_set_incomplete",
+                        translation_placeholders={"option": option.name},
+                    )
+                options[option.uid] = value
+
+        await program.start(options, override_options=True)
 
     @error_decorator
     async def async_turn_off(self, **kwargs: Any) -> None:
         # Writing 0 to the speed options is rejected by some hoods: the appliance
         # echoes the option back at its old, non-zero value instead of accepting
-        # 0 (confirmed live via debug log, vemboy200/homeconnect_local_hass#17).
-        # Powering the appliance off is the confirmed working stop for those
+        # 0. Powering the appliance off is the confirmed working stop for those
         # devices, so prefer it when available; keep the zero-write as a
         # fallback for appliances without a switchable PowerState so nothing
         # that works today regresses.
