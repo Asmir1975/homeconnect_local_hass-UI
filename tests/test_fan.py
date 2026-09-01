@@ -157,6 +157,28 @@ async def test_is_on_false_when_operation_state_inactive(
     assert state.state == STATE_OFF
 
 
+async def test_percentage_zero_when_operation_state_inactive(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Percentage must not stay at a stale speed once is_on reports off."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await mock_appliance.entities["Test.FanSpeed1"].update({"value": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.attributes[ATTR_PERCENTAGE] == 25
+
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 0})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.state == STATE_OFF
+    assert state.attributes[ATTR_PERCENTAGE] == 0
+
+
 async def test_turn_off_uses_power_state_when_settable(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,

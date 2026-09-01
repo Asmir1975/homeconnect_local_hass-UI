@@ -98,14 +98,22 @@ class HCFan(HCEntity, FanEntity):
             and str(operation_state.value or "").lower() in _INACTIVE_OPERATION_STATES
         ):
             return False
-        return self.percentage is not None and self.percentage > 0
+        return self._raw_percentage() > 0
 
-    @property
-    def percentage(self) -> int | None:
+    def _raw_percentage(self) -> int:
         for speed in self._speed_mapping:
             if self._speed_entities[speed.entity_name].value_raw == speed.entity_value:
                 return ranged_value_to_percentage(self._speed_range, speed.speed)
         return 0
+
+    @property
+    def percentage(self) -> int | None:
+        # Keep the reported speed in sync with is_on: once OperationState says
+        # off, a stale non-zero speed value must not leave the percentage
+        # attribute out of sync with the state.
+        if not self.is_on:
+            return 0
+        return self._raw_percentage()
 
     @error_decorator
     async def async_set_percentage(self, percentage: int) -> None:
