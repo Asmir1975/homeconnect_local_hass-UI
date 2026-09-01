@@ -46,6 +46,8 @@ POWER_SWITCH_VALUE_MAPINGS = (
     ("Standby", "Off"),
 )
 
+POWER_OFF_STATE_NAMES = ("Off", "MainsOff")
+
 
 def generate_start_button(appliance: HomeAppliance) -> EntityDescriptions:
     """Get Start Button description."""
