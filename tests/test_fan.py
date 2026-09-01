@@ -181,6 +181,33 @@ async def test_turn_off_uses_power_state_when_settable(
     )
 
 
+async def test_turn_off_ignores_power_state_value_outside_min_max(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """An enum value outside the declared min/max is not actually settable."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    # PowerState enum is {0: MainsOff, 1: Off, 2: On}; restrict the settable
+    # range to On only, matching generate_power_switch's own range check.
+    await mock_appliance.entities["BSH.Common.Setting.PowerState"].update({"min": 2, "max": 2})
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/values",
+            action=Action.POST,
+            data=[{"uid": 403, "value": 0}, {"uid": 404, "value": 0}],
+        )
+    )
+
+
 async def test_turn_off_falls_back_to_zero_write_without_power_state(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,

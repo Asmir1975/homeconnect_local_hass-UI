@@ -148,7 +148,17 @@ class HCFan(HCEntity, FanEntity):
         power_state = self._runtime_data.appliance.entities.get(_POWER_STATE_ENTITY)
         off_value = None
         if power_state is not None:
-            settable = set((power_state.enum or {}).values())
+            if power_state.min is not None and power_state.max is not None:
+                # Some appliances declare a wider enum than they actually allow
+                # writing, matching generate_power_switch's own settable-range
+                # check for this same entity.
+                settable = {
+                    value
+                    for key, value in (power_state.enum or {}).items()
+                    if power_state.min <= key <= power_state.max
+                }
+            else:
+                settable = set((power_state.enum or {}).values())
             off_value = next((name for name in POWER_OFF_STATE_NAMES if name in settable), None)
 
         if off_value is not None:
