@@ -8,7 +8,7 @@ from homeassistant.components.select import SelectEntity
 from homeconnect_websocket.entities import Access, Execution
 
 from .entity import HCEntity
-from .helpers import create_entities, entity_is_available, error_decorator
+from .helpers import create_entities, ensure_writable, entity_is_available, error_decorator
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -78,6 +78,7 @@ class HCSelect(HCEntity, SelectEntity):
 
     @error_decorator
     async def async_select_option(self, option: str) -> None:
+        ensure_writable(self._entity)
         if self._rev_options:
             option = self._rev_options[option]
         await self._entity.set_value(option)

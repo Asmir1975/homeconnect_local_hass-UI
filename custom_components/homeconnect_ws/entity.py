@@ -7,8 +7,9 @@ from typing import TYPE_CHECKING
 
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeconnect_websocket.entities import Access
 
-from .helpers import entity_is_available
+from .helpers import entity_is_available, is_locked_option
 
 if TYPE_CHECKING:
     from homeassistant.helpers.device_registry import DeviceInfo
@@ -81,11 +82,19 @@ class HCEntity(CoordinatorEntity, Entity):
             self._runtime_data.coordinator.connected
             or self._runtime_data.appliance.session.connected
         )
-        return conn and entity_is_available(self._entity, self.entity_description.available_access)
+        available_access = self.entity_description.available_access
+        if available_access is not None and is_locked_option(self._entity):
+            # Home Connect shows a locked Option as visible-but-disabled rather
+            # than hiding it; Access.READ means "still readable", so widen the
+            # check instead of going unavailable and hiding the current value.
+            available_access = (*available_access, Access.READ)
+        return conn and entity_is_available(self._entity, available_access)
 
     @property
     def extra_state_attributes(self) -> dict:
         extra_state_attributes = {}
+        if is_locked_option(self._entity):
+            extra_state_attributes["readonly"] = True
         for description in self._extra_attributes:
             entity = self._runtime_data.appliance.entities[description["entity"]]
             if "value_fn" in description:
