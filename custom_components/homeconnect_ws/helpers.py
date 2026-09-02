@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_extract_config_entry_ids
+from homeconnect_websocket.entities import Access, Option
 from homeconnect_websocket.errors import AccessError, CodeResponsError, NotConnectedError
 
 from .const import DOMAIN
@@ -18,7 +19,6 @@ if TYPE_CHECKING:
 
     from homeassistant.core import HomeAssistant, ServiceCall
     from homeconnect_websocket import HomeAppliance
-    from homeconnect_websocket.entities import Access
     from homeconnect_websocket.entities import Entity as HcEntity
 
     from . import HCConfigEntry, HCData
@@ -106,6 +106,27 @@ def entity_is_available(entity: HcEntity, available_access: tuple[Access]) -> bo
     if hasattr(entity, "access"):
         available &= entity.access in available_access
     return available
+
+
+def is_locked_option(entity: HcEntity | None) -> bool:
+    """
+    Whether entity is a program Option currently locked read-only, not just inapplicable.
+
+    Home Connect locks some Options to read-only while a program runs, rather
+    than making them unapplicable; the official app shows these as
+    visible-but-disabled, not hidden. Access.NONE ("not applicable at all")
+    is unaffected and stays genuinely unavailable.
+    """
+    return isinstance(entity, Option) and entity.access == Access.READ
+
+
+def ensure_writable(entity: HcEntity | None) -> None:
+    """Raise a clear error instead of attempting a write a locked Option will reject."""
+    if is_locked_option(entity):
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="read_only",
+        )
 
 
 def error_decorator[T](func: Callable[..., Coroutine[T]]) -> Callable[..., Coroutine[T]]:

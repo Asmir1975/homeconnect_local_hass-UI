@@ -8,11 +8,13 @@ from typing import TYPE_CHECKING
 import pytest
 from custom_components.homeconnect_ws.helpers import (
     EntityMatch,
+    ensure_writable,
     error_decorator,
     get_entities_from_regex,
     get_groups_from_regex,
+    is_locked_option,
 )
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from .const import DEVICE_DESCRIPTION
 
@@ -52,3 +54,35 @@ async def test_error_decorator_timeout_becomes_homeassistant_error() -> None:
         await raises_timeout()
 
     assert exc_info.value.translation_key == "command_timeout"
+
+
+async def test_is_locked_option(mock_homeconnect_appliance: MockApplianceType) -> None:
+    """Only an Option with Access.READ counts as locked read-only."""
+    appliance = await mock_homeconnect_appliance(description=DEVICE_DESCRIPTION)
+    option = appliance.entities["Test.Option1"]
+    setting = appliance.entities["Test.Switch"]
+
+    await option.update({"access": "read"})
+    assert is_locked_option(option) is True
+
+    await option.update({"access": "readwrite"})
+    assert is_locked_option(option) is False
+
+    await option.update({"access": "none"})
+    assert is_locked_option(option) is False
+
+    await setting.update({"access": "read"})
+    assert is_locked_option(setting) is False
+
+
+async def test_ensure_writable(mock_homeconnect_appliance: MockApplianceType) -> None:
+    """ensure_writable raises only for a locked Option."""
+    appliance = await mock_homeconnect_appliance(description=DEVICE_DESCRIPTION)
+    option = appliance.entities["Test.Option1"]
+
+    await option.update({"access": "readwrite"})
+    ensure_writable(option)
+
+    await option.update({"access": "read"})
+    with pytest.raises(ServiceValidationError):
+        ensure_writable(option)

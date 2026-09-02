@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -14,6 +15,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNKNOWN,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeconnect_websocket.message import Action, Message
 
 from . import setup_config_entry
@@ -189,3 +191,48 @@ async def test_turn_off_enum(
             data={"uid": 202, "value": 0},
         )
     )
+
+
+async def test_available_and_readonly_when_option_locked(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """A switch backed by a read-locked Option stays available with its value."""
+    entity_id = "switch.fake_brand_homeappliance_switch_option"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Option1"].update({"value": True, "access": "readwrite"})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert "readonly" not in state.attributes
+
+    await mock_appliance.entities["Test.Option1"].update({"access": "read"})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+    assert state.attributes["readonly"] is True
+
+
+async def test_turn_on_raises_when_option_locked(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Turning on a locked Option raises instead of attempting a rejected write."""
+    entity_id = "switch.fake_brand_homeappliance_switch_option"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Option1"].update({"value": False, "access": "read"})
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    mock_appliance.session.send_sync.assert_not_awaited()

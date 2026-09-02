@@ -2825,6 +2825,9 @@
     },
     "full_option_set_incomplete": {
       "message": "Geschwindigkeit kann nicht gesetzt werden: Das Gerät hat noch keinen Wert für {option} gemeldet"
+    },
+    "read_only": {
+      "message": "Dies ist aktuell im Nur-Lese-Modus und kann gerade nicht geändert werden"
     }
   }
 }
