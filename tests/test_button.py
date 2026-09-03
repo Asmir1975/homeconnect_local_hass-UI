@@ -13,7 +13,9 @@ from custom_components.homeconnect_ws.entity_descriptions.common import generate
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
+from homeconnect_websocket.errors import CodeResponsError
 from homeconnect_websocket.message import Action, Message
 from homeconnect_websocket.testutils import MockAppliance
 
@@ -96,6 +98,27 @@ async def test_abort(
             data={"uid": 300, "value": True},
         )
     )
+
+
+async def test_abort_rejected_by_appliance_becomes_homeassistant_error(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Test pressing abort when the appliance rejects it does not raise a raw traceback."""
+    entity_id = "button.fake_brand_homeappliance_abortprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    mock_appliance.session.send_sync.side_effect = CodeResponsError(400, "/ro/values")
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            domain=BUTTON_DOMAIN,
+            service=SERVICE_PRESS,
+            service_data={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "code_respons"
 
 
 ACTIVE_PROGRAM = "BSH.Common.Root.ActiveProgram"

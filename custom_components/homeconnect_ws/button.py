@@ -39,6 +39,7 @@ class HCButton(HCEntity, ButtonEntity):
     _entity: Command
     entity_description: HCButtonEntityDescription
 
+    @error_decorator
     async def async_press(self) -> None:
         await self._entity.set_value(True)
 
