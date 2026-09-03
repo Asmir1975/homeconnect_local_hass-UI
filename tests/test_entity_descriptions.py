@@ -23,6 +23,7 @@ from custom_components.homeconnect_ws.entity_descriptions.common import (
     generate_start_button,
 )
 from custom_components.homeconnect_ws.entity_descriptions.cooking import (
+    COOKING_ENTITY_DESCRIPTIONS,
     generate_hob_zones,
     generate_hood_fan,
 )
@@ -39,7 +40,7 @@ from custom_components.homeconnect_ws.sensor import HCEventSensor
 from homeassistant.components.number import NumberDeviceClass, NumberMode
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.const import PERCENTAGE, UnitOfTime
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTime
 from homeconnect_websocket.entities import (
     Access,
     DeviceDescription,
@@ -100,6 +101,21 @@ def test_dishwasher_pretreatment_switch_description() -> None:
 
     assert description.entity == "Dishcare.Dishwasher.Option.Pretreatment"
     assert description.device_class is SwitchDeviceClass.SWITCH
+
+
+def test_hob_energy_consumption_indication_switch_description() -> None:
+    """Test the hob Energy Consumption Indication Setting is mapped as an enum switch."""
+    description = next(
+        item
+        for item in COOKING_ENTITY_DESCRIPTIONS["switch"]
+        if item.key == "switch_hob_energy_consumption_indication"
+    )
+
+    assert description.entity == "Cooking.Hob.Setting.EnergyConsumptionIndication"
+    assert description.device_class is SwitchDeviceClass.SWITCH
+    assert description.entity_category is EntityCategory.CONFIG
+    # Enumeration Setting, so the on/off values have to be mapped explicitly
+    assert description.value_mapping == ("IndicationOn", "IndicationOff")
 
 
 def test_not_selectable_hob_zones_disabled_by_default() -> None:
