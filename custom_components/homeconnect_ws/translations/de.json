@@ -185,6 +185,9 @@
       "switch_oven_light_during_operation": {
         "name": "Ofenlicht während Betrieb"
       },
+      "switch_oven_cavity_light": {
+        "name": "Garraumlicht"
+      },
       "switch_oven_sabbath_mode": {
         "name": "Sabbat Modus"
       },
