@@ -254,6 +254,9 @@
       "switch_hood_boost": {
         "name": "Boost"
       },
+      "switch_hob_energy_consumption_indication": {
+        "name": "Energy consumption indication"
+      },
       "switch_hood_silence_mode": {
         "name": "Silence Mode"
       },
