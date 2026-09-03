@@ -588,6 +588,11 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity_category=EntityCategory.CONFIG,
         ),
         HCSwitchEntityDescription(
+            key="switch_oven_cavity_light",
+            entity="Cooking.Oven.Setting.Light.Cavity.001.Power",
+            device_class=SwitchDeviceClass.SWITCH,
+        ),
+        HCSwitchEntityDescription(
             key="switch_oven_sabbath_mode",
             entity="Cooking.Oven.Setting.SabbathMode",
             device_class=SwitchDeviceClass.SWITCH,
