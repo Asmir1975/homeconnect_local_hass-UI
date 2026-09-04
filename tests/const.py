@@ -158,6 +158,12 @@ ENTITY_DESCRIPTIONS: _EntityDescriptionsType = {
             entity="Test.Sensor.Enum",
             device_class=SensorDeviceClass.ENUM,
         ),
+        HCSensorEntityDescription(
+            key="Test.Sensor.Resettable",
+            name="Sensor.Resettable",
+            entity="Test.Sensor.Resettable",
+            reset_when_operation_state_terminal=True,
+        ),
     ],
     "start_button": [
         HCButtonEntityDescription(
@@ -261,7 +267,23 @@ DEVICE_DESCRIPTION = DeviceDescription(
         EntityDescription(
             uid=115,
             name="BSH.Common.Status.OperationState",
-            enumeration={"0": "Inactive", "1": "Ready", "2": "Run"},
+            enumeration={
+                "0": "Inactive",
+                "1": "Ready",
+                "2": "DelayedStart",
+                "3": "Run",
+                "4": "Pause",
+                "5": "ActionRequired",
+                "6": "Finished",
+                "7": "Error",
+                "8": "Aborting",
+            },
+            available=True,
+            access=Access.READ,
+        ),
+        EntityDescription(
+            uid=116,
+            name="Test.Sensor.Resettable",
             available=True,
             access=Access.READ,
         ),

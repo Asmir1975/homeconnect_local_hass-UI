@@ -220,6 +220,63 @@ def generate_temperature_unit(appliance: HomeAppliance) -> HCSelectEntityDescrip
     return None
 
 
+_OVEN_CAVITY_PATTERN = re.compile(r"^Cooking\.Oven\.Status\.Cavity\.\d+\..*$")
+
+
+def _has_oven_cavity(appliance: HomeAppliance) -> bool:
+    """Detect an oven by its cavity-scoped status entities."""
+    return any(_OVEN_CAVITY_PATTERN.match(entity) for entity in appliance.entities)
+
+
+def generate_remaining_program_time(appliance: HomeAppliance) -> HCSensorEntityDescription | None:
+    """Get RemainingProgramTime sensor description."""
+    if "BSH.Common.Option.RemainingProgramTime" not in appliance.entities:
+        return None
+    return HCSensorEntityDescription(
+        key="sensor_remaining_program_time",
+        entity="BSH.Common.Option.RemainingProgramTime",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        extra_attributes=[
+            {
+                "name": "Is Estimated",
+                "entity": "BSH.Common.Option.RemainingProgramTimeIsEstimated",
+            }
+        ],
+        # Confirmed on an oven: the post-program display prompt, if left
+        # unanswered, can leave this stale forever instead of resetting it,
+        # unlike e.g. a dishwasher which always resets it itself.
+        reset_when_operation_state_terminal=_has_oven_cavity(appliance),
+    )
+
+
+def generate_elapsed_program_time(appliance: HomeAppliance) -> HCSensorEntityDescription | None:
+    """Get ElapsedProgramTime sensor description."""
+    if "BSH.Common.Option.ElapsedProgramTime" not in appliance.entities:
+        return None
+    return HCSensorEntityDescription(
+        key="sensor_elapsed_program_time",
+        entity="BSH.Common.Option.ElapsedProgramTime",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
+        suggested_unit_of_measurement=UnitOfTime.HOURS,
+        reset_when_operation_state_terminal=_has_oven_cavity(appliance),
+    )
+
+
+def generate_program_progress(appliance: HomeAppliance) -> HCSensorEntityDescription | None:
+    """Get ProgramProgress sensor description."""
+    if "BSH.Common.Option.ProgramProgress" not in appliance.entities:
+        return None
+    return HCSensorEntityDescription(
+        key="sensor_program_progress",
+        entity="BSH.Common.Option.ProgramProgress",
+        native_unit_of_measurement=PERCENTAGE,
+        reset_when_operation_state_terminal=_has_oven_cavity(appliance),
+    )
+
+
 COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     "button": [
         HCButtonEntityDescription(
@@ -310,31 +367,9 @@ COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         generate_temperature_unit,
     ],
     "sensor": [
-        HCSensorEntityDescription(
-            key="sensor_remaining_program_time",
-            entity="BSH.Common.Option.RemainingProgramTime",
-            device_class=SensorDeviceClass.DURATION,
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            suggested_unit_of_measurement=UnitOfTime.HOURS,
-            extra_attributes=[
-                {
-                    "name": "Is Estimated",
-                    "entity": "BSH.Common.Option.RemainingProgramTimeIsEstimated",
-                }
-            ],
-        ),
-        HCSensorEntityDescription(
-            key="sensor_elapsed_program_time",
-            entity="BSH.Common.Option.ElapsedProgramTime",
-            device_class=SensorDeviceClass.DURATION,
-            native_unit_of_measurement=UnitOfTime.SECONDS,
-            suggested_unit_of_measurement=UnitOfTime.HOURS,
-        ),
-        HCSensorEntityDescription(
-            key="sensor_program_progress",
-            entity="BSH.Common.Option.ProgramProgress",
-            native_unit_of_measurement=PERCENTAGE,
-        ),
+        generate_remaining_program_time,
+        generate_elapsed_program_time,
+        generate_program_progress,
         HCSensorEntityDescription(
             key="sensor_water_forecast",
             entity="BSH.Common.Option.WaterForecast",
