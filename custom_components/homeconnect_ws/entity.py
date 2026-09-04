@@ -9,7 +9,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeconnect_websocket.entities import Access
 
-from .helpers import entity_is_available, is_locked_option
+from .helpers import entity_is_available, is_locked_option, is_option
 
 if TYPE_CHECKING:
     from homeassistant.helpers.device_registry import DeviceInfo
@@ -93,8 +93,10 @@ class HCEntity(CoordinatorEntity, Entity):
     @property
     def extra_state_attributes(self) -> dict:
         extra_state_attributes = {}
-        if is_locked_option(self._entity):
-            extra_state_attributes["readonly"] = True
+        if is_option(self._entity):
+            # Always present (not just when locked) so a template/custom card
+            # can rely on it existing rather than treating "missing" as false.
+            extra_state_attributes["readonly"] = is_locked_option(self._entity)
         for description in self._extra_attributes:
             entity = self._runtime_data.appliance.entities[description["entity"]]
             if "value_fn" in description:

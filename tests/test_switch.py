@@ -198,7 +198,13 @@ async def test_available_and_readonly_when_option_locked(
     mock_appliance: MockAppliance,
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
-    """A switch backed by a read-locked Option stays available with its value."""
+    """
+    A switch backed by a read-locked Option stays available with its value.
+
+    `readonly` is always present (as False) on an Option-backed entity, not
+    just when it's actually locked, so a template/custom card doesn't have
+    to treat a missing attribute as meaning "not readonly".
+    """
     entity_id = "switch.fake_brand_homeappliance_switch_option"
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
     await mock_appliance.entities["Test.Option1"].update({"value": True, "access": "readwrite"})
@@ -206,7 +212,7 @@ async def test_available_and_readonly_when_option_locked(
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_ON
-    assert "readonly" not in state.attributes
+    assert state.attributes["readonly"] is False
 
     await mock_appliance.entities["Test.Option1"].update({"access": "read"})
     await hass.async_block_till_done()

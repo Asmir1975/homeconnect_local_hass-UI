@@ -108,6 +108,11 @@ def entity_is_available(entity: HcEntity, available_access: tuple[Access]) -> bo
     return available
 
 
+def is_option(entity: HcEntity | None) -> bool:
+    """Whether entity is a program Option at all, regardless of its current access."""
+    return isinstance(entity, Option)
+
+
 def is_locked_option(entity: HcEntity | None) -> bool:
     """
     Whether entity is a program Option currently locked read-only, not just inapplicable.

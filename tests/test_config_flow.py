@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from binascii import Error as BinasciiError
 from typing import TYPE_CHECKING
-from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call
+from unittest.mock import ANY, AsyncMock, MagicMock, Mock, call, patch
 from uuid import uuid4
 from zipfile import BadZipFile
 
@@ -19,7 +19,14 @@ from custom_components.homeconnect_ws.const import (
 )
 from custom_components.homeconnect_ws.hc_auth import HCAppliance
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER
-from homeassistant.const import CONF_DESCRIPTION, CONF_DEVICE, CONF_DEVICE_ID, CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    CONF_DESCRIPTION,
+    CONF_DEVICE,
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_MODE,
+    CONF_NAME,
+)
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.selector import SelectOptionDict
 from homeconnect_websocket import AuthenticationError, HCHandshakeError, ParserError
@@ -188,6 +195,39 @@ async def test_user_init(
 
     hass.config_entries.flow.async_abort(result["flow_id"])
     mock_setup_entry.assert_not_awaited()
+
+
+async def test_user_upload_config_entry_dump_sets_unique_id(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """A config_entry-shaped upload (a diagnostics dump) still ends up with a unique_id."""
+    dump_info = {**MOCK_TLS_DEVICE_INFO, "deviceID": "Dump_Device_ID"}
+    dump_data = {
+        CONF_MODE: "TLS",
+        CONF_HOST: "1.2.3.4",
+        CONF_PSK: "PSK_KEY",
+        CONF_DESCRIPTION: {"info": dict(MOCK_TLS_DEVICE_INFO)},
+        CONF_DEVICE_ID: "01020304",
+        CONF_NAME: "Test_Brand Test_TLS",
+    }
+    appliance = MockAppliance(dump_info)
+    monkeypatch.setattr(config_flow, "HomeAppliance", appliance)
+
+    with patch(
+        "custom_components.homeconnect_ws.config_flow.HomeConnectConfigFlow._process_profile_file",
+        return_value={"config_entry": dump_data},
+    ):
+        result = await async_start_upload_flow(hass)
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_FILE: UPLOADED_FILE},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == "Dump_Device_ID"
+    mock_setup_entry.assert_awaited_once()
 
 
 async def test_user_tls(
