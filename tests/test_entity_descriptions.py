@@ -18,8 +18,11 @@ from custom_components.homeconnect_ws.entity_descriptions import (
     HCSwitchEntityDescription,
 )
 from custom_components.homeconnect_ws.entity_descriptions.common import (
+    generate_elapsed_program_time,
     generate_power_switch,
     generate_program,
+    generate_program_progress,
+    generate_remaining_program_time,
     generate_start_button,
 )
 from custom_components.homeconnect_ws.entity_descriptions.cooking import (
@@ -727,6 +730,58 @@ async def test_oven_water_tank_is_an_event_sensor(
 
     await empty.update({"value": False})
     assert sensor.native_value == "ok"
+
+
+OVEN_PROGRAM_TIME_PROFILE = DeviceDescription(
+    status=[
+        EntityDescription(
+            uid=9001,
+            name="Cooking.Oven.Status.Cavity.001.ProgramProgress",
+            available=True,
+            access=Access.READ,
+        ),
+    ],
+    option=[
+        EntityDescription(
+            uid=9002, name="BSH.Common.Option.ProgramProgress", available=True, access=Access.READ
+        ),
+        EntityDescription(
+            uid=9003,
+            name="BSH.Common.Option.RemainingProgramTime",
+            available=True,
+            access=Access.READ,
+        ),
+        EntityDescription(
+            uid=9004,
+            name="BSH.Common.Option.ElapsedProgramTime",
+            available=True,
+            access=Access.READ,
+        ),
+    ],
+)
+
+
+async def test_oven_program_time_sensors_reset_on_terminal_state(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test the reset flag turns on when an oven cavity status entity is present."""
+    appliance = await mock_homeconnect_appliance(description=OVEN_PROGRAM_TIME_PROFILE)
+
+    assert generate_program_progress(appliance).reset_when_operation_state_terminal
+    assert generate_remaining_program_time(appliance).reset_when_operation_state_terminal
+    assert generate_elapsed_program_time(appliance).reset_when_operation_state_terminal
+
+
+async def test_non_oven_program_time_sensors_keep_default_behavior(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test the reset flag stays off for a device without an oven cavity, e.g. a dishwasher."""
+    description = DeviceDescription(option=OVEN_PROGRAM_TIME_PROFILE["option"])
+    appliance = await mock_homeconnect_appliance(description=description)
+
+    assert not generate_program_progress(appliance).reset_when_operation_state_terminal
+    assert not generate_remaining_program_time(appliance).reset_when_operation_state_terminal
+    assert not generate_elapsed_program_time(appliance).reset_when_operation_state_terminal
 
 
 def _speed_perfect_option(name: str, uid: int) -> dict:

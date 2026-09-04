@@ -153,6 +153,123 @@ async def test_update_active_program(
     assert state.state == "Named Favorite"
 
 
+async def test_reset_when_operation_state_terminal(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Sensor must reset to 0 once OperationState is terminal, even with a stale value."""
+    entity_id = "sensor.fake_brand_homeappliance_sensor_resettable"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await mock_appliance.entities["Test.Sensor.Resettable"].update({"value": 42})
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 3})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "42"
+
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 0})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+
+
+async def test_reset_when_operation_state_finished(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Sensor must reset to 0 on Finished, matching the Gate-A oven repro."""
+    entity_id = "sensor.fake_brand_homeappliance_sensor_resettable"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await mock_appliance.entities["Test.Sensor.Resettable"].update({"value": 42})
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 6})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+
+
+async def test_reset_when_operation_state_error_or_aborting(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Sensor must reset to 0 on Error and on Aborting."""
+    entity_id = "sensor.fake_brand_homeappliance_sensor_resettable"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await mock_appliance.entities["Test.Sensor.Resettable"].update({"value": 42})
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 7})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+
+    await mock_appliance.entities["Test.Sensor.Resettable"].update({"value": 42})
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 8})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+
+
+async def test_reset_when_operation_state_terminal_overrides_unavailable(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Sensor must show 0, not unavailable, when the device itself clears the entity."""
+    entity_id = "sensor.fake_brand_homeappliance_sensor_resettable"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await mock_appliance.entities["Test.Sensor.Resettable"].update(
+        {"value": 42, "available": False}
+    )
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 0})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+
+
+async def test_reset_when_operation_state_terminal_not_reset_when_ready(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """A freshly selected program's estimated value must survive the Ready state."""
+    entity_id = "sensor.fake_brand_homeappliance_sensor_resettable"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await mock_appliance.entities["Test.Sensor.Resettable"].update({"value": 42})
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "42"
+
+
+async def test_unaffected_sensor_ignores_operation_state(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """A sensor without reset_when_operation_state_terminal must keep its stale value."""
+    entity_id = "sensor.fake_brand_homeappliance_sensor"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await mock_appliance.entities["Test.Sensor"].update({"value": 5})
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 0})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "5"
+
+
 async def test_wifi_update() -> None:
     """Test the fallback WiFi sensor polling path."""
     appliance = MagicMock()

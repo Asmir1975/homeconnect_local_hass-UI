@@ -29,6 +29,14 @@ PARALLEL_UPDATES = 0
 # stationary, so an hourly signal-strength refresh is sufficient.
 SCAN_INTERVAL = timedelta(hours=1)
 
+_OPERATION_STATE_ENTITY = "BSH.Common.Status.OperationState"
+# Some appliances (confirmed: an oven, when its post-program display prompt is
+# left unanswered) never reset ProgramProgress/RemainingProgramTime/
+# ElapsedProgramTime once a program ends, unlike e.g. a dishwasher which
+# always resets them itself. "Ready" is excluded: a freshly selected program
+# legitimately shows its estimated duration before it has even started.
+_RESET_OPERATION_STATES = frozenset({"finished", "inactive", "error", "aborting"})
+
 
 async def async_setup_entry(
     hass: HomeAssistant,  # noqa: ARG001
@@ -66,8 +74,38 @@ class HCSensor(HCEntity, SensorEntity):
             else:
                 self._attr_options = [str(value) for value in self._entity.enum.values()]
 
+        if entity_description.reset_when_operation_state_terminal:
+            # OperationState changes must reach this entity's callback too, or
+            # native_value below goes stale until an unrelated update fires.
+            operation_state = self._runtime_data.appliance.entities.get(_OPERATION_STATE_ENTITY)
+            if operation_state is not None and operation_state not in self._entities:
+                self._entities.append(operation_state)
+
+    def _operation_state_is_terminal(self) -> bool:
+        if not self.entity_description.reset_when_operation_state_terminal:
+            return False
+        operation_state = self._runtime_data.appliance.entities.get(_OPERATION_STATE_ENTITY)
+        return (
+            operation_state is not None
+            and str(operation_state.value or "").lower() in _RESET_OPERATION_STATES
+        )
+
+    @property
+    def available(self) -> bool:
+        if self._operation_state_is_terminal():
+            # The oven can mark this entity available:false on the same terminal
+            # transition (see native_value); bypass just that device-side gate so
+            # the overlaid 0 is shown instead of "unavailable".
+            return (
+                self._runtime_data.coordinator.connected
+                or self._runtime_data.appliance.session.connected
+            )
+        return super().available
+
     @property
     def native_value(self) -> int | float | str:
+        if self._operation_state_is_terminal():
+            return 0
         if self._entity.value is None:
             return None
         if self._entity.enum and self.entity_description.has_state_translation:

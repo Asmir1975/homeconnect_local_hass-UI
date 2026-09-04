@@ -67,6 +67,7 @@ class HCSensorEntityDescription(
     available_access: tuple[Access] = (Access.READ, Access.READ_WRITE)
     has_state_translation: bool = False
     mapping: dict[str, str] = None
+    reset_when_operation_state_terminal: bool = False
 
 
 class HCBinarySensorEntityDescription(
