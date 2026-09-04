@@ -13,6 +13,7 @@ from custom_components.homeconnect_ws.helpers import (
     get_entities_from_regex,
     get_groups_from_regex,
     is_locked_option,
+    is_option,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
@@ -73,6 +74,19 @@ async def test_is_locked_option(mock_homeconnect_appliance: MockApplianceType) -
 
     await setting.update({"access": "read"})
     assert is_locked_option(setting) is False
+
+
+async def test_is_option(mock_homeconnect_appliance: MockApplianceType) -> None:
+    """is_option is true for an Option regardless of its current access."""
+    appliance = await mock_homeconnect_appliance(description=DEVICE_DESCRIPTION)
+    option = appliance.entities["Test.Option1"]
+    setting = appliance.entities["Test.Switch"]
+
+    for access in ("none", "read", "readwrite"):
+        await option.update({"access": access})
+        assert is_option(option) is True
+
+    assert is_option(setting) is False
 
 
 async def test_ensure_writable(mock_homeconnect_appliance: MockApplianceType) -> None:
