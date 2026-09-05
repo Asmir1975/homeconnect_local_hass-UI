@@ -131,6 +131,7 @@ ENTITY_DESCRIPTIONS: _EntityDescriptionsType = {
                 "Test.Program.Program1": "test_program_program1",
                 "Test.Program.Program2": "test_program_program2",
                 "Test.Program.Program3": "test_program_program3",
+                "Test.Program.Program4": "test_program_program4",
             },
         )
     ],
@@ -533,6 +534,17 @@ DEVICE_DESCRIPTION = DeviceDescription(
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=506),
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=507),
             ],
+        ),
+        EntityDescription(
+            uid=505,
+            name="Test.Program.Program4",
+            options=[
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=403),
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=404),
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=506),
+            ],
+            execution=Execution.START_ONLY,
+            fullOptionSet=True,
         ),
     ],
     selectedProgram=EntityDescription(

@@ -8,7 +8,13 @@ from homeassistant.components.select import SelectEntity
 from homeconnect_websocket.entities import Access, Execution
 
 from .entity import HCEntity
-from .helpers import create_entities, ensure_writable, entity_is_available, error_decorator
+from .helpers import (
+    create_entities,
+    ensure_writable,
+    entity_is_available,
+    error_decorator,
+    fill_full_option_set,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -162,7 +168,13 @@ class HCProgram(HCSelect):
         if selected_program.execution in (Execution.SELECT_ONLY, Execution.SELECT_AND_START):
             await selected_program.select()
         elif selected_program.execution == Execution.START_ONLY:
-            if entity_is_available(self._entity, self.entity_description.available_access):
+            if selected_program.full_option_set:
+                # Some appliances validate a program write against the program's
+                # complete option set and reject a partial one — true regardless
+                # of whether SelectedProgram happens to be writable right now.
+                options = fill_full_option_set(selected_program, {})
+                await selected_program.start(options, override_options=True)
+            elif entity_is_available(self._entity, self.entity_description.available_access):
                 # SelectedProgram is writable, this path already worked before the
                 # read-only fallback above existed. Leave its payload unchanged.
                 await selected_program.start()
