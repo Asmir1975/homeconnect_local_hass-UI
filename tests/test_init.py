@@ -8,6 +8,7 @@ from unittest.mock import ANY, Mock
 from custom_components.homeconnect_ws import coordinator
 from custom_components.homeconnect_ws.const import DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeconnect_websocket.testutils import MockAppliance
 from pytest_homeassistant_custom_component.common import MockConfigEntry
 
@@ -56,6 +57,31 @@ async def test_load_unload_entry(
     await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.NOT_LOADED
+
+    appliance.session.close.assert_awaited_once()
+
+
+async def test_stop_listener_closes_connection(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the appliance connection is closed when Home Assistant stops."""
+    appliance = MockAppliance(DEVICE_DESCRIPTION, "host", "mock_app", "mock_app_id", "PSK_KEY")
+    monkeypatch.setattr(coordinator, "HomeAppliance", Mock(return_value=appliance))
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA,
+        unique_id=MOCK_TLS_DEVICE_ID,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
 
     appliance.session.close.assert_awaited_once()
 

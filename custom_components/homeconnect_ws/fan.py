@@ -8,13 +8,12 @@ from typing import TYPE_CHECKING, Any, NamedTuple
 from homeassistant.components.fan import FanEntity, FanEntityFeature
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util.percentage import percentage_to_ranged_value, ranged_value_to_percentage
-from homeconnect_websocket.entities import Access
 from homeconnect_websocket.message import Action, Message
 
 from .const import DOMAIN
 from .entity import HCEntity
 from .entity_descriptions.common import POWER_OFF_STATE_NAMES
-from .helpers import create_entities, error_decorator
+from .helpers import create_entities, error_decorator, fill_full_option_set
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -149,29 +148,7 @@ class HCFan(HCEntity, FanEntity):
             for entity in self._speed_entities.values()
         }
         if program.full_option_set:
-            # Some appliances validate a program write against the program's
-            # complete option set and reject a partial one. Fill in every
-            # other writable option with its current value so the write is
-            # not rejected and unrelated settings are not overwritten. value
-            # (not value_raw) resolves enum options to their display name,
-            # not the protocol value, so only value_shadow/value_raw are
-            # usable here.
-            for option in program.options:
-                if option.uid in options or option.access != Access.READ_WRITE:
-                    continue
-                value = option.value_shadow
-                if value is None:
-                    value = option.value_raw
-                if value is None:
-                    # Never reported by the appliance yet; guessing (e.g. a
-                    # minimum) could silently change a setting the user never
-                    # touched. Fail clearly instead.
-                    raise ServiceValidationError(
-                        translation_domain=DOMAIN,
-                        translation_key="full_option_set_incomplete",
-                        translation_placeholders={"option": option.name},
-                    )
-                options[option.uid] = value
+            fill_full_option_set(program, options)
 
         await program.start(options, override_options=True)
 

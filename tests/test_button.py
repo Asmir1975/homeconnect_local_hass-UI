@@ -13,7 +13,7 @@ from custom_components.homeconnect_ws.entity_descriptions.common import generate
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.button import SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_FRIENDLY_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 from homeconnect_websocket.errors import CodeResponsError
 from homeconnect_websocket.message import Action, Message
@@ -73,6 +73,62 @@ async def test_start(
             },
         )
     )
+
+
+async def test_start_full_option_set(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Full-option-set programs must fill in every writable option, not send nulls."""
+    entity_id = "button.fake_brand_homeappliance_activeprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
+    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 504})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        domain=BUTTON_DOMAIN,
+        service=SERVICE_PRESS,
+        service_data={ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 504,
+                "options": [
+                    {"uid": 403, "value": 0},
+                    {"uid": 404, "value": 0},
+                    {"uid": 506, "value": 1},
+                    {"uid": 507, "value": 0},
+                ],
+            },
+        )
+    )
+
+
+async def test_start_full_option_set_incomplete(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Guessing a value for an option the appliance never reported is unsafe."""
+    entity_id = "button.fake_brand_homeappliance_activeprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 504})
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            domain=BUTTON_DOMAIN,
+            service=SERVICE_PRESS,
+            service_data={ATTR_ENTITY_ID: entity_id},
+            blocking=True,
+        )
 
 
 async def test_abort(

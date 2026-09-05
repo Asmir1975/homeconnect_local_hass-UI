@@ -63,6 +63,7 @@ async def test_setup(
         "test_program_program1",
         "test_program_program2",
         "test_program_program3",
+        "test_program_program4",
     ]
 
 
@@ -236,6 +237,41 @@ async def test_start_only_program_available_with_read_only_selected_program(
             resource="/ro/activeProgram",
             action=Action.POST,
             data={"program": 501, "options": []},
+        )
+    )
+
+
+async def test_start_only_full_option_set(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """A full-option-set START_ONLY program must fill options, not send an empty set."""
+    entity_id = "select.fake_brand_homeappliance_selectedprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_OPTION: "test_program_program4",
+        },
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 505,
+                "options": [
+                    {"uid": 403, "value": 0},
+                    {"uid": 404, "value": 0},
+                    {"uid": 506, "value": 1},
+                ],
+            },
         )
     )
 
