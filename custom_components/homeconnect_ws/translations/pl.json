@@ -1120,7 +1120,7 @@
         "name": "Nasycenie filtra węglowego"
       },
       "sensor_hob_zone_state": {
-        "name": "Stan strefy {group_name}",
+        "name": "Stan strefy{group_name}",
         "state": {
           "notselectable": "niedostępna",
           "off": "wyłączona",
@@ -1129,7 +1129,7 @@
         }
       },
       "sensor_hob_zone_operationstate": {
-        "name": "Stan operacyjny strefy {group_name}",
+        "name": "Stan operacyjny strefy{group_name}",
         "state": {
           "inactive": "bezczynny",
           "ready": "gotowy",
@@ -1143,7 +1143,7 @@
         }
       },
       "sensor_hob_zone_power_level": {
-        "name": "Poziom mocy strefy {group_name}",
+        "name": "Poziom mocy strefy{group_name}",
         "state": {
           "off": "wyłączony",
           "keepwarm": "utrzymywanie ciepła",
@@ -1169,7 +1169,7 @@
         }
       },
       "sensor_hob_zone_frying_sensor_level": {
-        "name": "Poziom czujnika smażenia strefy {group_name}",
+        "name": "Poziom czujnika smażenia strefy{group_name}",
         "state": {
           "off": "wyłączony",
           "70dc": "70 °C",
@@ -1186,22 +1186,22 @@
         }
       },
       "sensor_hob_zone_current_temperature": {
-        "name": "Bieżąca temperatura strefy {group_name}"
+        "name": "Bieżąca temperatura strefy{group_name}"
       },
       "sensor_hob_zone_heatup_progress": {
-        "name": "Postęp nagrzewania strefy {group_name}"
+        "name": "Postęp nagrzewania strefy{group_name}"
       },
       "sensor_hob_zone_duration": {
-        "name": "Czas trwania strefy {group_name}"
+        "name": "Czas trwania strefy{group_name}"
       },
       "sensor_hob_zone_elapsed_program_time": {
-        "name": "Miniony czas programu strefy {group_name}"
+        "name": "Miniony czas programu strefy{group_name}"
       },
       "sensor_hob_zone_remaining_program_time": {
-        "name": "Pozostały czas programu strefy {group_name}"
+        "name": "Pozostały czas programu strefy{group_name}"
       },
       "sensor_hob_zone_program_progress": {
-        "name": "Postęp programu strefy {group_name}"
+        "name": "Postęp programu strefy{group_name}"
       },
       "sensor_count_ristretto_espresso": {
         "name": "Liczba Ristretto/Espresso"
