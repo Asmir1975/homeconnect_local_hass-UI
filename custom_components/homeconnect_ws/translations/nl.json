@@ -942,7 +942,7 @@
         "name": "Verzadiging koolstoffilter"
       },
       "sensor_hob_zone_state": {
-        "name": "Status zone {group_name}",
+        "name": "Status zone{group_name}",
         "state": {
           "notselectable": "Niet selecteerbaar",
           "off": "Uit",
@@ -951,7 +951,7 @@
         }
       },
       "sensor_hob_zone_operationstate": {
-        "name": "Bedrijfsstatus zone {group_name}",
+        "name": "Bedrijfsstatus zone{group_name}",
         "state": {
           "inactive": "Inactief",
           "ready": "Paraat",
@@ -965,7 +965,7 @@
         }
       },
       "sensor_hob_zone_power_level": {
-        "name": "Vermogensinstelling zone {group_name}",
+        "name": "Vermogensinstelling zone{group_name}",
         "state": {
           "off": "Uit",
           "keepwarm": "Warmhouden",
@@ -991,7 +991,7 @@
         }
       },
       "sensor_hob_zone_frying_sensor_level": {
-        "name": "Temperatuurinstelling zone {group_name}",
+        "name": "Temperatuurinstelling zone{group_name}",
         "state": {
           "off": "Uit",
           "70dc": "70 °C",
@@ -1008,22 +1008,22 @@
         }
       },
       "sensor_hob_zone_current_temperature": {
-        "name": "Huidige temperatuur zone {group_name}"
+        "name": "Huidige temperatuur zone{group_name}"
       },
       "sensor_hob_zone_heatup_progress": {
-        "name": "Voortgang opwarming zone {group_name}"
+        "name": "Voortgang opwarming zone{group_name}"
       },
       "sensor_hob_zone_duration": {
-        "name": "Tijdsduur zone {group_name}"
+        "name": "Tijdsduur zone{group_name}"
       },
       "sensor_hob_zone_elapsed_program_time": {
-        "name": "Gelopen programmatijd zone {group_name}"
+        "name": "Gelopen programmatijd zone{group_name}"
       },
       "sensor_hob_zone_remaining_program_time": {
-        "name": "Resterende programmatijd zone {group_name}"
+        "name": "Resterende programmatijd zone{group_name}"
       },
       "sensor_hob_zone_program_progress": {
-        "name": "Programmavoortgang zone {group_name}"
+        "name": "Programmavoortgang zone{group_name}"
       },
       "sensor_count_ristretto_espresso": {
         "name": "Aantal Ristretto Espresso"

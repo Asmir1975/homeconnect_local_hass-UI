@@ -816,7 +816,7 @@
         "name": "Насыщение угольного фильтра"
       },
       "sensor_hob_zone_state": {
-        "name": "Состояние зоны {group_name}",
+        "name": "Состояние зоны{group_name}",
         "state": {
           "notselectable": "Не выбирается",
           "off": "Выключено",
@@ -825,7 +825,7 @@
         }
       },
       "sensor_hob_zone_operationstate": {
-        "name": "Состояние работы зоны {group_name}",
+        "name": "Состояние работы зоны{group_name}",
         "state": {
           "inactive": "Неактивно",
           "ready": "Готово",
@@ -839,7 +839,7 @@
         }
       },
       "sensor_hob_zone_power_level": {
-        "name": "Уровень мощности зоны {group_name}",
+        "name": "Уровень мощности зоны{group_name}",
         "state": {
           "off": "Выключено",
           "keepwarm": "Подогрев",
@@ -865,7 +865,7 @@
         }
       },
       "sensor_hob_zone_frying_sensor_level": {
-        "name": "Уровень сенсора жарки зоны {group_name}",
+        "name": "Уровень сенсора жарки зоны{group_name}",
         "state": {
           "off": "Выключено",
           "70dc": "70 °C",
@@ -882,22 +882,22 @@
         }
       },
       "sensor_hob_zone_current_temperature": {
-        "name": "Текущая температура зоны {group_name}"
+        "name": "Текущая температура зоны{group_name}"
       },
       "sensor_hob_zone_heatup_progress": {
-        "name": "Прогресс нагрева зоны {group_name}"
+        "name": "Прогресс нагрева зоны{group_name}"
       },
       "sensor_hob_zone_duration": {
-        "name": "Длительность зоны {group_name}"
+        "name": "Длительность зоны{group_name}"
       },
       "sensor_hob_zone_elapsed_program_time": {
-        "name": "Прошедшее время программы зоны {group_name}"
+        "name": "Прошедшее время программы зоны{group_name}"
       },
       "sensor_hob_zone_remaining_program_time": {
-        "name": "Оставшееся время программы зоны {group_name}"
+        "name": "Оставшееся время программы зоны{group_name}"
       },
       "sensor_hob_zone_program_progress": {
-        "name": "Прогресс программы зоны {group_name}"
+        "name": "Прогресс программы зоны{group_name}"
       },
       "sensor_count_ristretto_espresso": {
         "name": "Количество ристретто эспрессо"
