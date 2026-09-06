@@ -68,6 +68,10 @@ class HCSensorEntityDescription(
     has_state_translation: bool = False
     mapping: dict[str, str] = None
     reset_when_operation_state_terminal: bool = False
+    # Only meaningful together with reset_when_operation_state_terminal. Progress
+    # and elapsed time have no legitimate non-zero value before a program starts,
+    # unlike remaining time (a preview of the selected program's duration).
+    also_reset_when_ready: bool = False
 
 
 class HCBinarySensorEntityDescription(

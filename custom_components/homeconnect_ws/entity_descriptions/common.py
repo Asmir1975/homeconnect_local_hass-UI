@@ -255,13 +255,17 @@ def generate_elapsed_program_time(appliance: HomeAppliance) -> HCSensorEntityDes
     """Get ElapsedProgramTime sensor description."""
     if "BSH.Common.Option.ElapsedProgramTime" not in appliance.entities:
         return None
+    is_oven = _has_oven_cavity(appliance)
     return HCSensorEntityDescription(
         key="sensor_elapsed_program_time",
         entity="BSH.Common.Option.ElapsedProgramTime",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_unit_of_measurement=UnitOfTime.HOURS,
-        reset_when_operation_state_terminal=_has_oven_cavity(appliance),
+        reset_when_operation_state_terminal=is_oven,
+        # Unlike remaining time, elapsed time has no legitimate non-zero
+        # value before a program starts.
+        also_reset_when_ready=is_oven,
     )
 
 
@@ -269,11 +273,15 @@ def generate_program_progress(appliance: HomeAppliance) -> HCSensorEntityDescrip
     """Get ProgramProgress sensor description."""
     if "BSH.Common.Option.ProgramProgress" not in appliance.entities:
         return None
+    is_oven = _has_oven_cavity(appliance)
     return HCSensorEntityDescription(
         key="sensor_program_progress",
         entity="BSH.Common.Option.ProgramProgress",
         native_unit_of_measurement=PERCENTAGE,
-        reset_when_operation_state_terminal=_has_oven_cavity(appliance),
+        reset_when_operation_state_terminal=is_oven,
+        # Unlike remaining time, progress has no legitimate non-zero value
+        # before a program starts.
+        also_reset_when_ready=is_oven,
     )
 
 
