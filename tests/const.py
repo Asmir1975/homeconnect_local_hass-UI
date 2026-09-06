@@ -165,6 +165,13 @@ ENTITY_DESCRIPTIONS: _EntityDescriptionsType = {
             entity="Test.Sensor.Resettable",
             reset_when_operation_state_terminal=True,
         ),
+        HCSensorEntityDescription(
+            key="Test.Sensor.ResettableOnReady",
+            name="Sensor.ResettableOnReady",
+            entity="Test.Sensor.ResettableOnReady",
+            reset_when_operation_state_terminal=True,
+            also_reset_when_ready=True,
+        ),
     ],
     "start_button": [
         HCButtonEntityDescription(
@@ -285,6 +292,12 @@ DEVICE_DESCRIPTION = DeviceDescription(
         EntityDescription(
             uid=116,
             name="Test.Sensor.Resettable",
+            available=True,
+            access=Access.READ,
+        ),
+        EntityDescription(
+            uid=117,
+            name="Test.Sensor.ResettableOnReady",
             available=True,
             access=Access.READ,
         ),

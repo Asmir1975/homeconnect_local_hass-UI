@@ -770,6 +770,11 @@ async def test_oven_program_time_sensors_reset_on_terminal_state(
     assert generate_program_progress(appliance).reset_when_operation_state_terminal
     assert generate_remaining_program_time(appliance).reset_when_operation_state_terminal
     assert generate_elapsed_program_time(appliance).reset_when_operation_state_terminal
+    # Progress/elapsed have no legitimate non-zero preview value in Ready,
+    # unlike remaining time (a preview of the selected program's duration).
+    assert generate_program_progress(appliance).also_reset_when_ready
+    assert generate_elapsed_program_time(appliance).also_reset_when_ready
+    assert not generate_remaining_program_time(appliance).also_reset_when_ready
 
 
 async def test_non_oven_program_time_sensors_keep_default_behavior(
@@ -782,6 +787,8 @@ async def test_non_oven_program_time_sensors_keep_default_behavior(
     assert not generate_program_progress(appliance).reset_when_operation_state_terminal
     assert not generate_remaining_program_time(appliance).reset_when_operation_state_terminal
     assert not generate_elapsed_program_time(appliance).reset_when_operation_state_terminal
+    assert not generate_program_progress(appliance).also_reset_when_ready
+    assert not generate_elapsed_program_time(appliance).also_reset_when_ready
 
 
 def _speed_perfect_option(name: str, uid: int) -> dict:

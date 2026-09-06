@@ -253,6 +253,42 @@ async def test_reset_when_operation_state_terminal_not_reset_when_ready(
     assert state.state == "42"
 
 
+async def test_reset_when_operation_state_ready_if_also_reset_when_ready(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Progress/elapsed-style sensors must reset to 0 on Ready too, unlike a preview value."""
+    entity_id = "sensor.fake_brand_homeappliance_sensor_resettableonready"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await mock_appliance.entities["Test.Sensor.ResettableOnReady"].update(
+        {"value": 42, "available": False}
+    )
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 1})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "0"
+
+
+async def test_reset_when_operation_state_run_if_also_reset_when_ready(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """A running program's own value must still survive, only Ready is added."""
+    entity_id = "sensor.fake_brand_homeappliance_sensor_resettableonready"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await mock_appliance.entities["Test.Sensor.ResettableOnReady"].update({"value": 42})
+    await mock_appliance.entities["BSH.Common.Status.OperationState"].update({"value": 3})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "42"
+
+
 async def test_unaffected_sensor_ignores_operation_state(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,

@@ -33,8 +33,10 @@ _OPERATION_STATE_ENTITY = "BSH.Common.Status.OperationState"
 # Some appliances (confirmed: an oven, when its post-program display prompt is
 # left unanswered) never reset ProgramProgress/RemainingProgramTime/
 # ElapsedProgramTime once a program ends, unlike e.g. a dishwasher which
-# always resets them itself. "Ready" is excluded: a freshly selected program
-# legitimately shows its estimated duration before it has even started.
+# always resets them itself. "Ready" is excluded here: a freshly selected
+# program legitimately shows its estimated remaining duration as a preview
+# before it has even started. Progress and elapsed time have no such
+# legitimate non-zero preview value, see also_reset_when_ready below.
 _RESET_OPERATION_STATES = frozenset({"finished", "inactive", "error", "aborting"})
 
 
@@ -81,18 +83,20 @@ class HCSensor(HCEntity, SensorEntity):
             if operation_state is not None and operation_state not in self._entities:
                 self._entities.append(operation_state)
 
-    def _operation_state_is_terminal(self) -> bool:
+    def _should_reset_to_zero(self) -> bool:
         if not self.entity_description.reset_when_operation_state_terminal:
             return False
         operation_state = self._runtime_data.appliance.entities.get(_OPERATION_STATE_ENTITY)
-        return (
-            operation_state is not None
-            and str(operation_state.value or "").lower() in _RESET_OPERATION_STATES
-        )
+        if operation_state is None:
+            return False
+        value = str(operation_state.value or "").lower()
+        if value in _RESET_OPERATION_STATES:
+            return True
+        return self.entity_description.also_reset_when_ready and value == "ready"
 
     @property
     def available(self) -> bool:
-        if self._operation_state_is_terminal():
+        if self._should_reset_to_zero():
             # The oven can mark this entity available:false on the same terminal
             # transition (see native_value); bypass just that device-side gate so
             # the overlaid 0 is shown instead of "unavailable".
@@ -104,7 +108,7 @@ class HCSensor(HCEntity, SensorEntity):
 
     @property
     def native_value(self) -> int | float | str:
-        if self._operation_state_is_terminal():
+        if self._should_reset_to_zero():
             return 0
         if self._entity.value is None:
             return None
