@@ -230,9 +230,6 @@
       "switch_oven_light_during_operation": {
         "name": "Oven Light during Operation"
       },
-      "switch_oven_cavity_light": {
-        "name": "Cavity Light"
-      },
       "switch_oven_sabbath_mode": {
         "name": "Sabbath mode"
       },
@@ -4117,6 +4114,9 @@
       },
       "light_cooking_ambient_lighting": {
         "name": "Ambient Light"
+      },
+      "light_oven_cavity": {
+        "name": "Cavity Light"
       }
     },
     "fan": {
