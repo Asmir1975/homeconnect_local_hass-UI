@@ -1,62 +1,91 @@
 {
     "entity": {
         "switch": {
+          "switch_brilliance_dry": {
+            "default": "mdi:shimmer"
+          },
+          "switch_child_lock": {
+            "default": "mdi:lock",
+            "state": {
+              "off": "mdi:lock-open"
+            }
+          },
+          "switch_cup_warmer": {
+            "default": "mdi:heat-wave"
+          },
+          "switch_extra_dry": {
+            "default": "mdi:heat-wave"
+          },
+          "switch_extra_dry_option": {
+            "default": "mdi:heat-wave"
+          },
+          "switch_extra_rinse": {
+            "default": "mdi:water-plus"
+          },
+          "switch_half_load": {
+            "default": "mdi:fraction-one-half"
+          },
+          "switch_hob_energy_consumption_indication": {
+            "default": "mdi:transmission-tower"
+          },
+          "switch_hygiene_plus": {
+            "default": "mdi:thermometer-plus"
+          },
+          "switch_info_light": {},
+          "switch_intensiv_zone": {
+            "default": "mdi:pot-steam"
+          },
+          "switch_laundry_idos1_active": {
+            "default": "mdi:office-building-cog"
+          },
+          "switch_laundry_idos2_active": {
+            "default": "mdi:office-building-cog"
+          },
+          "switch_multiple_beverages": {
+            "default": "mdi:select-multiple"
+          },
+          "switch_oven_sabbath_mode": {
+            "default": "mdi:star-david"
+          },
+          "switch_power_state": {
+            "default": "mdi:power"
+          },
+          "switch_pretreatment": {
+            "default": "mdi:pot-steam-outline"
+          },
+          "switch_refrigeration_light_theater_mode": {
+            "default": "mdi:theater"
+          },
+          "switch_refrigerator_dispenser_enabled": {
+            "default": "mdi:snowflake"
+          },
           "switch_refrigerator_dispenser_party_mode": {
             "default": "mdi:party-popper"
           },
-            "switch_power_state": {
-                "default": "mdi:power"
-            },
-            "switch_hygiene_plus": {
-                "default": "mdi:thermometer-plus"
-            },
-            "switch_extra_dry_option": {
-                "default": "mdi:heat-wave"
-            },
-            "switch_intensiv_zone": {
-                "default": "mdi:arrow-decision"
-            },
-            "switch_vario_speed_plus": {
-                "default": "mdi:timer-play-outline"
-            },
-            "switch_silence_on_demand": {
-                "default": "mdi:volume-off"
-            },
-            "switch_extra_dry": {},
-            "switch_speed_on_demand": {
-                "default": "mdi:speedometer"
-            },
-            "switch_info_light": {},
-            "switch_brilliance_dry": {
-                "default": "mdi:shimmer"
-            },
-            "switch_multiple_beverages": {
-                "default": "mdi:select-multiple"
-            },
-            "switch_half_load": {
-                "default": "mdi:fraction-one-half"
-            },
-            "switch_child_lock": {
-                "default": "mdi:lock",
-                "state": {
-                    "off": "mdi:lock-open"
-                }
-            },
-            "switch_laundry_idos1_active": {
-                "default": "mdi:office-building-cog"
-            },
-            "switch_laundry_idos2_active": {
-                "default": "mdi:office-building-cog"
-            },
-            "switch_extra_rinse": {
-                "default": "mdi:water-plus"
-            },
-            "switch_pretreatment": {
-                "default": "mdi:pot-steam-outline"
-            },
-            "switch_cup_warmer": {
-                "default": "mdi:heat-wave"
-            }
+          "switch_refrigerator_door_assistant_freezer": {
+            "default": "mdi:door"
+          },
+          "switch_refrigerator_eco": {
+            "default": "mdi:sprout"
+          },
+          "switch_refrigerator_sabbath_mode": {
+            "default": "mdi:star-david"
+          },
+          "switch_silence_on_demand": {
+            "default": "mdi:volume-off"
+          },
+          "switch_speed_on_demand": {
+            "default": "mdi:speedometer"
+          },
+          "switch_super_freezer": {
+            "default": "mdi:speedometer"
+          },
+          "switch_super_refrigerator": {
+            "default": "mdi:speedometer"
+          },
+          "switch_vario_speed_plus": {
+            "default": "mdi:timer-play-outline"
+          }
         },
         "binary_sensor": {
           "binary_sensor_water_expired": {
