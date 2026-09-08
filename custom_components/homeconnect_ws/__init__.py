@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, Never
@@ -17,6 +18,9 @@ from homeassistant.helpers.device_registry import (
 )
 from homeassistant.util.hass_dict import HassKey
 from homeconnect_websocket import CodeResponsError, Entity
+from homeconnect_websocket.entities import Access
+from homeconnect_websocket.message import Action
+from homeconnect_websocket.message import Message as HC_Message
 
 from .const import (
     CONF_DEV_OVERRIDE_HOST,
@@ -73,6 +77,97 @@ type HCConfigEntry = ConfigEntry[HCData]
 
 HC_KEY: HassKey[HCConfig] = HassKey(DOMAIN)
 
+# Roughly one broadcast cycle - some appliances report ActiveProgram's access
+# as READ_WRITE only for a narrow window on their own schedule. Long enough to
+# catch the next window, short enough to fail fast if the appliance stops
+# broadcasting it at all.
+_ACTIVE_PROGRAM_WRITABLE_TIMEOUT = 35
+
+
+def _raise_start_error(err: CodeResponsError) -> Never:
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="start_program_error",
+        translation_placeholders={"code": err.code, "resource": err.resource},
+    ) from None
+
+
+async def _wait_for_writable(entity: Entity) -> None:
+    """
+    Wait for entity.access to allow a write, bounded to about one broadcast cycle.
+
+    Some appliances broadcast a descriptionChange NOTIFY flipping an entity's
+    access between READ and READ_WRITE on their own schedule rather than
+    accepting a write at any time. AccessMixin already tracks the live access
+    state, so wait for the next update that makes it writable instead of
+    firing blind into a closed window.
+    """
+    if getattr(entity, "access", None) in (Access.READ_WRITE, Access.WRITE_ONLY):
+        return
+    became_writable = asyncio.Event()
+
+    async def _on_update(_: Entity) -> None:
+        if getattr(entity, "access", None) in (Access.READ_WRITE, Access.WRITE_ONLY):
+            became_writable.set()
+
+    entity.register_callback(_on_update)
+    try:
+        async with asyncio.timeout(_ACTIVE_PROGRAM_WRITABLE_TIMEOUT):
+            await became_writable.wait()
+    except TimeoutError:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="finish_in_not_writable",
+        ) from None
+    finally:
+        entity.unregister_callback(_on_update)
+
+
+async def _set_finish_in_with_active_program(
+    appliance: HomeAppliance, finish_in_entity: Entity, seconds: int
+) -> None:
+    """
+    Fall back for appliances where FinishInRelative can't be set on its own.
+
+    Some appliances reject a standalone FinishInRelative write (CodeResponsError
+    501 or 541) and only accept FinishInRelative and ActiveProgram written
+    together in a single /ro/values message, sent while ActiveProgram's own
+    access briefly reports READ_WRITE.
+    """
+    active_program_entity = appliance.entities.get("BSH.Common.Root.ActiveProgram")
+    program = appliance.selected_program
+    if active_program_entity is None or program is None:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_program_selected",
+        )
+    await _wait_for_writable(active_program_entity)
+    message = HC_Message(
+        resource="/ro/values",
+        action=Action.POST,
+        data=[
+            {"uid": finish_in_entity.uid, "value": seconds},
+            {"uid": active_program_entity.uid, "value": program.uid},
+        ],
+    )
+    try:
+        await appliance.session.send_sync(message)
+    except CodeResponsError as exc:
+        _raise_start_error(exc)
+
+
+async def _set_finish_in_or_raise(
+    appliance: HomeAppliance, finish_in_entity: Entity, seconds: int
+) -> None:
+    try:
+        await finish_in_entity.set_value(seconds)
+    except CodeResponsError as exc:
+        # Only these two codes need the combined-write fallback; others are
+        # real, unrelated rejections and should surface immediately.
+        if exc.code not in (501, 541):
+            _raise_start_error(exc)
+        await _set_finish_in_with_active_program(appliance, finish_in_entity, seconds)
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up integration global config."""
@@ -97,13 +192,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             + int(data.get("minutes", 0)) * 60
             + int(data.get("seconds", 0))
         )
-
-    def _raise_start_error(err: CodeResponsError) -> Never:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="start_program_error",
-            translation_placeholders={"code": err.code, "resource": err.resource},
-        ) from None
 
     async def _set_value_or_raise(entity: Entity, relative_time_in_seconds: int) -> None:
         try:
@@ -155,11 +243,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async def handle_set_finish_in(call: ServiceCall) -> ServiceResponse:
         config_entry = await get_config_entry_from_call(hass, call)
         appliance = config_entry.runtime_data.appliance
-        await _set_value_or_raise(
-            _get_entity_or_raise(
-                appliance, "BSH.Common.Option.FinishInRelative", "finish_in_not_available"
-            ),
-            _duration_to_seconds(call.data["finish_in"]),
+        finish_in_entity = _get_entity_or_raise(
+            appliance, "BSH.Common.Option.FinishInRelative", "finish_in_not_available"
+        )
+        await _set_finish_in_or_raise(
+            appliance, finish_in_entity, _duration_to_seconds(call.data["finish_in"])
         )
 
     hass.services.async_register(DOMAIN, "start_program", handle_start_program)
