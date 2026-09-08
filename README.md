@@ -7,6 +7,7 @@
 [![Version](https://img.shields.io/github/v/release/Asmir1975/homeconnect_local_hass-UI?style=flat-square&logo=github&color=41BDF5&logoColor=white&cacheSeconds=15600)](https://github.com/Asmir1975/homeconnect_local_hass-UI/releases)
 
 [![GitHub stars](https://img.shields.io/github/stars/Asmir1975/homeconnect_local_hass-UI?style=flat-square&cacheSeconds=15600)](https://github.com/Asmir1975/homeconnect_local_hass-UI/stargazers)
+[![GitHub downloads](https://img.shields.io/github/downloads/Asmir1975/homeconnect_local_hass-UI/total?style=flat-square&cacheSeconds=15600)](https://github.com/Asmir1975/homeconnect_local_hass-UI/releases)
 
 </div>
 
