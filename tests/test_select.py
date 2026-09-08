@@ -4,6 +4,7 @@ from __future__ import annotations
 
 from typing import TYPE_CHECKING
 
+import pytest
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -16,6 +17,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
+from homeassistant.exceptions import ServiceValidationError
 from homeconnect_websocket.entities import Access, Execution
 from homeconnect_websocket.message import Action, Message
 
@@ -284,14 +286,16 @@ async def test_start_only_availability_follows_program_execution_updates(
     """
     Test a pure Program.execution update reaches this entity's HA state.
 
-    The read-only-SelectedProgram fallback reads Program.execution/available for
-    every mapped program, but only ActiveProgram was subscribed for callbacks.
-    A program flipping to START_ONLY without any SelectedProgram/ActiveProgram
-    value change must still refresh availability, not just future unrelated
-    updates.
+    Access.READ alone is now always available via is_locked_option(), so this
+    fallback only still matters for Access.NONE (SelectedProgram inapplicable,
+    e.g. no program selected yet). The read-only-SelectedProgram fallback reads
+    Program.execution/available for every mapped program, but only
+    ActiveProgram was subscribed for callbacks. A program flipping to
+    START_ONLY without any SelectedProgram/ActiveProgram value change must
+    still refresh availability, not just future unrelated updates.
     """
     entity_id = "select.fake_brand_homeappliance_selectedprogram"
-    await mock_appliance.entities["Test.SelectedProgram"].update({"access": Access.READ})
+    await mock_appliance.entities["Test.SelectedProgram"].update({"access": Access.NONE})
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
 
     # Only Program3 defaults to START_ONLY; the two Program*/Favorite* entries
@@ -365,3 +369,73 @@ async def test_select_program(
             },
         )
     )
+
+
+async def test_selected_program_read_write_read_read_write_sequence(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """SelectedProgram stays available and readonly across a Delayed Start lock/unlock."""
+    entity_id = "select.fake_brand_homeappliance_selectedprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "test_program_program1"
+    assert state.attributes["readonly"] is False
+
+    await mock_appliance.entities["Test.SelectedProgram"].update({"access": Access.READ})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state != STATE_UNAVAILABLE
+    assert state.state == "test_program_program1"
+    assert state.attributes["readonly"] is True
+
+    await mock_appliance.entities["Test.SelectedProgram"].update({"access": Access.READ_WRITE})
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == "test_program_program1"
+    assert state.attributes["readonly"] is False
+
+
+async def test_select_program_raises_when_selected_program_locked(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Selecting a SELECT_ONLY/SELECT_AND_START program raises while SelectedProgram is locked."""
+    entity_id = "select.fake_brand_homeappliance_selectedprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.SelectedProgram"].update({"access": Access.READ})
+    await hass.async_block_till_done()
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_OPTION: "test_program_program1",
+            },
+            blocking=True,
+        )
+
+    mock_appliance.session.send_sync.assert_not_awaited()
+
+
+async def test_selected_program_unavailable_when_access_none(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """SelectedProgram stays unavailable when Access.NONE, unlike Access.READ."""
+    entity_id = "select.fake_brand_homeappliance_selectedprogram"
+    await mock_appliance.entities["Test.SelectedProgram"].update({"access": Access.NONE})
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE

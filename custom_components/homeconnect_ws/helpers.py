@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, Any
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.service import async_extract_config_entry_ids
-from homeconnect_websocket.entities import Access, Option
+from homeconnect_websocket.entities import Access, Option, SelectedProgram
 from homeconnect_websocket.errors import AccessError, CodeResponsError, NotConnectedError
 
 from .const import DOMAIN
@@ -110,20 +110,20 @@ def entity_is_available(entity: HcEntity, available_access: tuple[Access]) -> bo
 
 
 def is_option(entity: HcEntity | None) -> bool:
-    """Whether entity is a program Option at all, regardless of its current access."""
-    return isinstance(entity, Option)
+    """Whether entity is a program Option or SelectedProgram, regardless of its current access."""
+    return isinstance(entity, Option | SelectedProgram)
 
 
 def is_locked_option(entity: HcEntity | None) -> bool:
     """
-    Whether entity is a program Option currently locked read-only, not just inapplicable.
+    Whether entity is a program Option or SelectedProgram currently locked read-only.
 
-    Home Connect locks some Options to read-only while a program runs, rather
-    than making them unapplicable; the official app shows these as
-    visible-but-disabled, not hidden. Access.NONE ("not applicable at all")
-    is unaffected and stays genuinely unavailable.
+    Home Connect locks some Options, and the program selector itself (e.g. during
+    Delayed Start), to read-only while a program runs, rather than making them
+    unapplicable; the official app shows these as visible-but-disabled, not hidden.
+    Access.NONE ("not applicable at all") is unaffected and stays genuinely unavailable.
     """
-    return isinstance(entity, Option) and entity.access == Access.READ
+    return isinstance(entity, Option | SelectedProgram) and entity.access == Access.READ
 
 
 def ensure_writable(entity: HcEntity | None) -> None:

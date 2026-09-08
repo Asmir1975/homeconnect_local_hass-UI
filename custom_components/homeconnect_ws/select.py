@@ -166,6 +166,9 @@ class HCProgram(HCSelect):
     async def async_select_option(self, option: str) -> None:
         selected_program = self._runtime_data.appliance.programs[self._rev_programs[option]]
         if selected_program.execution in (Execution.SELECT_ONLY, Execution.SELECT_AND_START):
+            # START_ONLY below writes ActiveProgram directly and has its own
+            # read-only fallback; only this path actually writes SelectedProgram.
+            ensure_writable(self._entity)
             await selected_program.select()
         elif selected_program.execution == Execution.START_ONLY:
             if selected_program.full_option_set:
