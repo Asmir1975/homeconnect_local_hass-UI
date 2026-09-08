@@ -4170,6 +4170,9 @@
     "finish_in_not_available": {
       "message": "'Finish in' is not available on this Appliance"
     },
+    "finish_in_not_writable": {
+      "message": "Appliance did not open a writable window for 'Finish in' in time - try again"
+    },
     "start_program_error": {
       "message": "Error {code} starting program, resource {resource}"
     },

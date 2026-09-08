@@ -2604,6 +2604,9 @@
     "finish_in_not_available": {
       "message": "Opcja 'Zakończ za' nie jest dostępna w tym urządzeniu"
     },
+    "finish_in_not_writable": {
+      "message": "Urządzenie nie otworzyło na czas okna zapisu dla 'Zakończ za' - spróbuj ponownie"
+    },
     "start_program_error": {
       "message": "Błąd {code} podczas uruchamiania programu, zasób {resource}"
     },

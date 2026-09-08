@@ -4170,6 +4170,9 @@
     "finish_in_not_available": {
       "message": "'Fertig in' ist an diesem Gerät nicht verfügbar"
     },
+    "finish_in_not_writable": {
+      "message": "Gerät hat kein Schreibfenster für 'Fertig in' rechtzeitig geöffnet - bitte erneut versuchen"
+    },
     "start_program_error": {
       "message": "Fehler {code} beim Starten des Programms, Ressource {resource}"
     },
