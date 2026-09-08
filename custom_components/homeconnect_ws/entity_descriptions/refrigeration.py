@@ -297,6 +297,11 @@ REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity="Refrigeration.Common.Command.Dispenser.WaterFilterReset",
             entity_category=EntityCategory.CONFIG,
         ),
+        HCButtonEntityDescription(
+            key="button_refrigerator_open_door",
+            entity="BSH.Common.Command.OpenDoor",
+            entity_registry_enabled_default=False,
+        ),
     ],
     "number": [
         HCNumberEntityDescription(
@@ -431,6 +436,12 @@ REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity_category=EntityCategory.CONFIG,
         ),
         HCSwitchEntityDescription(
+            key="switch_refrigerator_door_assistant_fridge",
+            entity="Refrigeration.Common.Setting.Door.AssistantFridge",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        HCSwitchEntityDescription(
             key="switch_refrigeration_light_internal",
             entity="Refrigeration.Common.Setting.Light.Internal.Power",
             device_class=SwitchDeviceClass.SWITCH,
@@ -474,6 +485,12 @@ REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         HCSelectEntityDescription(
             key="select_refrigerator_door_assistant_freezer_force",
             entity="Refrigeration.Common.Setting.Door.AssistantForceFreezer",
+            device_class=SensorDeviceClass.ENUM,
+            has_state_translation=True,
+        ),
+        HCSelectEntityDescription(
+            key="select_refrigerator_door_assistant_fridge_force",
+            entity="Refrigeration.Common.Setting.Door.AssistantForceFridge",
             device_class=SensorDeviceClass.ENUM,
             has_state_translation=True,
         ),

@@ -65,6 +65,9 @@
           "switch_refrigerator_door_assistant_freezer": {
             "default": "mdi:door"
           },
+          "switch_refrigerator_door_assistant_fridge": {
+            "default": "mdi:door"
+          },
           "switch_refrigerator_eco": {
             "default": "mdi:sprout"
           },
@@ -392,6 +395,9 @@
         "button": {
           "button_water_filter_reset": {
             "default": "mdi:restore"
+          },
+          "button_refrigerator_open_door": {
+            "default": "mdi:door-open"
           },
             "button_abort_program": {
                 "default": "mdi:stop"
