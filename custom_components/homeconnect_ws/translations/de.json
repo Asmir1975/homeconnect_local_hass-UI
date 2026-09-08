@@ -242,6 +242,9 @@
       "switch_refrigerator_door_assistant_freezer": {
         "name": "Gefrierschrank-Türassistent"
       },
+      "switch_refrigerator_door_assistant_fridge": {
+        "name": "Kühlschrank-Türassistent"
+      },
       "switch_refrigeration_light_internal": {
         "name": "Innenbeleuchtung"
       },
@@ -3926,6 +3929,14 @@
           "highforce": "Hoch"
         }
       },
+      "select_refrigerator_door_assistant_fridge_force": {
+        "name": "Kühlschrank-Türassistent Stärke",
+        "state": {
+          "lowforce": "Niedrig",
+          "middleforce": "Mittel",
+          "highforce": "Hoch"
+        }
+      },
       "select_chiller_common_preset": {
         "name": "Frischezone-Voreinstellung",
         "state": {
@@ -4002,6 +4013,9 @@
     "button": {
       "button_water_filter_reset": {
         "name": "Wasserfilter zurücksetzen"
+      },
+      "button_refrigerator_open_door": {
+        "name": "Tür öffnen"
       },
       "button_abort_program": {
         "name": "Abbrechen"

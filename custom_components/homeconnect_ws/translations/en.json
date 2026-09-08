@@ -242,6 +242,9 @@
       "switch_refrigerator_door_assistant_freezer": {
         "name": "Freezer Door Assistant"
       },
+      "switch_refrigerator_door_assistant_fridge": {
+        "name": "Fridge Door Assistant"
+      },
       "switch_refrigeration_light_internal": {
         "name": "Internal Light"
       },
@@ -3926,6 +3929,14 @@
           "highforce": "High"
         }
       },
+      "select_refrigerator_door_assistant_fridge_force": {
+        "name": "Fridge Door Assistant force",
+        "state": {
+          "lowforce": "Low",
+          "middleforce": "Middle",
+          "highforce": "High"
+        }
+      },
       "select_chiller_common_preset": {
         "name": "Chiller preset",
         "state": {
@@ -4002,6 +4013,9 @@
     "button": {
       "button_water_filter_reset": {
         "name": "Water filter reset"
+      },
+      "button_refrigerator_open_door": {
+        "name": "Open door"
       },
       "button_abort_program": {
         "name": "Abort"
