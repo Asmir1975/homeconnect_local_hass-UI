@@ -1,0 +1,56 @@
+<svg viewBox="0 0 1200 280" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Home Connect Local: local control for Bosch, Siemens and Neff dishwasher, hob and oven, no cloud required, connected over the local network">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1200" y2="280" gradientUnits="userSpaceOnUse">
+      <stop offset="0" stop-color="#0b1220"/>
+      <stop offset="1" stop-color="#132038"/>
+    </linearGradient>
+  </defs>
+
+  <rect x="0" y="0" width="1200" height="280" rx="18" fill="url(#bg)"/>
+
+  <!-- wordmark -->
+  <text x="60" y="112" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="52" font-weight="700" fill="#f2f7ff">Home Connect Local</text>
+  <text x="61" y="148" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="19" fill="#7fb8e8">Local control for Bosch, Siemens &amp; Neff appliances</text>
+  <text x="61" y="174" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="19" fill="#7fb8e8">No cloud required after setup</text>
+
+  <!-- appliance chips -->
+  <g stroke="#41BDF5" stroke-width="2" fill="none">
+    <!-- dishwasher -->
+    <rect x="700" y="52" width="112" height="112" rx="10"/>
+    <rect x="722" y="72" width="68" height="60" rx="4"/>
+    <line x1="734" y1="72" x2="734" y2="132"/>
+    <circle cx="756" cy="92" r="3" fill="#41BDF5" stroke="none"/>
+    <circle cx="768" cy="92" r="3" fill="#41BDF5" stroke="none"/>
+    <circle cx="780" cy="92" r="3" fill="#41BDF5" stroke="none"/>
+
+    <!-- hob -->
+    <rect x="844" y="52" width="112" height="112" rx="10"/>
+    <circle cx="879" cy="88" r="15"/>
+    <circle cx="921" cy="88" r="15"/>
+    <circle cx="879" cy="128" r="15"/>
+    <circle cx="921" cy="128" r="15"/>
+
+    <!-- oven -->
+    <rect x="988" y="52" width="112" height="112" rx="10"/>
+    <rect x="1006" y="86" width="76" height="58" rx="4"/>
+    <circle cx="1044" cy="68" r="6"/>
+  </g>
+
+  <text x="756" y="185" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" fill="#a9c7e8" text-anchor="middle">Dishwasher</text>
+  <text x="900" y="185" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" fill="#a9c7e8" text-anchor="middle">Hob</text>
+  <text x="1044" y="185" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="15" fill="#a9c7e8" text-anchor="middle">Oven</text>
+
+  <!-- local network line -->
+  <line x1="700" y1="210" x2="1100" y2="210" stroke="#2c4568" stroke-width="1.5" stroke-dasharray="3 5"/>
+  <line x1="756" y1="164" x2="756" y2="210" stroke="#2c4568" stroke-width="1.5" stroke-dasharray="3 5"/>
+  <line x1="900" y1="164" x2="900" y2="210" stroke="#2c4568" stroke-width="1.5" stroke-dasharray="3 5"/>
+  <line x1="1044" y1="164" x2="1044" y2="210" stroke="#2c4568" stroke-width="1.5" stroke-dasharray="3 5"/>
+
+  <!-- local hub -->
+  <g transform="translate(900,236)">
+    <circle r="4" fill="#41BDF5"/>
+    <path d="M -14 -6 A 20 20 0 0 1 14 -6" stroke="#41BDF5" stroke-width="2" fill="none"/>
+    <path d="M -8 0 A 12 12 0 0 1 8 0" stroke="#41BDF5" stroke-width="2" fill="none"/>
+  </g>
+  <text x="900" y="264" font-family="-apple-system,Segoe UI,Helvetica,Arial,sans-serif" font-size="14" fill="#7fb8e8" text-anchor="middle">local network</text>
+</svg>
