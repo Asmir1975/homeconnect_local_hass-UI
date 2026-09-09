@@ -271,6 +271,12 @@
       }
     },
     "binary_sensor": {
+      "binary_sensor_favorite_short_press": {
+        "name": "Favoritentaste kurz gedrückt"
+      },
+      "binary_sensor_favorite_long_press": {
+        "name": "Favoritentaste lang gedrückt"
+      },
       "binary_sensor_release_rinse_hold_pending": {
         "name": "Spülstopp freigeben ausstehend"
       },

@@ -271,6 +271,12 @@
       }
     },
     "binary_sensor": {
+      "binary_sensor_favorite_short_press": {
+        "name": "Favorite short press"
+      },
+      "binary_sensor_favorite_long_press": {
+        "name": "Favorite long press"
+      },
       "binary_sensor_release_rinse_hold_pending": {
         "name": "Release rinse hold pending"
       },
