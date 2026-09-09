@@ -5,7 +5,7 @@
     "file_upload"
   ],
   "codeowners": [
-    "@chris-mc1"
+    "@Asmir1975"
   ],
   "config_flow": true,
   "documentation": "https://github.com/Asmir1975/homeconnect_local_hass-UI",

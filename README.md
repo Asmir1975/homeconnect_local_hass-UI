@@ -13,7 +13,7 @@
 
 > **Fork of [chris-mc1/homeconnect_local_hass](https://github.com/chris-mc1/homeconnect_local_hass)**
 >
-> This fork adds a built-in profile downloader to the HA setup flow, so you no longer need the separate [bruestel/homeconnect-profile-downloader](https://github.com/bruestel/homeconnect-profile-downloader) desktop tool on Windows, macOS, or Linux.
+> This fork adds a built-in profile downloader to the HA setup flow, so you no longer need the separate [bruestel/homeconnect-profile-downloader](https://github.com/bruestel/homeconnect-profile-downloader) desktop tool on Windows, macOS, or Linux. Beyond that, it is developed independently, with its own ongoing bug fixes and features on top of the upstream codebase.
 
 The **Home Connect Local** integration lets you control Bosch and Siemens home appliances directly over your local network. No cloud required after setup.
 
@@ -62,9 +62,7 @@ The authentication uses the same Authorization Code + PKCE flow as the bruestel 
 
 ## Reporting Issues
 
-For issues specific to this fork (profile download / sign-in flow), [open an issue here](https://github.com/Asmir1975/homeconnect_local_hass-UI/issues).
-
-For issues with the core integration (entities, local connection, protocols), please check the upstream repo: [chris-mc1/homeconnect_local_hass](https://github.com/chris-mc1/homeconnect_local_hass).
+[Open an issue here](https://github.com/Asmir1975/homeconnect_local_hass-UI/issues) for anything you run into with this fork, whether it's the profile download / sign-in flow or the core integration itself.
 
 ## Credits
 
