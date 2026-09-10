@@ -245,9 +245,6 @@
       "switch_refrigerator_door_assistant_fridge": {
         "name": "Kühlschrank-Türassistent"
       },
-      "switch_refrigeration_light_internal": {
-        "name": "Innenbeleuchtung"
-      },
       "switch_refrigeration_light_theater_mode": {
         "name": "Innenbeleuchtung Theatermodus"
       },

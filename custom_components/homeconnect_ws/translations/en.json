@@ -245,9 +245,6 @@
       "switch_refrigerator_door_assistant_fridge": {
         "name": "Fridge Door Assistant"
       },
-      "switch_refrigeration_light_internal": {
-        "name": "Internal Light"
-      },
       "switch_refrigeration_light_theater_mode": {
         "name": "Internal Light TheaterMode"
       },
