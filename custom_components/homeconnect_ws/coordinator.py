@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import logging
 import time
 from copy import deepcopy
@@ -21,6 +22,8 @@ from homeconnect_websocket import (
 from .const import (
     CONF_AES_IV,
     CONF_PSK,
+    INITIAL_CONNECT_BACKOFF,
+    MAX_CONNECT_BACKOFF,
     MAX_RECONECT_TIME,
 )
 
@@ -83,6 +86,7 @@ class HomeConnectCoordinator(DataUpdateCoordinator):
             "Connecting to %s", self.config_entry.data[CONF_DESCRIPTION]["info"].get("vib")
         )
         first_failure = True
+        backoff = INITIAL_CONNECT_BACKOFF
         while self._connecting:
             try:
                 await self.appliance.connect()
@@ -107,6 +111,11 @@ class HomeConnectCoordinator(DataUpdateCoordinator):
                 await self.appliance.close()
                 msg = f"Can't connect to {self.config_entry.data[CONF_HOST]}"
                 self.logger.exception(msg)
+            # Wait before the next attempt so an unreachable device does not cause a
+            # tight connect/close loop. Skip the wait if close() ended the loop.
+            if self._connecting:
+                await asyncio.sleep(backoff)
+                backoff = min(backoff * 2, MAX_CONNECT_BACKOFF)
 
     async def _async_update_data(self) -> None:
         return None

@@ -27,3 +27,8 @@ CONF_DEV_OVERRIDE_HOST: Final = "override_host"
 CONF_DEV_OVERRIDE_PSK: Final = "override_psk"
 
 MAX_RECONECT_TIME: Final = 300
+
+# Backoff for the initial connect loop in the coordinator (seconds). Separate from
+# the library's own reconnect backoff, which only covers an already-established session.
+INITIAL_CONNECT_BACKOFF: Final = 2
+MAX_CONNECT_BACKOFF: Final = 60
