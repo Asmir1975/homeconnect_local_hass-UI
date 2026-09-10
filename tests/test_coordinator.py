@@ -129,9 +129,7 @@ async def test_connect_stops_when_closed_during_backoff() -> None:
     async def stop_during_sleep(_delay: float) -> None:
         coord._connecting = False
 
-    with patch.object(
-        coordinator.asyncio, "sleep", new=AsyncMock(side_effect=stop_during_sleep)
-    ):
+    with patch.object(coordinator.asyncio, "sleep", new=AsyncMock(side_effect=stop_during_sleep)):
         await coord._connect()
 
     assert attempts == 1
