@@ -40,8 +40,8 @@ async def test_favorite_events(
         if item.key.startswith("binary_sensor_favorite_")
     ]
     expected_keys = {
-        "001": "binary_sensor_favorite_short_press",
-        "002": "binary_sensor_favorite_long_press",
+        "001": "binary_sensor_favorite_001",
+        "002": "binary_sensor_favorite_002",
     }
     assert {item.key for item in descriptions} == {expected_keys[item] for item in favorites}
     runtime_data = HCData(

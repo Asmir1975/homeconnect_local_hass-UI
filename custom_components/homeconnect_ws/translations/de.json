@@ -271,10 +271,10 @@
       }
     },
     "binary_sensor": {
-      "binary_sensor_favorite_short_press": {
+      "binary_sensor_favorite_001": {
         "name": "Favoritentaste kurz gedrückt"
       },
-      "binary_sensor_favorite_long_press": {
+      "binary_sensor_favorite_002": {
         "name": "Favoritentaste lang gedrückt"
       },
       "binary_sensor_release_rinse_hold_pending": {

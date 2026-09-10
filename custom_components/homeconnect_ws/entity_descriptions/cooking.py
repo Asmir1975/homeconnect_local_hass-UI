@@ -649,18 +649,5 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity_category=EntityCategory.CONFIG,
         ),
     ],
-    "binary_sensor": [
-        HCBinarySensorEntityDescription(
-            key="binary_sensor_favorite_short_press",
-            entity="BSH.Common.Event.Favorite.001.ExternalTrigger",
-            value_on={"Present", "Confirmed"},
-            value_off={"Off"},
-        ),
-        HCBinarySensorEntityDescription(
-            key="binary_sensor_favorite_long_press",
-            entity="BSH.Common.Event.Favorite.002.ExternalTrigger",
-            value_on={"Present", "Confirmed"},
-            value_off={"Off"},
-        ),
-    ],
+    "binary_sensor": [],
 }

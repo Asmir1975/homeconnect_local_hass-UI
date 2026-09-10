@@ -362,6 +362,18 @@ COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             value_on={"Present", "Confirmed"},
             value_off={"Off"},
         ),
+        HCBinarySensorEntityDescription(
+            key="binary_sensor_favorite_001",
+            entity="BSH.Common.Event.Favorite.001.ExternalTrigger",
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+        ),
+        HCBinarySensorEntityDescription(
+            key="binary_sensor_favorite_002",
+            entity="BSH.Common.Event.Favorite.002.ExternalTrigger",
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+        ),
     ],
     "select": [
         HCSelectEntityDescription(
