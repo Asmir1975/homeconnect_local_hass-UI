@@ -819,6 +819,40 @@ async def test_turn_on_when_rgb_is_unavailable(
     )
 
 
+async def test_set_color_when_rgb_setting_unavailable(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """An explicit colour must not be written while the colour Setting is unavailable."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": False})
+    color = mock_appliance.entities["Test.LightingCustomColor"]
+    color._value = None
+    await color.update({"available": False})
+    await mock_appliance.entities["Test.LightingColor"].update({"available": False})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.fake_brand_homeappliance_light_4",
+            ATTR_RGB_COLOR: (0, 255, 0),
+            ATTR_BRIGHTNESS: 127,
+        },
+        blocking=True,
+    )
+    sent = [
+        entry["uid"]
+        for call in mock_appliance.session.send_sync.await_args_list
+        for entry in call.args[0].data
+    ]
+    assert color.uid not in sent
+    assert mock_appliance.entities["Test.LightingColor"].uid not in sent
+    assert mock_appliance.entities["Test.Lighting"].uid in sent
+
+
 async def test_light_unavailable_when_power_is_unavailable(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,

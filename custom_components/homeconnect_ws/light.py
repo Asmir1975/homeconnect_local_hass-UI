@@ -122,6 +122,19 @@ class HCLight(HCEntity, LightEntity):
         )
 
     @property
+    def _rgb_usable(self) -> bool:
+        """
+        Whether the Appliance currently offers the color Setting.
+
+        Ambient lights report their color Setting as unavailable while the
+        light is off, so writing a color then would hit a Setting the
+        Appliance rejects with WriteRequest NotAvailable.
+        """
+        if self._color_entity is None:
+            return False
+        return entity_is_available(self._color_entity, self.entity_description.available_access)
+
+    @property
     def supported_color_modes(self) -> set[ColorMode] | None:
         if self._attr_supported_color_modes == {ColorMode.COLOR_TEMP} and (
             not self._color_temp_usable
@@ -185,7 +198,12 @@ class HCLight(HCEntity, LightEntity):
         brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
         rgb = kwargs.get(ATTR_RGB_COLOR, self.rgb_color)
 
-        if self._attr_color_mode == ColorMode.RGB and brightness is not None and rgb is not None:
+        if (
+            self._attr_color_mode == ColorMode.RGB
+            and self._rgb_usable
+            and brightness is not None
+            and rgb is not None
+        ):
             rgb_with_brightness = tuple(color * brightness // 255 for color in rgb)
             message.data.append(
                 {
