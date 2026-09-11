@@ -153,3 +153,76 @@ async def test_connect_backoff_is_capped() -> None:
     delays = [call.args[0] for call in sleep.await_args_list]
     assert delays[-1] == MAX_CONNECT_BACKOFF
     assert all(delay <= MAX_CONNECT_BACKOFF for delay in delays)
+
+
+def _make_reconnect_coordinator() -> coordinator.HomeConnectCoordinator:
+    """Build a bare coordinator with just what _connection_state_callback() touches."""
+    coord = object.__new__(coordinator.HomeConnectCoordinator)
+    coord._connecting = True
+    coord._reconnecting = False
+    coord._reconnect_timer = None
+    coord.connected = False
+    coord.logger = MagicMock()
+    coord.async_set_updated_data = MagicMock()
+    coord.config_entry = SimpleNamespace(data={CONF_DESCRIPTION: {"info": {"vib": "TEST"}}})
+    coord.appliance = SimpleNamespace(close=AsyncMock(), session=SimpleNamespace(connected=False))
+    coord.hass = MagicMock()
+    coord.hass.loop.time.return_value = 0.0
+    return coord
+
+
+async def test_reconnect_timer_is_cancelled_on_reconnect() -> None:
+    """A successful reconnect must cancel its own grace-period timer."""
+    coord = _make_reconnect_coordinator()
+    handle = MagicMock(name="TimerHandle")
+    coord.hass.loop.call_at.return_value = handle
+
+    await coord._connection_state_callback(coordinator.ConnectionState.RECONNECTING)
+    assert coord._reconnect_timer is handle
+
+    await coord._connection_state_callback(coordinator.ConnectionState.CONNECTED)
+
+    handle.cancel.assert_called_once()
+    assert coord._reconnect_timer is None
+
+
+async def test_reconnect_timer_is_cancelled_on_closed() -> None:
+    """A final disconnect (CLOSED) must also cancel a pending grace-period timer."""
+    coord = _make_reconnect_coordinator()
+    handle = MagicMock(name="TimerHandle")
+    coord.hass.loop.call_at.return_value = handle
+
+    await coord._connection_state_callback(coordinator.ConnectionState.RECONNECTING)
+    await coord._connection_state_callback(coordinator.ConnectionState.CLOSED)
+
+    handle.cancel.assert_called_once()
+    assert coord._reconnect_timer is None
+
+
+async def test_close_cancels_pending_reconnect_timer() -> None:
+    """close() must not leave a reconnect grace-period timer pending."""
+    coord = _make_reconnect_coordinator()
+    handle = MagicMock(name="TimerHandle")
+    coord.hass.loop.call_at.return_value = handle
+
+    await coord._connection_state_callback(coordinator.ConnectionState.RECONNECTING)
+    await coord.close()
+
+    handle.cancel.assert_called_once()
+    assert coord._reconnect_timer is None
+
+
+async def test_second_reconnect_cycle_gets_its_own_timer() -> None:
+    """After a cycle completes cleanly, a later disconnect gets a fresh timer."""
+    coord = _make_reconnect_coordinator()
+    handle_a = MagicMock(name="TimerHandleA")
+    coord.hass.loop.call_at.return_value = handle_a
+    await coord._connection_state_callback(coordinator.ConnectionState.RECONNECTING)
+    await coord._connection_state_callback(coordinator.ConnectionState.CONNECTED)
+
+    handle_b = MagicMock(name="TimerHandleB")
+    coord.hass.loop.call_at.return_value = handle_b
+    await coord._connection_state_callback(coordinator.ConnectionState.RECONNECTING)
+
+    assert coord._reconnect_timer is handle_b
+    handle_a.cancel.assert_called_once()

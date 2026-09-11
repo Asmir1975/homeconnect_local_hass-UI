@@ -42,6 +42,7 @@ class HomeConnectCoordinator(DataUpdateCoordinator):
     appliance: HomeAppliance
     _connecting: bool = True
     _reconnecting: bool = False
+    _reconnect_timer: asyncio.TimerHandle | None = None
     connected: bool = False
 
     def __init__(
@@ -74,6 +75,7 @@ class HomeConnectCoordinator(DataUpdateCoordinator):
 
     async def close(self) -> None:
         self._connecting = False
+        self._cancel_reconnect_timer()
         await self.appliance.close()
 
     async def _async_setup(self) -> None:
@@ -125,7 +127,9 @@ class HomeConnectCoordinator(DataUpdateCoordinator):
             if not self._reconnecting:
                 self._reconnecting = True
                 reconnect_timeout = int(self.hass.loop.time()) + MAX_RECONECT_TIME
-                self.hass.loop.call_at(reconnect_timeout, self._connection_reconnect_callback)
+                self._reconnect_timer = self.hass.loop.call_at(
+                    reconnect_timeout, self._connection_reconnect_callback
+                )
 
         elif event == ConnectionState.CONNECTED:
             self.connected = True
@@ -135,13 +139,24 @@ class HomeConnectCoordinator(DataUpdateCoordinator):
                     self.config_entry.data[CONF_DESCRIPTION]["info"].get("vib"),
                 )
                 self._reconnecting = False
+            self._cancel_reconnect_timer()
 
         elif event == ConnectionState.CLOSED:
             self.connected = False
+            self._cancel_reconnect_timer()
 
         self.async_set_updated_data(None)
 
+    def _cancel_reconnect_timer(self) -> None:
+        # A stale timer from an earlier disconnect must not fire during a later
+        # one and mark the coordinator disconnected before that cycle's own
+        # grace period elapsed.
+        if self._reconnect_timer is not None:
+            self._reconnect_timer.cancel()
+            self._reconnect_timer = None
+
     def _connection_reconnect_callback(self) -> None:
+        self._reconnect_timer = None
         if not self.appliance.session.connected:
             self.connected = False
             self.async_set_updated_data(None)
