@@ -6,7 +6,7 @@ description = "Home Connect Local for Homeassistant"
 readme = "README.md"
 requires-python = ">=3.14.2"
 dependencies = [
-    "homeconnect-websocket@git+https://github.com/Asmir1975/homeconnect_websocket.git@f3d89bf3b4e60b025eabce48052d5ad072eee076",
+    "homeconnect-websocket@git+https://github.com/Asmir1975/homeconnect_websocket.git@0157649da640fc308ce76a35ad71d5bcc000d29f",
 ]
 
 [project.urls]
