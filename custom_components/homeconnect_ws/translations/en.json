@@ -248,9 +248,6 @@
       "switch_refrigeration_light_theater_mode": {
         "name": "Internal Light TheaterMode"
       },
-      "switch_hood_boost": {
-        "name": "Boost"
-      },
       "switch_hob_energy_consumption_indication": {
         "name": "Energy consumption indication"
       },
@@ -4102,6 +4099,9 @@
       },
       "number_hood_delayed_shutoff_time": {
         "name": "Delayed Shutoff Time"
+      },
+      "number_hood_boost_time": {
+        "name": "Boost Time"
       },
       "number_hood_sensor_sensitivity": {
         "name": "Auto Sensor Sensitivity"
