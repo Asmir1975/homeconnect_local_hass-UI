@@ -169,7 +169,9 @@ class HCProgram(HCSelect):
             # START_ONLY below writes ActiveProgram directly and has its own
             # read-only fallback; only this path actually writes SelectedProgram.
             ensure_writable(self._entity)
-            await selected_program.select()
+            # Do not carry shared option shadows from the previously selected
+            # program unless this program explicitly requires a full option set.
+            await selected_program.select(override_options=not selected_program.full_option_set)
         elif selected_program.execution == Execution.START_ONLY:
             if selected_program.full_option_set:
                 # Some appliances validate a program write against the program's
