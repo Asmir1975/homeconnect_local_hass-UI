@@ -2,13 +2,17 @@
 
 from __future__ import annotations
 
+from datetime import timedelta
 from typing import TYPE_CHECKING
 
 import pytest
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
+    ATTR_PRESET_MODE,
+    ATTR_PRESET_MODES,
     SERVICE_SET_PERCENTAGE,
+    SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
     FanEntityFeature,
 )
@@ -21,7 +25,9 @@ from homeassistant.const import (
     STATE_ON,
 )
 from homeassistant.exceptions import ServiceValidationError
+from homeassistant.util import dt as dt_util
 from homeconnect_websocket.message import Action, Message
+from pytest_homeassistant_custom_component.common import async_fire_time_changed
 
 from . import setup_config_entry
 from .const import MOCK_CONFIG_DATA
@@ -43,11 +49,11 @@ async def test_setup(
     assert state
     assert state.name == "Fake_brand HomeAppliance Fan"
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Fake_brand HomeAppliance Fan"
-    assert (
-        state.attributes[ATTR_SUPPORTED_FEATURES]
-        == FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_OFF
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
+        FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE | FanEntityFeature.TURN_OFF
     )
     assert state.attributes[ATTR_PERCENTAGE_STEP] == 25
+    assert state.attributes[ATTR_PRESET_MODES] == ["None", "Boost"]
 
 
 async def test_update(
@@ -326,6 +332,171 @@ async def test_turn_off_ignores_power_state_value_outside_min_max(
             data=[{"uid": 403, "value": 0}, {"uid": 404, "value": 0}],
         )
     )
+
+
+async def test_preset_mode_reflects_live_boost_value(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Preset mode must follow the appliance's own Boost value when not optimistic."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.attributes[ATTR_PRESET_MODE] == "None"
+
+    await mock_appliance.entities["Cooking.Common.Option.Hood.Boost"].update({"value": True})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.attributes[ATTR_PRESET_MODE] == "Boost"
+
+    await mock_appliance.entities["Cooking.Common.Option.Hood.Boost"].update({"value": False})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.attributes[ATTR_PRESET_MODE] == "None"
+
+
+async def test_set_preset_mode_boost_sends_expected_payload(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Starting Boost must zero the speed options and set Boost in one write."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan", ATTR_PRESET_MODE: "Boost"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 504,
+                "options": [
+                    {"uid": 403, "value": 0},
+                    {"uid": 404, "value": 0},
+                    {"uid": 508, "value": True},
+                ],
+            },
+        )
+    )
+
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.attributes[ATTR_PRESET_MODE] == "Boost"
+
+
+async def test_set_preset_mode_none_sends_expected_payload(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Clearing Boost must restart the program with an empty, unforced option set."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Cooking.Common.Option.Hood.Boost"].update({"value": True})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan", ATTR_PRESET_MODE: "None"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={"program": 504, "options": []},
+        )
+    )
+
+
+async def test_optimistic_preset_reverts_to_live_value_after_timeout(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """
+    Optimistic Boost display must fall back to the live value once it clears.
+
+    The appliance itself resets Boost after its own timer with no "still pending"
+    signal in between - a request that never gets appliance-side confirmation must
+    not leave the preset stuck showing Boost forever.
+    """
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan", ATTR_PRESET_MODE: "Boost"},
+        blocking=True,
+    )
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.attributes[ATTR_PRESET_MODE] == "Boost"
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=9))
+    await hass.async_block_till_done()
+
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.attributes[ATTR_PRESET_MODE] == "None"
+
+
+async def test_turn_off_resets_optimistic_boost_preset(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Turning the fan off must not leave a stale optimistic Boost preset behind."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan", ATTR_PRESET_MODE: "Boost"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan"},
+        blocking=True,
+    )
+
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.attributes[ATTR_PRESET_MODE] == "None"
+
+
+async def test_set_speed_resets_optimistic_boost_preset(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Manually picking a speed must not leave a stale optimistic Boost preset behind."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PRESET_MODE,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan", ATTR_PRESET_MODE: "Boost"},
+        blocking=True,
+    )
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan", ATTR_PERCENTAGE: 25},
+        blocking=True,
+    )
+
+    state = hass.states.get("fan.fake_brand_homeappliance_fan")
+    assert state.attributes[ATTR_PRESET_MODE] == "None"
 
 
 async def test_turn_off_falls_back_to_zero_write_without_power_state(

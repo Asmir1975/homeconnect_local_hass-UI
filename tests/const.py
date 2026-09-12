@@ -500,6 +500,14 @@ DEVICE_DESCRIPTION = DeviceDescription(
             available=True,
             access=Access.READ_WRITE,
         ),
+        EntityDescription(
+            uid=508,
+            name="Cooking.Common.Option.Hood.Boost",
+            available=True,
+            access=Access.READ_WRITE,
+            protocolType="Boolean",
+            default=False,
+        ),
     ],
     program=[
         EntityDescription(
