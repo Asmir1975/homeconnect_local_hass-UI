@@ -19,6 +19,7 @@ ignore = [
     "ISC001",  # incompatible with formatter
     "ARG002",  # unused-method-argument
     "PLR2004", # magic-value-comparison
+    "CPY001",  # missing-copyright-notice (new in ruff 0.16, we don't use file headers)
 ]
 
 [lint.flake8-pytest-style]
