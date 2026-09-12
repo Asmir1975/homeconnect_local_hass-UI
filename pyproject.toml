@@ -16,8 +16,8 @@ Issues = "https://github.com/Asmir1975/homeconnect_local_hass-UI/issues"
 [dependency-groups]
 dev = [
     "colorlog==6.10.1",
-    "homeassistant==2026.5.3",
-    "pytest-homeassistant-custom-component==0.13.332",
+    "homeassistant==2026.9.1",
+    "pytest-homeassistant-custom-component==0.13.364",
     "voluptuous-stubs==0.1.1",
     "ruff==0.15.17",
     "pre-commit==4.6.0",
