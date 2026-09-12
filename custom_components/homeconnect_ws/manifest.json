@@ -19,7 +19,7 @@
   "requirements": [
     "homeconnect-websocket@git+https://github.com/Asmir1975/homeconnect_websocket.git@0157649da640fc308ce76a35ad71d5bcc000d29f"
   ],
-  "version": "1.12.1",
+  "version": "1.12.2",
   "zeroconf": [
     "_homeconnect._tcp.local."
   ]
