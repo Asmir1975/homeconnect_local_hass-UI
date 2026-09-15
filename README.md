@@ -25,8 +25,14 @@ The **Home Connect Local** integration lets you control Bosch, Siemens, and Neff
 
 | | Original integration | This fork |
 |---|---|---|
-| Profile download | Separate desktop app (Windows/macOS/Linux only) | Built into the HA setup flow, works on any device |
-| Auth flow | — | Same Authorization Code + PKCE as the bruestel tool, no developer portal registration |
+| Profile download | Separate desktop app (Windows/macOS/Linux only) | 🔷 Built into the HA setup flow, works on any device |
+| Auth flow | — | 🔷 Same Authorization Code + PKCE as the bruestel tool, no developer portal registration |
+
+## 📋 Supported Device Types
+
+![Supported device types: Dishwasher, Hob, Oven, Washing machine, Refrigerator / Freezer and Extraction hood are supported. Coffee machine and Dryer are in testing.](assets/supported-devices-matrix.png)
+
+If you have other device types not listed yet, please let us know by opening an issue.
 
 ## 🧩 Install via HACS
 
