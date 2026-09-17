@@ -457,6 +457,9 @@
       "binary_sensor_door_not_unlockable": {
         "name": "Door Not Unlockable"
       },
+      "binary_sensor_door_open": {
+        "name": "Door Open Alarm"
+      },
       "binary_sensor_fatal_error_occurred": {
         "name": "Fatal Error"
       },
@@ -470,10 +473,18 @@
         "name": "i-DOS 1 Low"
       },
       "binary_sensor_chiller_common_door_state": {
-        "name": "Chiller Door"
+        "name": "Chiller Door",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
       },
       "binary_sensor_freezer_door_state": {
-        "name": "Freezer Door"
+        "name": "Freezer Door",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
       },
       "binary_sensor_idos_unit_defect": {
         "name": "i-DOS Defect"
@@ -485,7 +496,11 @@
         "name": "Spin Aborted"
       },
       "binary_sensor_fridge_door_state": {
-        "name": "Fridge Door"
+        "name": "Fridge Door",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
       },
       "binary_sensor_door_alarm_chiller_common": {
         "name": "Door alarm Chiller"

@@ -158,6 +158,24 @@
                 "on": "mdi:door-open"
               }
             },
+            "binary_sensor_chiller_common_door_state": {
+              "default": "mdi:door-closed",
+              "state": {
+                "on": "mdi:door-open"
+              }
+            },
+            "binary_sensor_freezer_door_state": {
+              "default": "mdi:door-closed",
+              "state": {
+                "on": "mdi:door-open"
+              }
+            },
+            "binary_sensor_fridge_door_state": {
+              "default": "mdi:door-closed",
+              "state": {
+                "on": "mdi:door-open"
+              }
+            },
             "binary_sensor_intensiv_zone_active": {
                 "default": "mdi:arrow-decision"
             },
