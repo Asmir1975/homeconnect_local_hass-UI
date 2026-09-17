@@ -63,7 +63,6 @@ REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         HCBinarySensorEntityDescription(
             key="binary_sensor_chiller_common_door_state",
             entity="Refrigeration.Common.Status.Door.ChillerCommon",
-            device_class=BinarySensorDeviceClass.DOOR,
             entity_registry_enabled_default=False,
             value_on={"Open"},
             value_off={"Closed"},
@@ -71,21 +70,18 @@ REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         HCBinarySensorEntityDescription(
             key="binary_sensor_freezer_door_state",
             entity="Refrigeration.Common.Status.Door.Freezer",
-            device_class=BinarySensorDeviceClass.DOOR,
             value_on={"Open"},
             value_off={"Closed"},
         ),
         HCBinarySensorEntityDescription(
             key="binary_sensor_fridge_door_state",
             entity="Refrigeration.Common.Status.Door.Refrigerator",
-            device_class=BinarySensorDeviceClass.DOOR,
             value_on={"Open"},
             value_off={"Closed"},
         ),
         HCBinarySensorEntityDescription(
             key="binary_sensor_chiller_common_door_state",
             entity="Refrigeration.FridgeFreezer.Status.ChillerCommon",
-            device_class=BinarySensorDeviceClass.DOOR,
             entity_registry_enabled_default=False,
             value_on={"Open"},
             value_off={"Closed"},
@@ -93,14 +89,12 @@ REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         HCBinarySensorEntityDescription(
             key="binary_sensor_freezer_door_state",
             entity="Refrigeration.FridgeFreezer.Status.DoorFreezer",
-            device_class=BinarySensorDeviceClass.DOOR,
             value_on={"Open"},
             value_off={"Closed"},
         ),
         HCBinarySensorEntityDescription(
             key="binary_sensor_fridge_door_state",
             entity="Refrigeration.FridgeFreezer.Status.DoorRefrigerator",
-            device_class=BinarySensorDeviceClass.DOOR,
             value_on={"Open"},
             value_off={"Closed"},
         ),
