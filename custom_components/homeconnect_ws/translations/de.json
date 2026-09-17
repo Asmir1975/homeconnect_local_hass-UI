@@ -483,6 +483,9 @@
       "binary_sensor_door_not_unlockable": {
         "name": "Tür nicht entriegelbar"
       },
+      "binary_sensor_door_open": {
+        "name": "Tür offen (Alarm)"
+      },
       "binary_sensor_fatal_error_occurred": {
         "name": "Schwerwiegender Fehler"
       },
