@@ -152,7 +152,12 @@
             }
           },
             "connection": {},
-            "binary_sensor_door_state": {},
+            "binary_sensor_door_state": {
+              "default": "mdi:door-closed",
+              "state": {
+                "on": "mdi:door-open"
+              }
+            },
             "binary_sensor_intensiv_zone_active": {
                 "default": "mdi:arrow-decision"
             },

@@ -299,7 +299,11 @@
         "name": "Connection"
       },
       "binary_sensor_door_state": {
-        "name": "Door"
+        "name": "Door",
+        "state": {
+          "off": "Closed",
+          "on": "Open"
+        }
       },
       "binary_sensor_intensiv_zone_active": {
         "name": "Intensive Zone Active"
