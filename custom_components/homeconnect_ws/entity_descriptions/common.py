@@ -308,7 +308,6 @@ COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         HCBinarySensorEntityDescription(
             key="binary_sensor_door_state",
             entity="BSH.Common.Status.DoorState",
-            device_class=BinarySensorDeviceClass.DOOR,
             value_on={"Open", "Ajar"},
             value_off={"Closed", "Locked"},
         ),

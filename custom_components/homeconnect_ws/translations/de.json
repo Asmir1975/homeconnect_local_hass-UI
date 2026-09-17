@@ -299,7 +299,11 @@
         "name": "Verbindung"
       },
       "binary_sensor_door_state": {
-        "name": "Tür"
+        "name": "Tür",
+        "state": {
+          "off": "Geschlossen",
+          "on": "Geöffnet"
+        }
       },
       "binary_sensor_intensiv_zone_active": {
         "name": "Intensivzone aktiv"
