@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING
 from aiohttp.client_exceptions import ClientConnectionResetError
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.core import callback
-from homeconnect_websocket import NotConnectedError
+from homeconnect_websocket import DisconnectedError, NotConnectedError
 
 from .entity import HCEntity
 from .helpers import create_entities
@@ -17,6 +17,8 @@ from .helpers import create_entities
 _LOGGER = logging.getLogger(__name__)
 
 if TYPE_CHECKING:
+    import asyncio
+
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
@@ -164,6 +166,8 @@ class HCActiveProgram(HCSensor):
 class HCWiFI(HCEntity, SensorEntity):
     """WiFi signal sensor polled from the appliance network endpoint."""
 
+    _update_after_connect_task: asyncio.Task | None = None
+
     @property
     def should_poll(self) -> bool:
         """Enable polling despite HCEntity inheriting CoordinatorEntity."""
@@ -180,9 +184,14 @@ class HCWiFI(HCEntity, SensorEntity):
     async def async_added_to_hass(self) -> None:
         """Fetch the first value immediately after the entity is added."""
         await super().async_added_to_hass()
+        self.async_on_remove(self._cancel_update_after_connect_task)
         await self.async_update()
         self._was_connected = self._runtime_data.appliance.session.connected
         self.async_write_ha_state()
+
+    def _cancel_update_after_connect_task(self) -> None:
+        if self._update_after_connect_task is not None:
+            self._update_after_connect_task.cancel()
 
     @callback
     def _handle_coordinator_update(self) -> None:
@@ -192,7 +201,9 @@ class HCWiFI(HCEntity, SensorEntity):
         self._was_connected = connected
         super()._handle_coordinator_update()
         if refresh_after_connect:
-            self.hass.async_create_task(self._async_update_after_connect())
+            self._update_after_connect_task = self.hass.async_create_task(
+                self._async_update_after_connect()
+            )
 
     async def _async_update_after_connect(self) -> None:
         """Refresh and write the WiFi state after connecting."""
@@ -213,3 +224,5 @@ class HCWiFI(HCEntity, SensorEntity):
             _LOGGER.debug("WiFi update failed: Connection reset")
         except NotConnectedError:
             _LOGGER.debug("WiFi update failed: Not connected")
+        except TimeoutError, DisconnectedError:
+            _LOGGER.debug("WiFi update failed: Timed out waiting for a response")

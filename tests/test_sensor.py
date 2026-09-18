@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING
 from unittest.mock import AsyncMock, MagicMock
 
@@ -12,6 +13,7 @@ from custom_components.homeconnect_ws.entity_descriptions.descriptions_definitio
 from custom_components.homeconnect_ws.sensor import HCWiFI
 from homeassistant.components.sensor import ATTR_OPTIONS
 from homeassistant.const import ATTR_FRIENDLY_NAME
+from homeconnect_websocket import DisconnectedError
 
 from . import setup_config_entry
 from .const import MOCK_CONFIG_DATA
@@ -378,3 +380,85 @@ async def test_wifi_updates_when_coordinator_connects(hass: HomeAssistant) -> No
 
     assert entity.native_value == -56
     appliance.get_network_config.assert_awaited_once()
+
+
+async def test_wifi_update_timeout_keeps_last_value() -> None:
+    """A timed-out request must not clear a previously known RSSI value."""
+    appliance = MagicMock()
+    appliance.info = {"deviceID": "test_device_id"}
+    appliance.session.connected = True
+    appliance.get_network_config = AsyncMock(return_value=[{"rssi": -70}])
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=MagicMock(),
+        coordinator=MagicMock(),
+    )
+    entity = HCWiFI(
+        HCSensorEntityDescription(key="sensor_wifi_signal_strength"),
+        runtime_data,
+    )
+    await entity.async_update()
+    assert entity.native_value == -70
+
+    appliance.get_network_config.side_effect = TimeoutError
+    await entity.async_update()
+
+    assert entity.native_value == -70
+
+
+async def test_wifi_update_disconnected_error_keeps_last_value() -> None:
+    """A DisconnectedError from a close-during-request race is handled like a timeout."""
+    appliance = MagicMock()
+    appliance.info = {"deviceID": "test_device_id"}
+    appliance.session.connected = True
+    appliance.get_network_config = AsyncMock(side_effect=DisconnectedError)
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=MagicMock(),
+        coordinator=MagicMock(),
+    )
+    entity = HCWiFI(
+        HCSensorEntityDescription(key="sensor_wifi_signal_strength"),
+        runtime_data,
+    )
+
+    await entity.async_update()
+
+    assert entity.native_value is None
+
+
+async def test_wifi_removal_cancels_pending_update_after_connect_task(
+    hass: HomeAssistant,
+) -> None:
+    """Removing the entity must cancel a still-running post-connect refresh."""
+    appliance = MagicMock()
+    appliance.info = {"deviceID": "test_device_id"}
+    appliance.session.connected = False
+    # Never resolves on its own, so the task is still running when cancelled.
+    appliance.get_network_config = AsyncMock(side_effect=asyncio.Event().wait)
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=MagicMock(),
+        coordinator=MagicMock(),
+    )
+    entity = HCWiFI(
+        HCSensorEntityDescription(key="sensor_wifi_signal_strength"),
+        runtime_data,
+    )
+    entity.hass = hass
+    entity.async_write_ha_state = MagicMock()
+
+    appliance.session.connected = True
+    entity._handle_coordinator_update()
+    await asyncio.sleep(0)  # let the task start and reach the pending await
+
+    task = entity._update_after_connect_task
+    assert task is not None
+    assert not task.done()
+    entity._cancel_update_after_connect_task()
+    await hass.async_block_till_done()
+
+    assert task.cancelled()
