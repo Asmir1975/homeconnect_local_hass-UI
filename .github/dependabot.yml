@@ -22,3 +22,7 @@ updates:
           - "homeassistant"
           - "pytest-homeassistant-custom-component"
 
+  - package-ecosystem: "pre-commit"
+    directory: "/"
+    schedule:
+      interval: "daily"
