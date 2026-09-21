@@ -4247,6 +4247,9 @@
     },
     "read_only": {
       "message": "This is currently in read-only mode and can't be changed right now"
+    },
+    "invalid_step": {
+      "message": "Value not allowed: use a multiple of {step} {unit} from {min} to {max} {unit}"
     }
   }
 }

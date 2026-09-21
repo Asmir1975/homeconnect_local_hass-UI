@@ -17,8 +17,15 @@ from custom_components.homeconnect_ws.entity_descriptions import (
     HCSwitchEntityDescription,
     _EntityDescriptionsType,
 )
+from homeassistant.components.number import NumberDeviceClass, NumberMode
 from homeassistant.components.sensor import SensorDeviceClass
-from homeassistant.const import CONF_DESCRIPTION, CONF_DEVICE_ID, CONF_HOST, CONF_NAME
+from homeassistant.const import (
+    CONF_DESCRIPTION,
+    CONF_DEVICE_ID,
+    CONF_HOST,
+    CONF_NAME,
+    UnitOfTime,
+)
 from homeconnect_websocket.entities import (
     Access,
     DeviceDescription,
@@ -119,7 +126,18 @@ ENTITY_DESCRIPTIONS: _EntityDescriptionsType = {
             options=["Event2", "Event1", "No Event"],
         ),
     ],
-    "number": [HCNumberEntityDescription(key="Test.Number", name="Number", entity="Test.Number")],
+    "number": [
+        HCNumberEntityDescription(key="Test.Number", name="Number", entity="Test.Number"),
+        HCNumberEntityDescription(
+            key="Test.Duration",
+            name="Duration",
+            entity="Test.Duration",
+            device_class=NumberDeviceClass.DURATION,
+            native_unit_of_measurement=UnitOfTime.SECONDS,
+            mode=NumberMode.BOX,
+            enforce_step=True,
+        ),
+    ],
     "program": [
         HCSelectEntityDescription(
             key="Test.SelectedProgram",
@@ -343,6 +361,15 @@ DEVICE_DESCRIPTION = DeviceDescription(
             min=0,
             max=20,
             stepSize=2,
+            available=True,
+            access=Access.READ_WRITE,
+        ),
+        EntityDescription(
+            uid=205,
+            name="Test.Duration",
+            min=60,
+            max=1800,
+            stepSize=60,
             available=True,
             access=Access.READ_WRITE,
         ),

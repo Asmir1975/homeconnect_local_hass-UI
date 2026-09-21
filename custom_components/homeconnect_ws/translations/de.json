@@ -4247,6 +4247,9 @@
     },
     "read_only": {
       "message": "Dies ist aktuell im Nur-Lese-Modus und kann gerade nicht geändert werden"
+    },
+    "invalid_step": {
+      "message": "Wert nicht erlaubt: bitte ein Vielfaches von {step} {unit} von {min} bis {max} {unit} wählen"
     }
   }
 }
