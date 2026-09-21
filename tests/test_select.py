@@ -472,3 +472,77 @@ async def test_selected_program_unavailable_when_access_none(
 
     state = hass.states.get(entity_id)
     assert state.state == STATE_UNAVAILABLE
+
+
+async def test_favorite_name_arrives_after_setup(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """The appliance sends favorite names after setup, select and sensor follow."""
+    select_id = "select.fake_brand_homeappliance_selectedprogram"
+    sensor_id = "sensor.fake_brand_homeappliance_activeprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.ActiveProgram"].update({"value": 503})
+    await hass.async_block_till_done()
+    assert "favorite_002" in hass.states.get(select_id).attributes[ATTR_OPTIONS]
+    assert hass.states.get(sensor_id).state == "favorite_002"
+
+    favorite = mock_appliance.settings["BSH.Common.Setting.Favorite.002.Name"]
+    for name in ("Late Name", "Renamed", ""):
+        await favorite.update({"value": name})
+        await hass.async_block_till_done()
+        expected = name or "favorite_002"
+        assert expected in hass.states.get(select_id).attributes[ATTR_OPTIONS]
+        assert expected in hass.states.get(sensor_id).attributes[ATTR_OPTIONS]
+        assert hass.states.get(sensor_id).state == expected
+
+    await favorite.update({"value": "Late Name"})
+    await hass.async_block_till_done()
+    mock_appliance.session.send_sync.reset_mock()
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: select_id, ATTR_OPTION: "Late Name"},
+        blocking=True,
+    )
+    message = mock_appliance.session.send_sync.call_args.args[0]
+    assert message.data["program"] == 503
+
+
+async def test_duplicate_favorite_names_select_the_right_slot(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Two favorites with the same name stay separately selectable."""
+    select_id = "select.fake_brand_homeappliance_selectedprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.settings["BSH.Common.Setting.Favorite.001.Name"].update(
+        {"value": "Milchschaum"}
+    )
+    await mock_appliance.settings["BSH.Common.Setting.Favorite.002.Name"].update(
+        {"value": "Milchschaum"}
+    )
+    await hass.async_block_till_done()
+    options = hass.states.get(select_id).attributes[ATTR_OPTIONS]
+    assert "Milchschaum (001)" in options
+    assert "Milchschaum (002)" in options
+    assert "Milchschaum" not in options
+
+    mock_appliance.session.send_sync.reset_mock()
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: select_id, ATTR_OPTION: "Milchschaum (001)"},
+        blocking=True,
+    )
+    assert mock_appliance.session.send_sync.call_args.args[0].data["program"] == 502
+    mock_appliance.session.send_sync.reset_mock()
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: select_id, ATTR_OPTION: "Milchschaum (002)"},
+        blocking=True,
+    )
+    assert mock_appliance.session.send_sync.call_args.args[0].data["program"] == 503
