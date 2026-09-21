@@ -4199,6 +4199,19 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Anzeige der Favoriten",
+        "data": {
+          "filter_unsaved_favorites": "Nicht gespeicherte Favoriten ausblenden"
+        },
+        "data_description": {
+          "filter_unsaved_favorites": "Zeigt in der Programmauswahl nur Favoritenplätze, die du gespeichert hast. Standardprogramme sind nicht betroffen."
+        }
+      }
+    }
+  },
   "exceptions": {
     "start_in_not_available": {
       "message": "'Start in' ist an diesem Gerät nicht verfügbar"

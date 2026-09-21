@@ -13,6 +13,7 @@ from homeconnect_websocket import DisconnectedError, NotConnectedError
 
 from .entity import HCEntity
 from .helpers import create_entities
+from .program_names import favorite_name_settings, program_labels
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -150,16 +151,23 @@ class HCActiveProgram(HCSensor):
         runtime_data: HCData,
     ) -> None:
         super().__init__(entity_description, runtime_data)
-        self._attr_options = list(entity_description.mapping.values())
+        # Favorite names arrive after setup, observe them so the labels follow.
+        self._entities.extend(
+            favorite_name_settings(runtime_data.appliance, entity_description.mapping)
+        )
+
+    def _labels(self) -> dict[str, str]:
+        return program_labels(self._runtime_data.appliance, self.entity_description.mapping)
+
+    @property
+    def options(self) -> list[str]:
+        return list(self._labels().values())
 
     @property
     def native_value(self) -> str | None:
         if self._runtime_data.appliance.active_program:
-            if self._runtime_data.appliance.active_program.name in self.entity_description.mapping:
-                return self.entity_description.mapping[
-                    self._runtime_data.appliance.active_program.name
-                ]
-            return self._runtime_data.appliance.active_program.name
+            name = self._runtime_data.appliance.active_program.name
+            return self._labels().get(name, name)
         return None
 
 

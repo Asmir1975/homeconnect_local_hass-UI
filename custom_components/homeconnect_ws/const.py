@@ -32,3 +32,5 @@ MAX_RECONECT_TIME: Final = 300
 # the library's own reconnect backoff, which only covers an already-established session.
 INITIAL_CONNECT_BACKOFF: Final = 2
 MAX_CONNECT_BACKOFF: Final = 60
+
+CONF_FILTER_UNSAVED_FAVORITES: Final = "filter_unsaved_favorites"

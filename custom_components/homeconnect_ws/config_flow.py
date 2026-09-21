@@ -16,7 +16,7 @@ import homeassistant.helpers.config_validation as cv
 import voluptuous as vol
 from aiohttp import ClientConnectionError, ClientConnectorSSLError, WSServerHandshakeError
 from homeassistant.components.file_upload import process_uploaded_file
-from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow
+from homeassistant.config_entries import SOURCE_IGNORE, ConfigFlow, OptionsFlowWithReload
 from homeassistant.const import (
     CONF_DESCRIPTION,
     CONF_DEVICE,
@@ -25,6 +25,7 @@ from homeassistant.const import (
     CONF_MODE,
     CONF_NAME,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     FileSelector,
@@ -45,7 +46,14 @@ from homeconnect_websocket import (
 )
 
 from . import HC_KEY, HCConfig
-from .const import CONF_AES_IV, CONF_FILE, CONF_MANUAL_HOST, CONF_PSK, DOMAIN
+from .const import (
+    CONF_AES_IV,
+    CONF_FILE,
+    CONF_FILTER_UNSAVED_FAVORITES,
+    CONF_MANUAL_HOST,
+    CONF_PSK,
+    DOMAIN,
+)
 from .hc_auth import HCAuthError, HCProfileDownloader
 
 if TYPE_CHECKING:
@@ -110,6 +118,12 @@ def process_json_file(config_path: Path) -> dict[str, dict[str, dict | DeviceDes
 
 class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
     """HomeConnect Config flow."""
+
+    @staticmethod
+    @callback
+    def async_get_options_flow(config_entry: HCConfigEntry) -> HomeConnectOptionsFlow:  # noqa: ARG004
+        """Return the options flow of an appliance."""
+        return HomeConnectOptionsFlow()
 
     def __init__(self) -> None:
         super().__init__()
@@ -521,3 +535,25 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             return await self.async_step_user()
         except KeyError:
             return self.async_abort(reason="invalid_discovery_info")
+
+
+class HomeConnectOptionsFlow(OptionsFlowWithReload):
+    """Per appliance display options, the entry is reloaded after a change."""
+
+    async def async_step_init(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Show and save the favorite filter option."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title="", data={**self.config_entry.options, **user_input}
+            )
+        return self.async_show_form(
+            step_id="init",
+            data_schema=vol.Schema(
+                {
+                    vol.Optional(
+                        CONF_FILTER_UNSAVED_FAVORITES,
+                        default=self.config_entry.options.get(CONF_FILTER_UNSAVED_FAVORITES, False),
+                    ): bool,
+                }
+            ),
+        )

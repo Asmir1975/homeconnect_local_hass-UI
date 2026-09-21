@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 from homeassistant.components.select import SelectEntity
 from homeconnect_websocket.entities import Access, Execution
 
+from .const import CONF_FILTER_UNSAVED_FAVORITES
 from .entity import HCEntity
 from .helpers import (
     create_entities,
@@ -15,6 +16,7 @@ from .helpers import (
     error_decorator,
     fill_full_option_set,
 )
+from .program_names import favorite_name_settings, program_labels, selectable_program_labels
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -103,7 +105,10 @@ class HCProgram(HCSelect):
     ) -> None:
         super().__init__(entity_description, runtime_data)
         self._programs = entity_description.mapping
-        self._rev_programs = {value: key for key, value in self._programs.items()}
+        # Favorite names arrive after setup, observe them so the labels follow.
+        self._entities.extend(
+            favorite_name_settings(runtime_data.appliance, self._programs, with_functionality=True)
+        )
         if entity_description.entity and entity_description.entity.endswith(
             _SELECTED_PROGRAM_SUFFIX
         ):
@@ -120,9 +125,16 @@ class HCProgram(HCSelect):
             if program is not None and program not in self._entities:
                 self._entities.append(program)
 
+    def _labels(self) -> dict[str, str]:
+        if self._runtime_data.coordinator.config_entry.options.get(
+            CONF_FILTER_UNSAVED_FAVORITES, False
+        ):
+            return selectable_program_labels(self._runtime_data.appliance, self._programs)
+        return program_labels(self._runtime_data.appliance, self._programs)
+
     @property
     def options(self) -> list[str] | None:
-        return list(self._programs.values())
+        return list(self._labels().values())
 
     @property
     def available(self) -> bool:
@@ -157,14 +169,13 @@ class HCProgram(HCSelect):
             current_program = self._runtime_data.appliance.active_program
 
         if current_program:
-            if current_program.name in self._programs:
-                return self._programs[current_program.name]
-            return current_program.name
+            return self._labels().get(current_program.name, current_program.name)
         return None
 
     @error_decorator
     async def async_select_option(self, option: str) -> None:
-        selected_program = self._runtime_data.appliance.programs[self._rev_programs[option]]
+        program_by_label = {label: name for name, label in self._labels().items()}
+        selected_program = self._runtime_data.appliance.programs[program_by_label[option]]
         if selected_program.execution in (Execution.SELECT_ONLY, Execution.SELECT_AND_START):
             # START_ONLY below writes ActiveProgram directly and has its own
             # read-only fallback; only this path actually writes SelectedProgram.

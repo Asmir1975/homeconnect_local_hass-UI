@@ -4199,6 +4199,19 @@
       }
     }
   },
+  "options": {
+    "step": {
+      "init": {
+        "title": "Favorite display options",
+        "data": {
+          "filter_unsaved_favorites": "Hide unsaved favorites"
+        },
+        "data_description": {
+          "filter_unsaved_favorites": "Only show favorite slots you have saved in the program selection. Standard programs are not affected."
+        }
+      }
+    }
+  },
   "exceptions": {
     "start_in_not_available": {
       "message": "'Start in' is not available on this Appliance"
