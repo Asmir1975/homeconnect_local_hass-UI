@@ -100,6 +100,10 @@ class HCNumberEntityDescription(
     """Description for Number Entity."""
 
     available_access: tuple[Access] = (Access.READ_WRITE, Access.WRITE_ONLY)
+    # The appliance only accepts multiples of the profile step. Values off that
+    # grid are rejected with a clear message before anything is sent, and the
+    # step stays usable when the unit is changed in Home Assistant.
+    enforce_step: bool = False
 
 
 class HCLightEntityDescription(HCEntityDescription, LightEntityDescription, frozen_or_thawed=True):
