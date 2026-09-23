@@ -8,7 +8,12 @@ from homeassistant.components.button import ButtonEntity
 from homeconnect_websocket.entities import Execution
 
 from .entity import HCEntity
-from .helpers import create_entities, error_decorator, fill_full_option_set
+from .helpers import (
+    create_entities,
+    error_decorator,
+    fill_full_option_set,
+    start_program_with_fallback,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -19,6 +24,8 @@ if TYPE_CHECKING:
     from .entity_descriptions.descriptions_definitions import HCButtonEntityDescription
 
 PARALLEL_UPDATES = 0
+
+COFFEE_MAKER_TYPE = "CoffeeMaker"
 
 
 async def async_setup_entry(
@@ -68,5 +75,10 @@ class HCStartButton(HCEntity, ButtonEntity):
             # Some appliances validate a program write against the program's
             # complete option set and reject a partial one.
             await program.start(fill_full_option_set(program, {}), override_options=True)
+        elif self._runtime_data.appliance.info.get("type") == COFFEE_MAKER_TYPE:
+            # Coffee makers have been seen answering 400 to a start that carries
+            # values for currently unavailable options; other appliance types keep
+            # the plain start, so a 400 there stays a clean failure.
+            await start_program_with_fallback(program)
         else:
             await program.start()
