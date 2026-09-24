@@ -461,6 +461,11 @@
             "number_light_internal_brightness": {
                 "default": "mdi:lightbulb"
             }
+        },
+        "light": {
+            "light_cooking_ambient_lighting": {
+                "default": "mdi:television-ambient-light"
+            }
         }
     },
     "services": {
