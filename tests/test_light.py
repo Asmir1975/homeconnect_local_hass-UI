@@ -764,7 +764,7 @@ async def test_turn_on_brightness_falls_back_when_rgb_preset_active(
     its last known value (BSH.Common.Setting.AmbientLightCustomColor on a
     real hood), so the RGB write path can't be used. Without this fallback the
     write branches both fall through and an empty message goes out, which
-    the appliance rejects outright (Issue #85, WriteRequest UnknownUID).
+    the appliance rejects outright (WriteRequest UnknownUID).
     """
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
     await mock_appliance.entities["Test.Lighting"].update({"value": True})

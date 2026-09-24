@@ -240,6 +240,14 @@ ENTITY_DESCRIPTIONS: _EntityDescriptionsType = {
             default_program="Test.Program.HoodVenting",
         )
     ],
+    "hood_level": [
+        HCFanEntityDescription(
+            key="Test.HoodLevel",
+            name="HoodLevel",
+            entities=["Test.HoodLevelVenting", "Test.HoodLevelIntensive"],
+            default_program="Test.Program.HoodLevel",
+        )
+    ],
     "light": [
         HCLightEntityDescription(
             key="Test.Light.1",
@@ -598,6 +606,22 @@ DEVICE_DESCRIPTION = DeviceDescription(
             protocolType="Boolean",
             default=False,
         ),
+        EntityDescription(
+            uid=520,
+            name="Test.HoodLevelVenting",
+            available=True,
+            access=Access.READ_WRITE,
+            enumeration={"0": "FanOff", "1": "FanStage01", "2": "FanStage02"},
+            default=0,
+        ),
+        EntityDescription(
+            uid=521,
+            name="Test.HoodLevelIntensive",
+            available=True,
+            access=Access.READ_WRITE,
+            enumeration={"0": "IntensiveStageOff", "1": "IntensiveStage1"},
+            default=0,
+        ),
     ],
     program=[
         EntityDescription(
@@ -644,6 +668,14 @@ DEVICE_DESCRIPTION = DeviceDescription(
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=404),
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=506),
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=507),
+            ],
+        ),
+        EntityDescription(
+            uid=522,
+            name="Test.Program.HoodLevel",
+            options=[
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=520),
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=521),
             ],
         ),
         EntityDescription(

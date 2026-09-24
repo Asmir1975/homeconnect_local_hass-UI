@@ -40,6 +40,7 @@ from custom_components.homeconnect_ws.entity_descriptions.refrigeration import (
 from custom_components.homeconnect_ws.helpers import entity_is_available, merge_dicts
 from custom_components.homeconnect_ws.number import HCNumber
 from custom_components.homeconnect_ws.sensor import HCEventSensor
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.number import NumberDeviceClass, NumberMode
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.components.switch import SwitchDeviceClass
@@ -581,6 +582,19 @@ def test_static_descriptions_have_english_name() -> None:
     assert missing == []
 
 
+def test_delayed_shutoff_stage_translation_key_is_not_misspelled() -> None:
+    """Test no translation file still uses the misspelled Delayed shut off stage key."""
+    translations = Path(entity_descriptions.__file__).parents[1] / "translations"
+
+    stale = [
+        path.name
+        for path in translations.glob("*.json")
+        if "select_hob_delaye_shutoff_stage" in path.read_text(encoding="utf-8")
+    ]
+
+    assert stale == []
+
+
 SILENCE_ON_DEMAND_PROFILE = {
     "setting": [
         {
@@ -844,3 +858,70 @@ async def test_speed_perfect_descriptions_have_unique_keys(
     ]
     assert len(speed_perfect) == 2
     assert len({item.key for item in speed_perfect}) == 2
+
+
+def test_hood_ambient_light_color_select_description() -> None:
+    """Test the ambient light color preset Select uses the raw device enum."""
+    description = next(
+        item
+        for item in COOKING_ENTITY_DESCRIPTIONS["select"]
+        if item.key == "select_hood_ambient_light_color"
+    )
+
+    assert description.entity == "BSH.Common.Setting.AmbientLightColor"
+    assert description.has_state_translation is True
+
+
+def test_hood_regenerative_carbon_filter_sensors() -> None:
+    """Test the two new regenerative carbon filter percentage sensors."""
+    keys = {
+        "sensor_regenerative_carbon_filter_life_cycle": (
+            "Cooking.Hood.Status.RegenerativeCarbonFilterLifeCycle"
+        ),
+        "sensor_regenerative_carbon_filter_saturation": (
+            "Cooking.Hood.Status.RegenerativeCarbonFilterSaturation"
+        ),
+    }
+    for key, entity in keys.items():
+        description = next(
+            item for item in COOKING_ENTITY_DESCRIPTIONS["sensor"] if item.key == key
+        )
+        assert description.entity == entity
+        assert description.native_unit_of_measurement == PERCENTAGE
+
+
+def test_hood_filter_event_binary_sensors_disabled_by_default() -> None:
+    """Test the seven filter event Binary Sensors: entity, on/off values, disabled default."""
+    keys_to_entities = {
+        "binary_sensor_hood_carbon_filter_max_saturation_reached": (
+            "Cooking.Common.Event.Hood.CarbonFilterMaxSaturationReached"
+        ),
+        "binary_sensor_hood_carbon_filter_max_saturation_nearly_reached": (
+            "Cooking.Common.Event.Hood.CarbonFilterMaxSaturationNearlyReached"
+        ),
+        "binary_sensor_hood_grease_filter_max_saturation_reached": (
+            "Cooking.Common.Event.Hood.GreaseFilterMaxSaturationReached"
+        ),
+        "binary_sensor_hood_grease_filter_max_saturation_nearly_reached": (
+            "Cooking.Common.Event.Hood.GreaseFilterMaxSaturationNearlyReached"
+        ),
+        "binary_sensor_hood_regenerative_carbon_filter_max_saturation_reached": (
+            "Cooking.Common.Event.Hood.RegenerativeCarbonFilterMaxSaturationReached"
+        ),
+        "binary_sensor_hood_regenerative_carbon_filter_lifetime_exceeded": (
+            "Cooking.Common.Event.Hood.RegenerativeCarbonFilterLifeTimeExceeded"
+        ),
+        "binary_sensor_hood_regenerative_carbon_filter_lifetime_nearly_exceeded": (
+            "Cooking.Common.Event.Hood.RegenerativeCarbonFilterLifeTimeNearlyExceeded"
+        ),
+    }
+    by_key = {item.key: item for item in COOKING_ENTITY_DESCRIPTIONS["binary_sensor"]}
+    assert set(by_key) == set(keys_to_entities)
+    for key, entity in keys_to_entities.items():
+        description = by_key[key]
+        assert description.entity == entity
+        assert description.device_class is BinarySensorDeviceClass.PROBLEM
+        assert description.value_on == {"Present", "Confirmed"}
+        assert description.value_off == {"Off"}
+        assert description.force_disabled_default is True
+        assert description.entity_category is EntityCategory.DIAGNOSTIC

@@ -265,6 +265,27 @@
       }
     },
     "binary_sensor": {
+      "binary_sensor_hood_carbon_filter_max_saturation_reached": {
+        "name": "Carbon Filter Saturation Reached"
+      },
+      "binary_sensor_hood_carbon_filter_max_saturation_nearly_reached": {
+        "name": "Carbon Filter Saturation Nearly Reached"
+      },
+      "binary_sensor_hood_grease_filter_max_saturation_reached": {
+        "name": "Grease Filter Saturation Reached"
+      },
+      "binary_sensor_hood_grease_filter_max_saturation_nearly_reached": {
+        "name": "Grease Filter Saturation Nearly Reached"
+      },
+      "binary_sensor_hood_regenerative_carbon_filter_max_saturation_reached": {
+        "name": "Regenerative Carbon Filter Saturation Reached"
+      },
+      "binary_sensor_hood_regenerative_carbon_filter_lifetime_exceeded": {
+        "name": "Regenerative Carbon Filter Lifetime Exceeded"
+      },
+      "binary_sensor_hood_regenerative_carbon_filter_lifetime_nearly_exceeded": {
+        "name": "Regenerative Carbon Filter Lifetime Nearly Exceeded"
+      },
       "binary_sensor_favorite_001": {
         "name": "Favorite short press"
       },
@@ -1947,6 +1968,12 @@
       },
       "sensor_carbon_filter_saturation": {
         "name": "Carbon Filter Saturation"
+      },
+      "sensor_regenerative_carbon_filter_life_cycle": {
+        "name": "Regenerative Carbon Filter Life Cycle"
+      },
+      "sensor_regenerative_carbon_filter_saturation": {
+        "name": "Regenerative Carbon Filter Saturation"
       },
       "sensor_hob_zone_state": {
         "name": "Zone{group_name} State",
@@ -4012,6 +4039,24 @@
           "none": "None",
           "basiccarbonfilter": "Basic Carbon filter",
           "regenerativecarbonfilter": "Regenerative Carbon filter"
+        }
+      },
+      "select_hood_venting_level": {
+        "name": "Hood level"
+      },
+      "select_hood_ambient_light_color": {
+        "name": "Ambient light color",
+        "state": {
+          "customcolor": "Custom",
+          "color32": "Color 32",
+          "color33": "Color 33",
+          "color34": "Color 34",
+          "color35": "Color 35",
+          "color36": "Color 36",
+          "color37": "Color 37",
+          "color38": "Color 38",
+          "color39": "Color 39",
+          "color40": "Color 40"
         }
       },
       "select_hood_light_startup": {

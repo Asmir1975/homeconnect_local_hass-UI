@@ -1757,7 +1757,7 @@
           "fanstage03": "3"
         }
       },
-      "select_hob_delaye_shutoff_stage": {
+      "select_hood_delayed_shutoff_stage": {
         "name": "Forsinket avstengingstrinn",
         "state": {
           "fanoff": "Av",

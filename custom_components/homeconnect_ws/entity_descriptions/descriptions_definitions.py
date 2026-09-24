@@ -140,6 +140,7 @@ class EntityDescriptions(TypedDict):
     wifi: list[HCSensorEntityDescription]
     light: list[HCLightEntityDescription]
     fan: list[HCFanEntityDescription]
+    hood_level: list[HCFanEntityDescription]
 
 
 _EntityDescriptionsDefinitionsType = dict[
@@ -157,6 +158,7 @@ _EntityDescriptionsDefinitionsType = dict[
         "wifi",
         "light",
         "fan",
+        "hood_level",
         "dynamic",
     ],
     list[
@@ -180,6 +182,7 @@ _EntityDescriptionsType = dict[
         "wifi",
         "light",
         "fan",
+        "hood_level",
     ],
     list[HCEntityDescription],
 ]

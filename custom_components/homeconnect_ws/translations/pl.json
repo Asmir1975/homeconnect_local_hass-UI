@@ -2420,7 +2420,7 @@
           "fanstage03": "3"
         }
       },
-      "select_hob_delaye_shutoff_stage": {
+      "select_hood_delayed_shutoff_stage": {
         "name": "Stopień opóźnionego wyłączenia",
         "state": {
           "fanoff": "wyłączone",
