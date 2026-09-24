@@ -173,6 +173,88 @@ async def test_select(
     )
 
 
+async def test_select_excludes_enum_members_outside_min_max(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """An enum member outside the entity's writable range isn't offered."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_select_minmax"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["On1", "On2"]
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Off"},
+            blocking=True,
+        )
+
+
+async def test_select_excludes_enum_members_below_min_only(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Only a min bound is set: members below it are excluded, no upper cutoff."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_select_minonly"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["On1", "On2"]
+
+
+async def test_select_excludes_enum_members_above_max_only(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Only a max bound is set: members above it are excluded, no lower cutoff."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_select_maxonly"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["Off", "On1"]
+
+
+async def test_select_min_max_translated_write_and_reject(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Translated select: excluded option rejected, allowed option written."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_select_minmax_translated"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["on1", "on2"]
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "off"},
+            blocking=True,
+        )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "on1"},
+        blocking=True,
+    )
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/values",
+            action=Action.POST,
+            data={"uid": 209, "value": 1},
+        )
+    )
+
+
 async def test_update_program(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,

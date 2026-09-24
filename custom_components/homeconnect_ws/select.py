@@ -60,17 +60,35 @@ class HCSelect(HCEntity, SelectEntity):
         self._rev_options = {}
         if entity_description.options:
             self._attr_options = entity_description.options
+            # A curated options list is independent of min/max scoping, so
+            # the reverse lookup keeps covering the full device enum.
+            translatable_items = self._entity.enum.items() if self._entity.enum else []
         elif self._entity.enum:
+            entity_min = self._entity.min
+            entity_max = self._entity.max
+            # Some enum members are reported but rejected on write, e.g. an
+            # "off" state outside the appliance's writable range. Excluding
+            # them here, and from the reverse lookup below, keeps them from
+            # being offered or written in the first place.
+            writable_items = [
+                (key, value)
+                for key, value in self._entity.enum.items()
+                if (entity_min is None or key >= entity_min)
+                and (entity_max is None or key <= entity_max)
+            ]
             self._attr_options = []
             if self.entity_description.has_state_translation:
-                for value in self._entity.enum.values():
+                for _, value in writable_items:
                     self._attr_options.append(str(value).lower())
             else:
-                for value in self._entity.enum.values():
+                for _, value in writable_items:
                     self._attr_options.append(str(value))
+            translatable_items = writable_items
+        else:
+            translatable_items = []
 
-        if self.entity_description.has_state_translation and self._entity.enum:
-            for value in self._entity.enum.values():
+        if self.entity_description.has_state_translation:
+            for _, value in translatable_items:
                 self._rev_options[str(value).lower()] = value
 
     @property

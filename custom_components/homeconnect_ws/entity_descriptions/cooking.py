@@ -571,7 +571,7 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity_category=EntityCategory.CONFIG,
         ),
         HCSelectEntityDescription(
-            key="select_hob_delaye_shutoff_stage",
+            key="select_hood_delayed_shutoff_stage",
             entity="Cooking.Hood.Setting.DelayedShutOffStage",
             has_state_translation=True,
         ),

@@ -3990,7 +3990,7 @@
           "fanstage03": "3"
         }
       },
-      "select_hob_delaye_shutoff_stage": {
+      "select_hood_delayed_shutoff_stage": {
         "name": "Verzögerte Abschaltstufe",
         "state": {
           "fanoff": "Aus",
@@ -4146,7 +4146,7 @@
         "name": "Logo-Licht"
       },
       "light_cooking_lighting": {
-        "name": "Licht"
+        "name": "Funktionslicht"
       },
       "light_cooking_ambient_lighting": {
         "name": "Umgebungslicht"
