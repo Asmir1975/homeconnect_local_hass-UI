@@ -265,6 +265,27 @@
       }
     },
     "binary_sensor": {
+      "binary_sensor_hood_carbon_filter_max_saturation_reached": {
+        "name": "Aktivkohlefilter-Sättigung erreicht"
+      },
+      "binary_sensor_hood_carbon_filter_max_saturation_nearly_reached": {
+        "name": "Aktivkohlefilter-Sättigung fast erreicht"
+      },
+      "binary_sensor_hood_grease_filter_max_saturation_reached": {
+        "name": "Fettfilter-Sättigung erreicht"
+      },
+      "binary_sensor_hood_grease_filter_max_saturation_nearly_reached": {
+        "name": "Fettfilter-Sättigung fast erreicht"
+      },
+      "binary_sensor_hood_regenerative_carbon_filter_max_saturation_reached": {
+        "name": "Regenerierbarer Kohlefilter Sättigung erreicht"
+      },
+      "binary_sensor_hood_regenerative_carbon_filter_lifetime_exceeded": {
+        "name": "Regenerierbarer Kohlefilter Lebensdauer überschritten"
+      },
+      "binary_sensor_hood_regenerative_carbon_filter_lifetime_nearly_exceeded": {
+        "name": "Regenerierbarer Kohlefilter Lebensdauer fast überschritten"
+      },
       "binary_sensor_favorite_001": {
         "name": "Favoritentaste kurz gedrückt"
       },
@@ -2012,6 +2033,12 @@
       },
       "sensor_carbon_filter_saturation": {
         "name": "Aktivkohlefilter-Sättigung"
+      },
+      "sensor_regenerative_carbon_filter_life_cycle": {
+        "name": "Regenerierbarer Kohlefilter Lebensdauer"
+      },
+      "sensor_regenerative_carbon_filter_saturation": {
+        "name": "Regenerierbarer Kohlefilter Sättigung"
       },
       "sensor_hob_zone_state": {
         "name": "Zone{group_name} Status",
@@ -4012,6 +4039,24 @@
           "none": "Keine",
           "basiccarbonfilter": "Standard-Kohlefilter",
           "regenerativecarbonfilter": "Regenerierbarer Kohlefilter"
+        }
+      },
+      "select_hood_venting_level": {
+        "name": "Haubenstufe"
+      },
+      "select_hood_ambient_light_color": {
+        "name": "Ambientelicht Farbe",
+        "state": {
+          "customcolor": "Benutzerdefiniert",
+          "color32": "Farbe 32",
+          "color33": "Farbe 33",
+          "color34": "Farbe 34",
+          "color35": "Farbe 35",
+          "color36": "Farbe 36",
+          "color37": "Farbe 37",
+          "color38": "Farbe 38",
+          "color39": "Farbe 39",
+          "color40": "Farbe 40"
         }
       },
       "select_hood_light_startup": {
