@@ -156,6 +156,18 @@ async def _setup_entry_with_device(
     return appliance, devices[0].id
 
 
+async def test_device_model(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test the device model is the appliance type and the model id its vib."""
+    _, device_id = await _setup_entry_with_device(hass, monkeypatch)
+    device = dr.async_get(hass).async_get(device_id)
+
+    assert device.model == DEVICE_DESCRIPTION["info"]["type"]
+    assert device.model_id == DEVICE_DESCRIPTION["info"]["vib"]
+
+
 async def test_set_start_in_calls_set_value(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,
