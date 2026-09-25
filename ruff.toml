@@ -2,6 +2,7 @@
 
 # py314 (since 2026-09-07): HA requires Python >=3.14.2 since release 2026.3.0,
 # hacs.json's minimum HA version was raised to match (upstream #382).
+# It was raised again to 2026.4.4 so the CI matrix tests the claimed minimum exactly.
 target-version = "py314"
 line-length = 100
 

@@ -64,6 +64,7 @@ def get_available_entities(appliance: HomeAppliance) -> EntityDescriptions:
         "wifi": [],
         "light": [],
         "fan": [],
+        "hood_level": [],
     }
     appliance_entities = set(appliance.entities)
     for description_type, descriptions in get_all_entity_description().items():

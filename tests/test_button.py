@@ -378,14 +378,26 @@ async def test_read_only_hob_start_stays_disabled(
     assert registry.async_get(entity_id).disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
+FAVORITE = "BSH.Common.Program.Favorite.001"
+NORMAL = "BSH.Common.Program.Coffee.CaffeLatte"
+
+
 async def _press_start(
     hass: HomeAssistant,
     entity_id: str,
     mock_appliance: MockAppliance,
+    *,
     appliance_type: str = "CoffeeMaker",
+    program_name: str = FAVORITE,
 ) -> None:
-    # The type is set only for the press: it also steers which entities get created.
-    with patch.dict(mock_appliance.info, {"type": appliance_type}):
+    # Type and name are set only for the press: the type also steers which entities get
+    # created, and the name must not disturb the entity setup.
+    program = mock_appliance.selected_program
+    assert program is not None
+    with (
+        patch.dict(mock_appliance.info, {"type": appliance_type}),
+        patch.object(program, "_name", program_name),
+    ):
         await hass.services.async_call(
             domain=BUTTON_DOMAIN,
             service=SERVICE_PRESS,
@@ -394,26 +406,51 @@ async def _press_start(
         )
 
 
-def _start_message(options: list[dict]) -> Message:
+def _start_message(options: list[dict], program: int = 500) -> Message:
     return Message(
         resource="/ro/activeProgram",
         action=Action.POST,
-        data={"program": 500, "options": options},
+        data={"program": program, "options": options},
     )
 
 
-async def test_start_retries_without_unavailable_options_on_400(
+async def _setup_program(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    *,
+    unavailable: bool = True,
+) -> str:
+    entity_id = "button.fake_brand_homeappliance_activeprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Option1"].update({"value": 5})
+    await mock_appliance.entities["Test.Option2"].update({"value": 7, "available": not unavailable})
+    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
+    await hass.async_block_till_done()
+    return entity_id
+
+
+async def test_favorite_start_unchanged_when_it_works(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """A favorite start that succeeds sends the unchanged payload once."""
+    entity_id = await _setup_program(hass, mock_appliance)
+
+    await _press_start(hass, entity_id, mock_appliance)
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        _start_message([{"uid": 401, "value": 5}, {"uid": 402, "value": 7}])
+    )
+
+
+async def test_favorite_start_retries_once_without_unavailable_options(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
     """A 400 on the start resource is retried once without unavailable options."""
-    entity_id = "button.fake_brand_homeappliance_activeprogram"
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.Option1"].update({"value": 5})
-    await mock_appliance.entities["Test.Option2"].update({"value": 7, "available": False})
-    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
-    await hass.async_block_till_done()
+    entity_id = await _setup_program(hass, mock_appliance)
     mock_appliance.session.send_sync.side_effect = [
         CodeResponsError(400, "/ro/activeProgram"),
         None,
@@ -427,68 +464,45 @@ async def test_start_retries_without_unavailable_options_on_400(
     ]
 
 
-async def test_start_retries_without_options_after_second_400(
+async def test_favorite_start_second_400_is_raised_after_two_requests(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
-    """A second 400 is retried once more without any options."""
-    entity_id = "button.fake_brand_homeappliance_activeprogram"
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.Option1"].update({"value": 5})
-    await mock_appliance.entities["Test.Option2"].update({"value": 7, "available": False})
-    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
-    await hass.async_block_till_done()
-    bad_request = CodeResponsError(400, "/ro/activeProgram")
-    mock_appliance.session.send_sync.side_effect = [bad_request, bad_request, None]
+    """A second 400 stays a visible failure, no third request is sent."""
+    entity_id = await _setup_program(hass, mock_appliance)
+    mock_appliance.session.send_sync.side_effect = CodeResponsError(400, "/ro/activeProgram")
 
-    await _press_start(hass, entity_id, mock_appliance)
+    with pytest.raises(HomeAssistantError):
+        await _press_start(hass, entity_id, mock_appliance)
 
-    assert mock_appliance.session.send_sync.await_args_list == [
-        call(_start_message([{"uid": 401, "value": 5}, {"uid": 402, "value": 7}])),
-        call(_start_message([{"uid": 401, "value": 5}])),
-        call(_start_message([])),
-    ]
+    assert mock_appliance.session.send_sync.await_count == 2
 
 
-async def test_start_skips_reduced_retry_when_nothing_to_drop(
+async def test_favorite_start_no_retry_when_nothing_to_drop(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
-    """With every option available and set, the retry goes straight to no options."""
-    entity_id = "button.fake_brand_homeappliance_activeprogram"
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.Option1"].update({"value": 5})
-    await mock_appliance.entities["Test.Option2"].update({"value": 7})
-    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
-    await hass.async_block_till_done()
-    mock_appliance.session.send_sync.side_effect = [
-        CodeResponsError(400, "/ro/activeProgram"),
-        None,
-    ]
+    """With every option available and set, a 400 is raised without a retry."""
+    entity_id = await _setup_program(hass, mock_appliance, unavailable=False)
+    mock_appliance.session.send_sync.side_effect = CodeResponsError(400, "/ro/activeProgram")
 
-    await _press_start(hass, entity_id, mock_appliance)
+    with pytest.raises(HomeAssistantError):
+        await _press_start(hass, entity_id, mock_appliance)
 
-    assert mock_appliance.session.send_sync.await_args_list == [
-        call(_start_message([{"uid": 401, "value": 5}, {"uid": 402, "value": 7}])),
-        call(_start_message([])),
-    ]
+    assert mock_appliance.session.send_sync.await_count == 1
 
 
-async def test_start_keeps_option_with_unknown_availability(
+async def test_favorite_start_keeps_option_with_unknown_availability(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
     """An option whose availability is unknown (None) is not treated as unavailable."""
-    entity_id = "button.fake_brand_homeappliance_activeprogram"
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.Option1"].update({"value": 5})
-    await mock_appliance.entities["Test.Option2"].update({"value": 7, "available": False})
+    entity_id = await _setup_program(hass, mock_appliance)
+    await mock_appliance.entities["Test.Option1"].update({"available": False})
     mock_appliance.entities["Test.Option2"]._available = None
-    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
-    await hass.async_block_till_done()
     mock_appliance.session.send_sync.side_effect = [
         CodeResponsError(400, "/ro/activeProgram"),
         None,
@@ -498,21 +512,58 @@ async def test_start_keeps_option_with_unknown_availability(
 
     assert mock_appliance.session.send_sync.await_args_list == [
         call(_start_message([{"uid": 401, "value": 5}, {"uid": 402, "value": 7}])),
-        call(_start_message([])),
+        call(_start_message([{"uid": 402, "value": 7}])),
     ]
 
 
-async def test_start_does_not_retry_other_error_codes(
+async def test_normal_coffee_program_400_is_not_retried(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
-    """Only a 400 is retried, any other code is raised after one attempt."""
-    entity_id = "button.fake_brand_homeappliance_activeprogram"
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
-    await hass.async_block_till_done()
-    mock_appliance.session.send_sync.side_effect = CodeResponsError(404, "/ro/activeProgram")
+    """Only favorites are retried, a normal coffee program keeps the clean failure."""
+    entity_id = await _setup_program(hass, mock_appliance)
+    mock_appliance.session.send_sync.side_effect = CodeResponsError(400, "/ro/activeProgram")
+
+    with pytest.raises(HomeAssistantError):
+        await _press_start(hass, entity_id, mock_appliance, program_name=NORMAL)
+
+    assert mock_appliance.session.send_sync.await_count == 1
+
+
+async def test_other_appliance_type_400_is_not_retried(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Outside coffee makers a 400 stays a plain failure, even for a favorite."""
+    entity_id = await _setup_program(hass, mock_appliance)
+    mock_appliance.session.send_sync.side_effect = CodeResponsError(400, "/ro/activeProgram")
+
+    with pytest.raises(HomeAssistantError):
+        await _press_start(hass, entity_id, mock_appliance, appliance_type="HomeAppliance")
+
+    assert mock_appliance.session.send_sync.await_count == 1
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        CodeResponsError(404, "/ro/activeProgram"),
+        CodeResponsError(400, "/ro/selectedProgram"),
+        TimeoutError(),
+    ],
+    ids=["other_code", "other_resource", "timeout"],
+)
+async def test_favorite_start_only_retries_a_400_on_the_start_resource(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+    error: Exception,
+) -> None:
+    """Other codes, other resources and timeouts are never retried."""
+    entity_id = await _setup_program(hass, mock_appliance)
+    mock_appliance.session.send_sync.side_effect = error
 
     with pytest.raises(HomeAssistantError):
         await _press_start(hass, entity_id, mock_appliance)
@@ -520,59 +571,30 @@ async def test_start_does_not_retry_other_error_codes(
     assert mock_appliance.session.send_sync.await_count == 1
 
 
-async def test_start_does_not_retry_on_timeout(
+async def test_full_option_set_keeps_precedence_on_coffee_favorite(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
-    """A timeout is never retried, the appliance might already have started."""
+    """A full-option-set program keeps its existing path even for a coffee favorite."""
     entity_id = "button.fake_brand_homeappliance_activeprogram"
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
-    await hass.async_block_till_done()
-    mock_appliance.session.send_sync.side_effect = TimeoutError
-
-    with pytest.raises(HomeAssistantError):
-        await _press_start(hass, entity_id, mock_appliance)
-
-    assert mock_appliance.session.send_sync.await_count == 1
-
-
-async def test_start_does_not_retry_400_on_other_resource(
-    hass: HomeAssistant,
-    mock_appliance: MockAppliance,
-    patch_entity_description: None,  # noqa: ARG001
-) -> None:
-    """A 400 that names another resource is not a start rejection."""
-    entity_id = "button.fake_brand_homeappliance_activeprogram"
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
-    await hass.async_block_till_done()
-    mock_appliance.session.send_sync.side_effect = CodeResponsError(400, "/ro/selectedProgram")
-
-    with pytest.raises(HomeAssistantError):
-        await _press_start(hass, entity_id, mock_appliance)
-
-    assert mock_appliance.session.send_sync.await_count == 1
-
-
-async def test_start_does_not_retry_on_other_appliance_types(
-    hass: HomeAssistant,
-    mock_appliance: MockAppliance,
-    patch_entity_description: None,  # noqa: ARG001
-) -> None:
-    """Outside coffee makers a 400 stays a plain failure and is never retried."""
-    entity_id = "button.fake_brand_homeappliance_activeprogram"
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.Option1"].update({"value": 5})
-    await mock_appliance.entities["Test.Option2"].update({"value": 7, "available": False})
-    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 500})
+    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
+    await mock_appliance.entities["Test.SelectedProgram"].update({"value": 504})
     await hass.async_block_till_done()
     mock_appliance.session.send_sync.side_effect = CodeResponsError(400, "/ro/activeProgram")
 
     with pytest.raises(HomeAssistantError):
-        await _press_start(hass, entity_id, mock_appliance, "HomeAppliance")
+        await _press_start(hass, entity_id, mock_appliance)
 
     mock_appliance.session.send_sync.assert_awaited_once_with(
-        _start_message([{"uid": 401, "value": 5}, {"uid": 402, "value": 7}])
+        _start_message(
+            [
+                {"uid": 403, "value": 0},
+                {"uid": 404, "value": 0},
+                {"uid": 506, "value": 1},
+                {"uid": 507, "value": 0},
+            ],
+            program=504,
+        )
     )

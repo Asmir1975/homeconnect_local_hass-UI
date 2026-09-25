@@ -25,6 +25,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
 )
+from homeassistant.util.color import value_to_brightness
 from homeconnect_websocket.message import Action, Message
 
 from . import setup_config_entry
@@ -749,6 +750,116 @@ async def test_set_color(
         )
     )
     mock_appliance.session.send_sync.reset_mock()
+
+
+async def test_turn_on_brightness_falls_back_when_rgb_preset_active(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """
+    Adjusting brightness while a color preset is active writes to Brightness.
+
+    A preset leaves the custom-color Setting unavailable but does not clear
+    its last known value (BSH.Common.Setting.AmbientLightCustomColor on a
+    real hood), so the RGB write path can't be used. Without this fallback the
+    write branches both fall through and an empty message goes out, which
+    the appliance rejects outright (WriteRequest UnknownUID).
+    """
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingCustomColor"].update({"value": "#800000"})
+    await mock_appliance.entities["Test.LightingColor"].update({"value": 33})
+    await mock_appliance.entities["Test.LightingCustomColor"].update({"available": False})
+    await mock_appliance.entities["Test.LightingBrightness"].update({"value": 40})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.fake_brand_homeappliance_light_5",
+            ATTR_BRIGHTNESS_PCT: 50,
+        },
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/values",
+            action=Action.POST,
+            data=[{"uid": 109, "value": 50}],
+        )
+    )
+
+
+async def test_turn_on_explicit_color_while_rgb_unavailable_sends_nothing(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """An explicit color request must not silently turn into a brightness write."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingCustomColor"].update({"value": "#800000"})
+    await mock_appliance.entities["Test.LightingColor"].update({"value": 33})
+    await mock_appliance.entities["Test.LightingCustomColor"].update({"available": False})
+    await mock_appliance.entities["Test.LightingBrightness"].update({"value": 40})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {
+            ATTR_ENTITY_ID: "light.fake_brand_homeappliance_light_5",
+            ATTR_RGB_COLOR: (0, 255, 0),
+        },
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_not_awaited()
+
+
+async def test_turn_on_sends_nothing_when_message_is_empty(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """A turn_on that resolves to no writable data must not hit the appliance."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingCustomColor"].update({"value": "#800000"})
+    await mock_appliance.entities["Test.LightingColor"].update({"value": 33})
+    await mock_appliance.entities["Test.LightingCustomColor"].update({"available": False})
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "light.fake_brand_homeappliance_light_5"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_not_awaited()
+
+
+async def test_brightness_and_rgb_color_ignore_stale_value_when_rgb_unavailable(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """The displayed brightness/color must not show a stale custom color."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.Lighting"].update({"value": True})
+    await mock_appliance.entities["Test.LightingCustomColor"].update({"value": "#800000"})
+    await mock_appliance.entities["Test.LightingColor"].update({"value": 33})
+    await mock_appliance.entities["Test.LightingCustomColor"].update({"available": False})
+    await mock_appliance.entities["Test.LightingBrightness"].update({"value": 40})
+    await hass.async_block_till_done()
+
+    state = hass.states.get("light.fake_brand_homeappliance_light_5")
+    assert state.attributes[ATTR_RGB_COLOR] is None
+    assert state.attributes[ATTR_BRIGHTNESS] == value_to_brightness((1, 100), 40)
 
 
 async def test_turn_on_when_brightness_is_unavailable(

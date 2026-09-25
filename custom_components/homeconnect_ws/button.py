@@ -12,7 +12,7 @@ from .helpers import (
     create_entities,
     error_decorator,
     fill_full_option_set,
-    start_program_with_fallback,
+    start_coffee_favorite_with_fallback,
 )
 
 if TYPE_CHECKING:
@@ -26,6 +26,7 @@ if TYPE_CHECKING:
 PARALLEL_UPDATES = 0
 
 COFFEE_MAKER_TYPE = "CoffeeMaker"
+COFFEE_FAVORITE_PREFIX = "BSH.Common.Program.Favorite."
 
 
 async def async_setup_entry(
@@ -71,14 +72,15 @@ class HCStartButton(HCEntity, ButtonEntity):
     @error_decorator
     async def async_press(self) -> None:
         program = self._runtime_data.appliance.selected_program
+        is_coffee_maker = self._runtime_data.appliance.info.get("type") == COFFEE_MAKER_TYPE
         if program.full_option_set:
             # Some appliances validate a program write against the program's
             # complete option set and reject a partial one.
             await program.start(fill_full_option_set(program, {}), override_options=True)
-        elif self._runtime_data.appliance.info.get("type") == COFFEE_MAKER_TYPE:
-            # Coffee makers have been seen answering 400 to a start that carries
-            # values for currently unavailable options; other appliance types keep
-            # the plain start, so a 400 there stays a clean failure.
-            await start_program_with_fallback(program)
+        elif is_coffee_maker and program.name.startswith(COFFEE_FAVORITE_PREFIX):
+            # A Siemens coffee maker answered 400 to the start of a favorite that
+            # carried values for unavailable options. Only favorites on coffee
+            # makers get the single retry, everything else keeps the plain start.
+            await start_coffee_favorite_with_fallback(program)
         else:
             await program.start()

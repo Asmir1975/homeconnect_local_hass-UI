@@ -6,9 +6,12 @@ from typing import TYPE_CHECKING
 
 from homeassistant.components.select import SelectEntity
 from homeconnect_websocket.entities import Access, Execution
+from homeconnect_websocket.message import Action, Message
 
 from .const import CONF_FILTER_UNSAVED_FAVORITES
 from .entity import HCEntity
+from .entity_descriptions.common import POWER_OFF_STATE_NAMES
+from .fan import SpeedMapping
 from .helpers import (
     create_entities,
     ensure_writable,
@@ -22,13 +25,23 @@ if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
     from homeconnect_websocket.entities import ActiveProgram, Program, SelectedProgram
+    from homeconnect_websocket.entities import Entity as HcEntity
 
     from . import HCConfigEntry, HCData
-    from .entity_descriptions.descriptions_definitions import HCSelectEntityDescription
+    from .entity_descriptions.descriptions_definitions import (
+        HCFanEntityDescription,
+        HCSelectEntityDescription,
+    )
 PARALLEL_UPDATES = 0
 
 _ACTIVE_PROGRAM_ACCESS = (Access.READ_WRITE, Access.WRITE_ONLY)
 _SELECTED_PROGRAM_SUFFIX = ".SelectedProgram"
+_OPERATION_STATE_ENTITY = "BSH.Common.Status.OperationState"
+_INACTIVE_OPERATION_STATES = frozenset({"inactive", "ready"})
+_POWER_STATE_ENTITY = "BSH.Common.Setting.PowerState"
+HOOD_LEVEL_OFF = "Off"
+HOOD_LEVEL_BOOST = "Boost"
+_VENTING_BOOST_ENTITY = "Cooking.Common.Option.Hood.Boost"
 
 
 async def async_setup_entry(
@@ -38,7 +51,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up select platform."""
     entities = create_entities(
-        {"select": HCSelect, "program": HCProgram},
+        {"select": HCSelect, "program": HCProgram, "hood_level": HCHoodLevelSelect},
         config_entry.runtime_data,
     )
     async_add_entites(entities)
@@ -60,17 +73,35 @@ class HCSelect(HCEntity, SelectEntity):
         self._rev_options = {}
         if entity_description.options:
             self._attr_options = entity_description.options
+            # A curated options list is independent of min/max scoping, so
+            # the reverse lookup keeps covering the full device enum.
+            translatable_items = self._entity.enum.items() if self._entity.enum else []
         elif self._entity.enum:
+            entity_min = self._entity.min
+            entity_max = self._entity.max
+            # Some enum members are reported but rejected on write, e.g. an
+            # "off" state outside the appliance's writable range. Excluding
+            # them here, and from the reverse lookup below, keeps them from
+            # being offered or written in the first place.
+            writable_items = [
+                (key, value)
+                for key, value in self._entity.enum.items()
+                if (entity_min is None or key >= entity_min)
+                and (entity_max is None or key <= entity_max)
+            ]
             self._attr_options = []
             if self.entity_description.has_state_translation:
-                for value in self._entity.enum.values():
+                for _, value in writable_items:
                     self._attr_options.append(str(value).lower())
             else:
-                for value in self._entity.enum.values():
+                for _, value in writable_items:
                     self._attr_options.append(str(value))
+            translatable_items = writable_items
+        else:
+            translatable_items = []
 
-        if self.entity_description.has_state_translation and self._entity.enum:
-            for value in self._entity.enum.values():
+        if self.entity_description.has_state_translation:
+            for _, value in translatable_items:
                 self._rev_options[str(value).lower()] = value
 
     @property
@@ -200,3 +231,137 @@ class HCProgram(HCSelect):
                 # (Program._build_options); scoped to this path so devices that
                 # already worked keep their existing payload.
                 await selected_program.start(override_options=True)
+
+
+class HCHoodLevelSelect(HCEntity, SelectEntity):
+    """
+    Single always-visible Hood level Select.
+
+    Venting/Intensive are Program Options, not Settings, so this mirrors HCFan's write path
+    (program.start over /ro/activeProgram, zeroing the other option,
+    PowerState-off fallback for "Off") instead of the generic
+    HCSelect.async_select_option()/entity.set_value(), which would write the
+    wrong resource. Options are the device's own enum names, "Off" is our
+    own addition since the appliance has no selectable off stage.
+    """
+
+    entity_description: HCFanEntityDescription
+    _speed_entities: dict[str, HcEntity]
+    _speed_mapping: list[SpeedMapping]
+    _venting_boost_entity: HcEntity | None = None
+
+    def __init__(
+        self,
+        entity_description: HCFanEntityDescription,
+        runtime_data: HCData,
+    ) -> None:
+        super().__init__(entity_description, runtime_data)
+        self._speed_entities = {}
+        self._speed_mapping = []
+        speed = 0
+        for entity_name in entity_description.entities:
+            entity = self._runtime_data.appliance.entities[entity_name]
+            self._speed_entities[entity_name] = entity
+            for option in entity.enum:
+                if option != 0:
+                    speed += 1
+                    self._speed_mapping.append(SpeedMapping(entity_name, option, speed))
+        self._attr_options = [
+            HOOD_LEVEL_OFF,
+            *(
+                self._speed_entities[m.entity_name].enum[m.entity_value]
+                for m in self._speed_mapping
+            ),
+        ]
+        operation_state = self._runtime_data.appliance.entities.get(_OPERATION_STATE_ENTITY)
+        if operation_state is not None and operation_state not in self._entities:
+            self._entities.append(operation_state)
+
+        # Boost zeroes both speed options (see HCFan._start_boost in fan.py), so
+        # without this, current_option would fall through to HOOD_LEVEL_OFF while
+        # the hood is actually running Boost.
+        self._venting_boost_entity = self._runtime_data.appliance.options.get(_VENTING_BOOST_ENTITY)
+        if self._venting_boost_entity is not None:
+            self._attr_options.append(HOOD_LEVEL_BOOST)
+            if self._venting_boost_entity not in self._entities:
+                self._entities.append(self._venting_boost_entity)
+
+    @property
+    def current_option(self) -> str:
+        operation_state = self._runtime_data.appliance.entities.get(_OPERATION_STATE_ENTITY)
+        if (
+            operation_state is not None
+            and str(operation_state.value or "").lower() in _INACTIVE_OPERATION_STATES
+        ):
+            return HOOD_LEVEL_OFF
+        for speed in self._speed_mapping:
+            entity = self._speed_entities[speed.entity_name]
+            if entity.value_raw == speed.entity_value:
+                return entity.enum[speed.entity_value]
+        if self._venting_boost_entity is not None and self._venting_boost_entity.value_raw:
+            return HOOD_LEVEL_BOOST
+        return HOOD_LEVEL_OFF
+
+    @error_decorator
+    async def async_select_option(self, option: str) -> None:
+        if option == HOOD_LEVEL_OFF:
+            await self._async_turn_off()
+            return
+        if option == HOOD_LEVEL_BOOST:
+            await self._async_start_boost()
+            return
+
+        new_speed_entity: str | None = None
+        new_speed_value: int | None = None
+        for speed in self._speed_mapping:
+            entity = self._speed_entities[speed.entity_name]
+            if entity.enum[speed.entity_value] == option:
+                new_speed_entity = speed.entity_name
+                new_speed_value = speed.entity_value
+                break
+
+        program = self._runtime_data.appliance.programs[self.entity_description.default_program]
+        options = {
+            entity.uid: (new_speed_value if entity.name == new_speed_entity else 0)
+            for entity in self._speed_entities.values()
+        }
+        if program.full_option_set:
+            fill_full_option_set(program, options)
+
+        await program.start(options, override_options=True)
+
+    async def _async_turn_off(self) -> None:
+        power_state = self._runtime_data.appliance.entities.get(_POWER_STATE_ENTITY)
+        off_value = None
+        if power_state is not None:
+            if power_state.min is not None and power_state.max is not None:
+                settable = {
+                    value
+                    for key, value in (power_state.enum or {}).items()
+                    if power_state.min <= key <= power_state.max
+                }
+            else:
+                settable = set((power_state.enum or {}).values())
+            off_value = next((name for name in POWER_OFF_STATE_NAMES if name in settable), None)
+
+        if off_value is not None:
+            await power_state.set_value(off_value)
+            return
+
+        data = [{"uid": entity.uid, "value": 0} for entity in self._speed_entities.values()]
+        message = Message(
+            resource="/ro/values",
+            action=Action.POST,
+            data=data,
+        )
+        await self._runtime_data.appliance.session.send_sync(message)
+
+    async def _async_start_boost(self) -> None:
+        # Mirrors HCFan._start_boost: zero every speed option, same entities as
+        # a normal level write, and set Boost.
+        program = self._runtime_data.appliance.programs[self.entity_description.default_program]
+        options: dict[int, str | int | bool] = {
+            entity.uid: 0 for entity in self._speed_entities.values()
+        }
+        options[self._venting_boost_entity.uid] = True
+        await program.start(options, override_options=True)

@@ -138,51 +138,39 @@ def ensure_writable(entity: HcEntity | None) -> None:
         )
 
 
-async def start_program_with_fallback(program: Program) -> None:
+async def start_coffee_favorite_with_fallback(program: Program) -> None:
     """
-    Start program, retrying with fewer options only if the appliance answers 400.
+    Start a coffee favorite, retrying once with fewer options after a 400.
 
-    The first attempt is the unchanged default start, so every appliance that
-    starts today keeps its payload. Some appliances answer 400 to a start whose
-    options include values for options that are currently not available (the
-    suspected cause when a Siemens coffee maker starts a favorite). Only after
-    such a 400 on the start resource is the request repeated, first without
-    unavailable options, then without any options. Other errors, timeouts and
-    disconnects are never retried, since the appliance might already have started.
+    The first attempt is the unchanged default start, so every start that works
+    today keeps its payload. Some coffee makers answer 400 to a favorite start
+    whose options include values for options that are currently not available
+    (the suspected cause on a Siemens TP713D09). Only after such a 400 on the
+    start resource the request is repeated exactly once, without the unavailable
+    options. Any other error, a timeout or a disconnect is never retried, since
+    the appliance might already have started.
     """
     try:
         await program.start()
     except CodeResponsError as exc:
         if exc.code != HTTP_BAD_REQUEST or exc.resource != _START_RESOURCE:
             raise
-        _LOGGER.debug("Start of %s answered 400, retrying with fewer options", program.name)
-    else:
-        return
-
-    writable = {
-        option.uid: option.value_shadow
-        for option in program.options
-        if option.access == Access.READ_WRITE
-    }
-    reduced = {
-        option.uid: option.value_shadow
-        for option in program.options
-        if option.access == Access.READ_WRITE
-        and option.available is not False
-        and option.value_shadow is not None
-    }
-    if reduced != writable:
-        try:
-            await program.start(reduced, override_options=True)
-        except CodeResponsError as exc:
-            if exc.code != HTTP_BAD_REQUEST or exc.resource != _START_RESOURCE:
-                raise
-            _LOGGER.debug(
-                "Reduced start of %s answered 400, retrying without options", program.name
-            )
-        else:
-            return
-    await program.start(override_options=True)
+        writable = {
+            option.uid: option.value_shadow
+            for option in program.options
+            if option.access == Access.READ_WRITE
+        }
+        reduced = {
+            option.uid: option.value_shadow
+            for option in program.options
+            if option.access == Access.READ_WRITE
+            and option.available is not False
+            and option.value_shadow is not None
+        }
+        if reduced == writable:
+            raise
+        _LOGGER.debug("Start of %s answered 400, retrying with available options", program.name)
+        await program.start(reduced, override_options=True)
 
 
 def fill_full_option_set(

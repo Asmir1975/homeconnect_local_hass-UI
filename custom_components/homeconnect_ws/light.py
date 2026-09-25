@@ -154,7 +154,11 @@ class HCLight(HCEntity, LightEntity):
 
     @property
     def brightness(self) -> int | None:
-        if self._color_entity is not None and self._color_entity.value is not None:
+        if (
+            self._rgb_usable
+            and self._color_entity is not None
+            and self._color_entity.value is not None
+        ):
             rgb = rgb_hex_to_rgb_list(self._color_entity.value.strip("#"))
             return max(rgb)
         if self._brightness_entity is not None and self._brightness_entity.value is not None:
@@ -183,7 +187,11 @@ class HCLight(HCEntity, LightEntity):
 
     @property
     def rgb_color(self) -> tuple[int, int, int] | None:
-        if self._color_entity is not None and self._color_entity.value is not None:
+        if (
+            self._rgb_usable
+            and self._color_entity is not None
+            and self._color_entity.value is not None
+        ):
             rgb = rgb_hex_to_rgb_list(self._color_entity.value.strip("#"))
             return match_max_scale((255,), rgb)
         return None
@@ -217,6 +225,28 @@ class HCLight(HCEntity, LightEntity):
             ):
                 color_mode_value = self._color_mode_entity._rev_enumeration["CustomColor"]  # noqa: SLF001
                 message.data.append({"uid": self._color_mode_entity.uid, "value": color_mode_value})
+
+        elif (
+            self._attr_color_mode == ColorMode.RGB
+            and not self._rgb_usable
+            and ATTR_BRIGHTNESS in kwargs
+            and ATTR_RGB_COLOR not in kwargs
+            and self._brightness_entity is not None
+            and entity_is_available(
+                self._brightness_entity, self.entity_description.available_access
+            )
+        ):
+            # The color Setting is unusable right now (e.g. a preset is active
+            # instead of Custom), so the RGB branch above can't write. Falling
+            # through here would send an empty message, which the appliance
+            # rejects outright (WriteRequest UnknownUID) rather than ignoring.
+            value_in_range = int(
+                max(
+                    brightness_to_value((1, 100), brightness),
+                    self._brightness_entity.min,
+                )
+            )
+            message.data.append({"uid": self._brightness_entity.uid, "value": value_in_range})
 
         elif (
             self._attr_color_mode in (ColorMode.BRIGHTNESS, ColorMode.COLOR_TEMP)
@@ -255,7 +285,8 @@ class HCLight(HCEntity, LightEntity):
 
         if self._entity.value is not True:
             message.data.append({"uid": self._entity.uid, "value": True})
-        await self._runtime_data.appliance.session.send_sync(message)
+        if message.data:
+            await self._runtime_data.appliance.session.send_sync(message)
 
     @error_decorator
     async def async_turn_off(self, **kwargs: Any) -> None:

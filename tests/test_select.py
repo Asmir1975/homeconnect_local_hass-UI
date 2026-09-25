@@ -173,6 +173,88 @@ async def test_select(
     )
 
 
+async def test_select_excludes_enum_members_outside_min_max(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """An enum member outside the entity's writable range isn't offered."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_select_minmax"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["On1", "On2"]
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Off"},
+            blocking=True,
+        )
+
+
+async def test_select_excludes_enum_members_below_min_only(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Only a min bound is set: members below it are excluded, no upper cutoff."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_select_minonly"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["On1", "On2"]
+
+
+async def test_select_excludes_enum_members_above_max_only(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Only a max bound is set: members above it are excluded, no lower cutoff."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_select_maxonly"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["Off", "On1"]
+
+
+async def test_select_min_max_translated_write_and_reject(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Translated select: excluded option rejected, allowed option written."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_select_minmax_translated"
+
+    state = hass.states.get(entity_id)
+    assert state.attributes[ATTR_OPTIONS] == ["on1", "on2"]
+
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "off"},
+            blocking=True,
+        )
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "on1"},
+        blocking=True,
+    )
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/values",
+            action=Action.POST,
+            data={"uid": 209, "value": 1},
+        )
+    )
+
+
 async def test_update_program(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,
@@ -546,3 +628,161 @@ async def test_duplicate_favorite_names_select_the_right_slot(
         blocking=True,
     )
     assert mock_appliance.session.send_sync.call_args.args[0].data["program"] == 503
+
+
+async def test_hood_level_select_setup(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,  # noqa: ARG001
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Test the always-visible Hood level Select."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    state = hass.states.get("select.fake_brand_homeappliance_hoodlevel")
+    assert state
+    assert state.state == "Off"
+    assert state.attributes[ATTR_OPTIONS] == [
+        "Off",
+        "FanStage01",
+        "FanStage02",
+        "IntensiveStage1",
+        "Boost",
+    ]
+
+
+async def test_hood_level_select_venting(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Selecting a venting level starts the owning Program, zeroing Intensive."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_hoodlevel"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "FanStage02"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 522,
+                "options": [{"uid": 520, "value": 2}, {"uid": 521, "value": 0}],
+            },
+        )
+    )
+
+    await mock_appliance.entities["Test.HoodLevelVenting"].update({"value": 2})
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == "FanStage02"
+
+
+async def test_hood_level_select_intensive_zeroes_venting(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Selecting an intensive level zeroes the venting option."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_hoodlevel"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "IntensiveStage1"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 522,
+                "options": [{"uid": 520, "value": 0}, {"uid": 521, "value": 1}],
+            },
+        )
+    )
+
+
+async def test_hood_level_select_off_uses_power_state(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Selecting Off powers the appliance down instead of zeroing both options."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_hoodlevel"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Off"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/values",
+            action=Action.POST,
+            data={"uid": 205, "value": 1},
+        )
+    )
+
+
+async def test_hood_level_select_shows_boost(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Boost zeroes both speed options; current_option must show Boost, not Off."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_hoodlevel"
+    assert "Boost" in hass.states.get(entity_id).attributes[ATTR_OPTIONS]
+
+    await mock_appliance.entities["Cooking.Common.Option.Hood.Boost"].update({"value": True})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "Boost"
+
+    await mock_appliance.entities["Cooking.Common.Option.Hood.Boost"].update({"value": False})
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "Off"
+
+
+async def test_hood_level_select_boost_sends_expected_payload(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Selecting Boost zeroes both speed options and sets Boost in one write."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    entity_id = "select.fake_brand_homeappliance_hoodlevel"
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Boost"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 522,
+                "options": [
+                    {"uid": 520, "value": 0},
+                    {"uid": 521, "value": 0},
+                    {"uid": 508, "value": True},
+                ],
+            },
+        )
+    )

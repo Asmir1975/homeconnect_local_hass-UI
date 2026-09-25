@@ -1803,7 +1803,7 @@
           "fanstage03": "3"
         }
       },
-      "select_hob_delaye_shutoff_stage": {
+      "select_hood_delayed_shutoff_stage": {
         "name": "Delayed ShutOff Stage",
         "state": {
           "fanoff": "Désactivé",

@@ -168,6 +168,27 @@ ENTITY_DESCRIPTIONS: _EntityDescriptionsType = {
             has_state_translation=True,
             options=["option2"],
         ),
+        HCSelectEntityDescription(
+            key="Test.Select.MinMax",
+            name="Select.MinMax",
+            entity="Test.Select.MinMax",
+        ),
+        HCSelectEntityDescription(
+            key="Test.Select.MinOnly",
+            name="Select.MinOnly",
+            entity="Test.Select.MinOnly",
+        ),
+        HCSelectEntityDescription(
+            key="Test.Select.MaxOnly",
+            name="Select.MaxOnly",
+            entity="Test.Select.MaxOnly",
+        ),
+        HCSelectEntityDescription(
+            key="Test.Select.MinMax.Translated",
+            name="Select.MinMax.Translated",
+            entity="Test.Select.MinMax.Translated",
+            has_state_translation=True,
+        ),
     ],
     "sensor": [
         HCSensorEntityDescription(key="Test.Sensor", name="Sensor", entity="Test.Sensor"),
@@ -219,6 +240,14 @@ ENTITY_DESCRIPTIONS: _EntityDescriptionsType = {
             default_program="Test.Program.HoodVenting",
         )
     ],
+    "hood_level": [
+        HCFanEntityDescription(
+            key="Test.HoodLevel",
+            name="HoodLevel",
+            entities=["Test.HoodLevelVenting", "Test.HoodLevelIntensive"],
+            default_program="Test.Program.HoodLevel",
+        )
+    ],
     "light": [
         HCLightEntityDescription(
             key="Test.Light.1",
@@ -242,6 +271,14 @@ ENTITY_DESCRIPTIONS: _EntityDescriptionsType = {
             key="Test.Light.4",
             name="Light.4",
             entity="Test.Lighting",
+            color_entity="Test.LightingCustomColor",
+            color_mode_entity="Test.LightingColor",
+        ),
+        HCLightEntityDescription(
+            key="Test.Light.5",
+            name="Light.5",
+            entity="Test.Lighting",
+            brightness_entity="Test.LightingBrightness",
             color_entity="Test.LightingCustomColor",
             color_mode_entity="Test.LightingColor",
         ),
@@ -352,6 +389,40 @@ DEVICE_DESCRIPTION = DeviceDescription(
             uid=203,
             name="Test.Select",
             enumeration={"0": "Option1", "1": "Option2", "2": "Option3"},
+            available=True,
+            access=Access.READ_WRITE,
+        ),
+        EntityDescription(
+            uid=206,
+            name="Test.Select.MinMax",
+            enumeration={"0": "Off", "1": "On1", "2": "On2"},
+            min=1,
+            max=2,
+            available=True,
+            access=Access.READ_WRITE,
+        ),
+        EntityDescription(
+            uid=207,
+            name="Test.Select.MinOnly",
+            enumeration={"0": "Off", "1": "On1", "2": "On2"},
+            min=1,
+            available=True,
+            access=Access.READ_WRITE,
+        ),
+        EntityDescription(
+            uid=208,
+            name="Test.Select.MaxOnly",
+            enumeration={"0": "Off", "1": "On1", "2": "On2"},
+            max=1,
+            available=True,
+            access=Access.READ_WRITE,
+        ),
+        EntityDescription(
+            uid=209,
+            name="Test.Select.MinMax.Translated",
+            enumeration={"0": "Off", "1": "On1", "2": "On2"},
+            min=1,
+            max=2,
             available=True,
             access=Access.READ_WRITE,
         ),
@@ -535,6 +606,22 @@ DEVICE_DESCRIPTION = DeviceDescription(
             protocolType="Boolean",
             default=False,
         ),
+        EntityDescription(
+            uid=520,
+            name="Test.HoodLevelVenting",
+            available=True,
+            access=Access.READ_WRITE,
+            enumeration={"0": "FanOff", "1": "FanStage01", "2": "FanStage02"},
+            default=0,
+        ),
+        EntityDescription(
+            uid=521,
+            name="Test.HoodLevelIntensive",
+            available=True,
+            access=Access.READ_WRITE,
+            enumeration={"0": "IntensiveStageOff", "1": "IntensiveStage1"},
+            default=0,
+        ),
     ],
     program=[
         EntityDescription(
@@ -581,6 +668,14 @@ DEVICE_DESCRIPTION = DeviceDescription(
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=404),
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=506),
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=507),
+            ],
+        ),
+        EntityDescription(
+            uid=522,
+            name="Test.Program.HoodLevel",
+            options=[
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=520),
+                OptionDescription(access=Access.READ_WRITE, available=True, refUID=521),
             ],
         ),
         EntityDescription(

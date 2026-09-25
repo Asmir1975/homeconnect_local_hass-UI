@@ -6,6 +6,7 @@ import re
 import sys
 from typing import TYPE_CHECKING
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.number import NumberDeviceClass, NumberMode
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.components.switch import SwitchDeviceClass
@@ -150,6 +151,32 @@ def generate_hood_fan(appliance: HomeAppliance) -> HCFanEntityDescription:
     if available_entities:
         return HCFanEntityDescription(
             key="fan_hood",
+            entities=available_entities,
+            default_program=HOOD_VENTING_PROGRAM,
+        )
+    return None
+
+
+def generate_hood_level_select(appliance: HomeAppliance) -> HCFanEntityDescription | None:
+    """
+    Get the Hood level Select description.
+
+    Same Venting Program option matching as generate_hood_fan(), but exposed
+    as a single always-visible Select instead of a Fan. Not
+    wired into COOKING_ENTITY_DESCRIPTIONS's normal "fan" key on purpose.
+    """
+    program = appliance.programs.get(HOOD_VENTING_PROGRAM)
+    if program is None:
+        return None
+    program_option_uids = {option.uid for option in program.options}
+    available_entities = [
+        entity
+        for entity in HOOD_FAN_ENTITIES
+        if entity in appliance.entities and appliance.entities[entity].uid in program_option_uids
+    ]
+    if available_entities:
+        return HCFanEntityDescription(
+            key="select_hood_venting_level",
             entities=available_entities,
             default_program=HOOD_VENTING_PROGRAM,
         )
@@ -440,6 +467,16 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             native_unit_of_measurement=PERCENTAGE,
         ),
         HCSensorEntityDescription(
+            key="sensor_regenerative_carbon_filter_life_cycle",
+            entity="Cooking.Hood.Status.RegenerativeCarbonFilterLifeCycle",
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        HCSensorEntityDescription(
+            key="sensor_regenerative_carbon_filter_saturation",
+            entity="Cooking.Hood.Status.RegenerativeCarbonFilterSaturation",
+            native_unit_of_measurement=PERCENTAGE,
+        ),
+        HCSensorEntityDescription(
             key="sensor_oven_current_temperature",
             entity="Cooking.Oven.Status.CurrentCavityTemperature",
             device_class=SensorDeviceClass.TEMPERATURE,
@@ -571,7 +608,7 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity_category=EntityCategory.CONFIG,
         ),
         HCSelectEntityDescription(
-            key="select_hob_delaye_shutoff_stage",
+            key="select_hood_delayed_shutoff_stage",
             entity="Cooking.Hood.Setting.DelayedShutOffStage",
             has_state_translation=True,
         ),
@@ -580,6 +617,11 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity="Cooking.Hood.Setting.CarbonFilterType",
             has_state_translation=True,
             entity_category=EntityCategory.CONFIG,
+        ),
+        HCSelectEntityDescription(
+            key="select_hood_ambient_light_color",
+            entity="BSH.Common.Setting.AmbientLightColor",
+            has_state_translation=True,
         ),
         HCSelectEntityDescription(
             key="select_hood_light_startup",
@@ -633,6 +675,7 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     ],
     "light": [generate_hood_light, generate_hood_ambient_light, generate_oven_cavity_light],
     "fan": [generate_hood_fan],
+    "hood_level": [generate_hood_level_select],
     "button": [
         HCButtonEntityDescription(
             key="button_hood_carbon_filter_reset",
@@ -655,5 +698,69 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             entity_category=EntityCategory.CONFIG,
         ),
     ],
-    "binary_sensor": [],
+    "binary_sensor": [
+        HCBinarySensorEntityDescription(
+            key="binary_sensor_hood_carbon_filter_max_saturation_reached",
+            entity="Cooking.Common.Event.Hood.CarbonFilterMaxSaturationReached",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            force_disabled_default=True,
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+        ),
+        HCBinarySensorEntityDescription(
+            key="binary_sensor_hood_carbon_filter_max_saturation_nearly_reached",
+            entity="Cooking.Common.Event.Hood.CarbonFilterMaxSaturationNearlyReached",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            force_disabled_default=True,
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+        ),
+        HCBinarySensorEntityDescription(
+            key="binary_sensor_hood_grease_filter_max_saturation_reached",
+            entity="Cooking.Common.Event.Hood.GreaseFilterMaxSaturationReached",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            force_disabled_default=True,
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+        ),
+        HCBinarySensorEntityDescription(
+            key="binary_sensor_hood_grease_filter_max_saturation_nearly_reached",
+            entity="Cooking.Common.Event.Hood.GreaseFilterMaxSaturationNearlyReached",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            force_disabled_default=True,
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+        ),
+        HCBinarySensorEntityDescription(
+            key="binary_sensor_hood_regenerative_carbon_filter_max_saturation_reached",
+            entity="Cooking.Common.Event.Hood.RegenerativeCarbonFilterMaxSaturationReached",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            force_disabled_default=True,
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+        ),
+        HCBinarySensorEntityDescription(
+            key="binary_sensor_hood_regenerative_carbon_filter_lifetime_exceeded",
+            entity="Cooking.Common.Event.Hood.RegenerativeCarbonFilterLifeTimeExceeded",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            force_disabled_default=True,
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+        ),
+        HCBinarySensorEntityDescription(
+            key="binary_sensor_hood_regenerative_carbon_filter_lifetime_nearly_exceeded",
+            entity="Cooking.Common.Event.Hood.RegenerativeCarbonFilterLifeTimeNearlyExceeded",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            device_class=BinarySensorDeviceClass.PROBLEM,
+            force_disabled_default=True,
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+        ),
+    ],
 }
