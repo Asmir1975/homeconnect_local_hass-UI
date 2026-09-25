@@ -27,6 +27,9 @@ if TYPE_CHECKING:
 
 _LOGGER = logging.getLogger(__name__)
 
+HTTP_BAD_REQUEST = 400
+_START_RESOURCE = "/ro/activeProgram"
+
 
 def create_entities(
     entities_classes: dict[str, type[HCEntity]], runtime_data: HCData
@@ -133,6 +136,41 @@ def ensure_writable(entity: HcEntity | None) -> None:
             translation_domain=DOMAIN,
             translation_key="read_only",
         )
+
+
+async def start_coffee_favorite_with_fallback(program: Program) -> None:
+    """
+    Start a coffee favorite, retrying once with fewer options after a 400.
+
+    The first attempt is the unchanged default start, so every start that works
+    today keeps its payload. Some coffee makers answer 400 to a favorite start
+    whose options include values for options that are currently not available
+    (the suspected cause on a Siemens TP713D09). Only after such a 400 on the
+    start resource the request is repeated exactly once, without the unavailable
+    options. Any other error, a timeout or a disconnect is never retried, since
+    the appliance might already have started.
+    """
+    try:
+        await program.start()
+    except CodeResponsError as exc:
+        if exc.code != HTTP_BAD_REQUEST or exc.resource != _START_RESOURCE:
+            raise
+        writable = {
+            option.uid: option.value_shadow
+            for option in program.options
+            if option.access == Access.READ_WRITE
+        }
+        reduced = {
+            option.uid: option.value_shadow
+            for option in program.options
+            if option.access == Access.READ_WRITE
+            and option.available is not False
+            and option.value_shadow is not None
+        }
+        if reduced == writable:
+            raise
+        _LOGGER.debug("Start of %s answered 400, retrying with available options", program.name)
+        await program.start(reduced, override_options=True)
 
 
 def fill_full_option_set(
