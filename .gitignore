@@ -1,0 +1,9 @@
+# Python and tool caches
+__pycache__/
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.venv/
+
+# not tracked in this fork
+/uv.lock
