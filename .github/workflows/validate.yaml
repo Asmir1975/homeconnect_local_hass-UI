@@ -6,13 +6,13 @@ on:
 
 jobs:
   hassfest:
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-26.04
     steps:
       - uses: "actions/checkout@v6"
       - uses: home-assistant/actions/hassfest@master
   validate-hacs:
     name: "HACS Validation"
-    runs-on: "ubuntu-latest"
+    runs-on: ubuntu-26.04
     steps:
       - uses: "actions/checkout@v6"
       - uses: "hacs/action@main"
