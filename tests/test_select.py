@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
@@ -590,6 +591,30 @@ async def test_favorite_name_arrives_after_setup(
     )
     message = mock_appliance.session.send_sync.call_args.args[0]
     assert message.data["program"] == 503
+
+
+async def test_unsaved_favorite_gives_clear_error(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Selecting a favorite the appliance reports as "Off" raises a clear error, sends nothing."""
+    select_id = "select.fake_brand_homeappliance_selectedprogram"
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    mock_appliance.settings["BSH.Common.Setting.Favorite.002.Functionality"] = SimpleNamespace(
+        value="Off"
+    )
+    mock_appliance.session.send_sync.reset_mock()
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {ATTR_ENTITY_ID: select_id, ATTR_OPTION: "favorite_002"},
+            blocking=True,
+        )
+    assert err.value.translation_key == "favorite_not_saved"
+    assert err.value.translation_placeholders == {"slot": "002"}
+    mock_appliance.session.send_sync.assert_not_called()
 
 
 async def test_duplicate_favorite_names_select_the_right_slot(

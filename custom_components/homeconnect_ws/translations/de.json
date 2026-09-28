@@ -4306,6 +4306,9 @@
     "read_only": {
       "message": "Dies ist aktuell im Nur-Lese-Modus und kann gerade nicht geändert werden"
     },
+    "favorite_not_saved": {
+      "message": "Favorit {slot} ist am Gerät noch nicht angelegt. Bitte zuerst in der Home-Connect-App oder am Gerät speichern."
+    },
     "invalid_step": {
       "message": "Wert nicht erlaubt: bitte ein Vielfaches von {step} {unit} von {min} bis {max} {unit} wählen"
     }

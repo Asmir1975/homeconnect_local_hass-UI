@@ -4306,6 +4306,9 @@
     "read_only": {
       "message": "This is currently in read-only mode and can't be changed right now"
     },
+    "favorite_not_saved": {
+      "message": "Favorite {slot} is not saved on the appliance yet. Save it in the Home Connect app or on the appliance first."
+    },
     "invalid_step": {
       "message": "Value not allowed: use a multiple of {step} {unit} from {min} to {max} {unit}"
     }
