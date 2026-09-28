@@ -1793,7 +1793,7 @@
         }
       },
       "sensor_door_state": {
-        "name": "Door",
+        "name": "Door state",
         "state": {
           "open": "Open",
           "closed": "Closed",
