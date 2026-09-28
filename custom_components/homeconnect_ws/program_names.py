@@ -15,6 +15,7 @@ FAVORITE_PREFIX = "BSH.Common.Program.Favorite."
 _NAME_SETTING = "BSH.Common.Setting.Favorite.{slot}.Name"
 _FUNCTIONALITY_SETTING = "BSH.Common.Setting.Favorite.{slot}.Functionality"
 _SAVED_FUNCTIONALITY = "Program"
+_UNSAVED_FUNCTIONALITY = "Off"
 
 
 def favorite_name_settings(
@@ -90,3 +91,19 @@ def selectable_program_labels(
         if not saved:
             del labels[program]
     return labels
+
+
+def unsaved_favorite_slot(appliance: HomeAppliance, program: str) -> str | None:
+    """
+    Return the slot of a favorite the appliance reports as not saved, else None.
+
+    Only an explicit "Off" counts: an oven answers 400 to selecting such a slot.
+    Appliances that do not report the flag are left to decide themselves.
+    """
+    if not program.startswith(FAVORITE_PREFIX):
+        return None
+    slot = program[len(FAVORITE_PREFIX) :]
+    functionality = appliance.settings.get(_FUNCTIONALITY_SETTING.format(slot=slot))
+    if functionality is not None and functionality.value == _UNSAVED_FUNCTIONALITY:
+        return slot
+    return None

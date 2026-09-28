@@ -5,10 +5,11 @@ from __future__ import annotations
 from typing import TYPE_CHECKING
 
 from homeassistant.components.select import SelectEntity
+from homeassistant.exceptions import ServiceValidationError
 from homeconnect_websocket.entities import Access, Execution
 from homeconnect_websocket.message import Action, Message
 
-from .const import CONF_FILTER_UNSAVED_FAVORITES
+from .const import CONF_FILTER_UNSAVED_FAVORITES, DOMAIN
 from .entity import HCEntity
 from .entity_descriptions.common import POWER_OFF_STATE_NAMES
 from .fan import SpeedMapping
@@ -19,7 +20,12 @@ from .helpers import (
     error_decorator,
     fill_full_option_set,
 )
-from .program_names import favorite_name_settings, program_labels, selectable_program_labels
+from .program_names import (
+    favorite_name_settings,
+    program_labels,
+    selectable_program_labels,
+    unsaved_favorite_slot,
+)
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -207,6 +213,13 @@ class HCProgram(HCSelect):
     async def async_select_option(self, option: str) -> None:
         program_by_label = {label: name for name, label in self._labels().items()}
         selected_program = self._runtime_data.appliance.programs[program_by_label[option]]
+        if slot := unsaved_favorite_slot(self._runtime_data.appliance, selected_program.name):
+            # The appliance answers 400 to an empty favorite slot; say why instead.
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="favorite_not_saved",
+                translation_placeholders={"slot": slot},
+            )
         if selected_program.execution in (Execution.SELECT_ONLY, Execution.SELECT_AND_START):
             # START_ONLY below writes ActiveProgram directly and has its own
             # read-only fallback; only this path actually writes SelectedProgram.
