@@ -1790,11 +1790,11 @@
         }
       },
       "sensor_door_state": {
-        "name": "Tür",
+        "name": "Türstatus",
         "state": {
           "open": "Offen",
           "closed": "Geschlossen",
-          "locked": "Abgeschlossen",
+          "locked": "Verriegelt",
           "ajar": "Angelehnt"
         }
       },
