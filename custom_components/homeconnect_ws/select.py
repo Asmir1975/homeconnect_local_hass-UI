@@ -30,6 +30,7 @@ from .program_names import (
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
     from homeassistant.helpers.entity_platform import AddEntitiesCallback
+    from homeconnect_websocket import HomeAppliance
     from homeconnect_websocket.entities import ActiveProgram, Program, SelectedProgram
     from homeconnect_websocket.entities import Entity as HcEntity
 
@@ -48,6 +49,43 @@ _POWER_STATE_ENTITY = "BSH.Common.Setting.PowerState"
 HOOD_LEVEL_OFF = "Off"
 HOOD_LEVEL_BOOST = "Boost"
 _VENTING_BOOST_ENTITY = "Cooking.Common.Option.Hood.Boost"
+_HOOD_VENTING_PROGRAM = "Cooking.Common.Program.Hood.Venting"
+_HOOD_VENTING_LEVEL = "Cooking.Common.Option.Hood.VentingLevel"
+_HOOD_INTENSIVE_LEVEL = "Cooking.Common.Option.Hood.IntensiveLevel"
+# The stage a hood picks itself when switched on (observed on a Siemens LC91KLT60).
+_HOOD_DEFAULT_VENTING_LEVEL = 2
+
+
+def hood_venting_start_options(appliance: HomeAppliance, program: Program) -> dict[int, int] | None:
+    """
+    Get the options to start a hood's venting program from the program Select.
+
+    The hood rejects the venting program without a fan stage. A running hood
+    keeps its current stage, otherwise it starts at its own default stage.
+    """
+    if program.name != _HOOD_VENTING_PROGRAM:
+        return None
+    venting = appliance.entities.get(_HOOD_VENTING_LEVEL)
+    stages = sorted(key for key in (venting.enum or {}) if key != 0) if venting else []
+    if not stages:
+        return None
+    operation_state = appliance.entities.get(_OPERATION_STATE_ENTITY)
+    running = (
+        operation_state is not None
+        and operation_state.value is not None
+        and str(operation_state.value).lower() not in _INACTIVE_OPERATION_STATES
+    )
+    if running and venting.value_raw in stages:
+        stage = venting.value_raw
+    elif _HOOD_DEFAULT_VENTING_LEVEL in stages:
+        stage = _HOOD_DEFAULT_VENTING_LEVEL
+    else:
+        stage = stages[0]
+    options = {venting.uid: stage}
+    intensive = appliance.entities.get(_HOOD_INTENSIVE_LEVEL)
+    if intensive is not None:
+        options[intensive.uid] = 0
+    return options
 
 
 async def async_setup_entry(
@@ -228,7 +266,14 @@ class HCProgram(HCSelect):
             # program unless this program explicitly requires a full option set.
             await selected_program.select(override_options=not selected_program.full_option_set)
         elif selected_program.execution == Execution.START_ONLY:
-            if selected_program.full_option_set:
+            if venting_options := hood_venting_start_options(
+                self._runtime_data.appliance, selected_program
+            ):
+                # Same payload as the fan and hood level entities.
+                if selected_program.full_option_set:
+                    fill_full_option_set(selected_program, venting_options)
+                await selected_program.start(venting_options, override_options=True)
+            elif selected_program.full_option_set:
                 # Some appliances validate a program write against the program's
                 # complete option set and reject a partial one — true regardless
                 # of whether SelectedProgram happens to be writable right now.

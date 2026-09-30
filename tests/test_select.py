@@ -6,6 +6,7 @@ from types import SimpleNamespace
 from typing import TYPE_CHECKING
 
 import pytest
+from custom_components.homeconnect_ws.select import hood_venting_start_options
 from homeassistant.components.select import (
     ATTR_OPTION,
     ATTR_OPTIONS,
@@ -811,3 +812,51 @@ async def test_hood_level_select_boost_sends_expected_payload(
             },
         )
     )
+
+
+def _hood(stages: dict[int, str], stage: int, operation_state: str | None) -> SimpleNamespace:
+    venting = SimpleNamespace(uid=55308, enum=stages, value_raw=stage)
+    intensive = SimpleNamespace(uid=55305)
+    entities = {
+        "Cooking.Common.Option.Hood.VentingLevel": venting,
+        "Cooking.Common.Option.Hood.IntensiveLevel": intensive,
+    }
+    if operation_state is not None:
+        entities["BSH.Common.Status.OperationState"] = SimpleNamespace(value=operation_state)
+    return SimpleNamespace(entities=entities)
+
+
+_HOOD_STAGES = {0: "FanOff", 1: "FanStage01", 2: "FanStage02", 3: "FanStage03"}
+_VENTING = SimpleNamespace(name="Cooking.Common.Program.Hood.Venting")
+
+
+def test_hood_venting_start_keeps_stage_of_running_hood() -> None:
+    """A running hood keeps its current stage when switched to venting."""
+    appliance = _hood(_HOOD_STAGES, 3, "Run")
+    assert hood_venting_start_options(appliance, _VENTING) == {55308: 3, 55305: 0}
+
+
+def test_hood_venting_start_uses_default_stage_when_off() -> None:
+    """A switched off hood starts at its own default stage, not a stale stage."""
+    appliance = _hood(_HOOD_STAGES, 3, "Inactive")
+    assert hood_venting_start_options(appliance, _VENTING) == {55308: 2, 55305: 0}
+
+
+def test_hood_venting_start_uses_default_stage_without_stage() -> None:
+    """A running hood without a fan stage (e.g. automatic idle) starts at the default stage."""
+    appliance = _hood(_HOOD_STAGES, 0, "Run")
+    assert hood_venting_start_options(appliance, _VENTING) == {55308: 2, 55305: 0}
+
+
+def test_hood_venting_start_falls_back_to_lowest_stage() -> None:
+    """Without a stage 2 the lowest stage is used."""
+    appliance = _hood({0: "FanOff", 1: "FanStage01"}, 0, None)
+    assert hood_venting_start_options(appliance, _VENTING) == {55308: 1, 55305: 0}
+
+
+def test_hood_venting_start_ignores_other_programs() -> None:
+    """Only the hood venting program gets a fan stage."""
+    appliance = _hood(_HOOD_STAGES, 3, "Run")
+    other = SimpleNamespace(name="Cooking.Common.Program.Hood.Automatic")
+    assert hood_venting_start_options(appliance, other) is None
+    assert hood_venting_start_options(SimpleNamespace(entities={}), _VENTING) is None
