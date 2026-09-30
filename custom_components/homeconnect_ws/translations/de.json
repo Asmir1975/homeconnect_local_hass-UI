@@ -4093,7 +4093,8 @@
         "state": {
           "none": "Keine",
           "basiccarbonfilter": "Standard-Kohlefilter",
-          "regenerativecarbonfilter": "Regenerierbarer Kohlefilter"
+          "regenerativecarbonfilter": "Regenerierbarer Kohlefilter",
+          "notselected": "Nicht ausgewählt"
         }
       },
       "select_hood_venting_level": {

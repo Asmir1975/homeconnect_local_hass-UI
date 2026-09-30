@@ -4093,7 +4093,8 @@
         "state": {
           "none": "None",
           "basiccarbonfilter": "Basic Carbon filter",
-          "regenerativecarbonfilter": "Regenerative Carbon filter"
+          "regenerativecarbonfilter": "Regenerative Carbon filter",
+          "notselected": "Not selected"
         }
       },
       "select_hood_venting_level": {
