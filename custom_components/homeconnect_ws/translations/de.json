@@ -76,6 +76,9 @@
   },
   "entity": {
     "switch": {
+      "switch_hood_interval_total_time_limitation": {
+        "name": "Intervall Gesamtlaufzeit begrenzen"
+      },
       "switch_eco_dry": {
         "name": "EcoDry"
       },
@@ -2154,6 +2157,42 @@
       }
     },
     "select": {
+      "select_hood_ventilation_startup": {
+        "name": "Lüfter beim Einschalten",
+        "state": {
+          "manualventing": "Manueller Modus",
+          "automaticventing": "Automatik Modus"
+        }
+      },
+      "select_hood_ventilation_shutdown": {
+        "name": "Lüfter beim Ausschalten",
+        "state": {
+          "off": "Aus",
+          "delayedshutoff": "Nachlauf"
+        }
+      },
+      "select_hood_favorite_001_functionality": {
+        "name": "Favoritentaste kurz",
+        "state": {
+          "off": "Aus",
+          "workinglightbrightnesslevel1": "Arbeitslicht Stufe 1",
+          "workinglightbrightnesslevel2": "Arbeitslicht Stufe 2",
+          "workinglightbrightnesslevel3": "Arbeitslicht Stufe 3",
+          "resetgreasefiltersaturation": "Fettfilter zurücksetzen",
+          "externaltrigger": "Externer Auslöser"
+        }
+      },
+      "select_hood_favorite_002_functionality": {
+        "name": "Favoritentaste lang",
+        "state": {
+          "off": "Aus",
+          "workinglightbrightnesslevel1": "Arbeitslicht Stufe 1",
+          "workinglightbrightnesslevel2": "Arbeitslicht Stufe 2",
+          "workinglightbrightnesslevel3": "Arbeitslicht Stufe 3",
+          "resetgreasefiltersaturation": "Fettfilter zurücksetzen",
+          "externaltrigger": "Externer Auslöser"
+        }
+      },
       "select_drying_assistant_all_programs": {
         "name": "Trocknungsassistent Alle Programme",
         "state": {
@@ -4121,6 +4160,12 @@
       }
     },
     "number": {
+      "number_hood_automatic_sensitivity": {
+        "name": "Sensibilität Automatik"
+      },
+      "number_hood_interval_total_time": {
+        "name": "Intervall Gesamtlaufzeit"
+      },
       "number_silence_on_demand_default_time": {
         "name": "Silence on Demand Dauer"
       },

@@ -76,6 +76,9 @@
   },
   "entity": {
     "switch": {
+      "switch_hood_interval_total_time_limitation": {
+        "name": "Limit interval total run time"
+      },
       "switch_eco_dry": {
         "name": "EcoDry"
       },
@@ -2154,6 +2157,42 @@
       }
     },
     "select": {
+      "select_hood_ventilation_startup": {
+        "name": "Fan at power on",
+        "state": {
+          "manualventing": "Manual mode",
+          "automaticventing": "Automatic mode"
+        }
+      },
+      "select_hood_ventilation_shutdown": {
+        "name": "Fan at power off",
+        "state": {
+          "off": "Off",
+          "delayedshutoff": "Fan run-on"
+        }
+      },
+      "select_hood_favorite_001_functionality": {
+        "name": "Favorite button short press",
+        "state": {
+          "off": "Off",
+          "workinglightbrightnesslevel1": "Work light level 1",
+          "workinglightbrightnesslevel2": "Work light level 2",
+          "workinglightbrightnesslevel3": "Work light level 3",
+          "resetgreasefiltersaturation": "Reset grease filter",
+          "externaltrigger": "External trigger"
+        }
+      },
+      "select_hood_favorite_002_functionality": {
+        "name": "Favorite button long press",
+        "state": {
+          "off": "Off",
+          "workinglightbrightnesslevel1": "Work light level 1",
+          "workinglightbrightnesslevel2": "Work light level 2",
+          "workinglightbrightnesslevel3": "Work light level 3",
+          "resetgreasefiltersaturation": "Reset grease filter",
+          "externaltrigger": "External trigger"
+        }
+      },
       "select_hob_ventilation": {
         "name": "Ventilation",
         "state": {
@@ -4121,6 +4160,12 @@
       }
     },
     "number": {
+      "number_hood_automatic_sensitivity": {
+        "name": "Automatic mode sensitivity"
+      },
+      "number_hood_interval_total_time": {
+        "name": "Interval total run time"
+      },
       "number_silence_on_demand_default_time": {
         "name": "Silence on Demand duration"
       },
