@@ -35,6 +35,7 @@ PARALLEL_UPDATES = 0
 _OPERATION_STATE_ENTITY = "BSH.Common.Status.OperationState"
 _INACTIVE_OPERATION_STATES = frozenset({"inactive", "ready"})
 _POWER_STATE_ENTITY = "BSH.Common.Setting.PowerState"
+_POWER_ON_STATE_NAMES = ("On",)
 _VENTING_BOOST_ENTITY = "Cooking.Common.Option.Hood.Boost"
 
 PRESET_NONE = "None"
@@ -87,7 +88,9 @@ class HCFan(HCEntity, FanEntity):
         if entity_description.default_program is None:
             msg = "HCFanEntityDescription.default_program is required"
             raise ValueError(msg)
-        self._attr_supported_features = FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_OFF
+        self._attr_supported_features = (
+            FanEntityFeature.SET_SPEED | FanEntityFeature.TURN_ON | FanEntityFeature.TURN_OFF
+        )
         self._speed_mapping = []
         self._speed_entities = {}
         self._attr_speed_count = 0
@@ -182,12 +185,49 @@ class HCFan(HCEntity, FanEntity):
             return 0
         return self._raw_percentage()
 
+    def _settable_power_state(self, names: tuple[str, ...]) -> tuple[HcEntity | None, str | None]:
+        """Return the PowerState entity and the first of `names` it allows writing."""
+        power_state = self._runtime_data.appliance.entities.get(_POWER_STATE_ENTITY)
+        if power_state is None:
+            return None, None
+        if power_state.min is not None and power_state.max is not None:
+            # Some appliances declare a wider enum than they actually allow
+            # writing, matching generate_power_switch's own settable-range
+            # check for this same entity.
+            settable = {
+                value
+                for key, value in (power_state.enum or {}).items()
+                if power_state.min <= key <= power_state.max
+            }
+        else:
+            settable = set((power_state.enum or {}).values())
+        return power_state, next((name for name in names if name in settable), None)
+
+    @error_decorator
+    async def async_turn_on(
+        self,
+        percentage: int | None = None,
+        preset_mode: str | None = None,
+        **kwargs: Any,
+    ) -> None:
+        if preset_mode is not None:
+            await self.async_set_preset_mode(preset_mode)
+            return
+        if percentage is not None:
+            await self.async_set_percentage(percentage)
+            return
+        # Without a speed, switch on like the appliance's own power button, which
+        # starts venting at the appliance's default stage.
+        power_state, on_value = self._settable_power_state(_POWER_ON_STATE_NAMES)
+        if on_value is not None:
+            await power_state.set_value(on_value)
+            return
+        await self.async_set_percentage(ranged_value_to_percentage(self._speed_range, 1))
+
     @error_decorator
     async def async_set_percentage(self, percentage: int) -> None:
-        # Our fan has no separate TURN_ON/async_turn_on (it turns on via a non-zero
-        # percentage instead); this is the equivalent point to vemboy's
-        # async_turn_on reset for "boost display shouldn't survive a manual speed
-        # change or an explicit off".
+        # Equivalent point to vemboy's async_turn_on reset for "boost display
+        # shouldn't survive a manual speed change or an explicit off".
         if self._venting_boost_entity is not None:
             self._set_optimistic_preset(PRESET_NONE)
 
@@ -231,21 +271,7 @@ class HCFan(HCEntity, FanEntity):
         # devices, so prefer it when available; keep the zero-write as a
         # fallback for appliances without a switchable PowerState so nothing
         # that works today regresses.
-        power_state = self._runtime_data.appliance.entities.get(_POWER_STATE_ENTITY)
-        off_value = None
-        if power_state is not None:
-            if power_state.min is not None and power_state.max is not None:
-                # Some appliances declare a wider enum than they actually allow
-                # writing, matching generate_power_switch's own settable-range
-                # check for this same entity.
-                settable = {
-                    value
-                    for key, value in (power_state.enum or {}).items()
-                    if power_state.min <= key <= power_state.max
-                }
-            else:
-                settable = set((power_state.enum or {}).values())
-            off_value = next((name for name in POWER_OFF_STATE_NAMES if name in settable), None)
+        power_state, off_value = self._settable_power_state(POWER_OFF_STATE_NAMES)
 
         if self._venting_boost_entity is not None:
             self._set_optimistic_preset(PRESET_NONE)

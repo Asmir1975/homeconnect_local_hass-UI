@@ -635,6 +635,12 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             has_state_translation=True,
             entity_category=EntityCategory.CONFIG,
         ),
+        HCSelectEntityDescription(
+            key="select_hood_color_temperature",
+            entity="Cooking.Hood.Setting.ColorTemperature",
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        ),
     ],
     "switch": [
         HCSwitchEntityDescription(

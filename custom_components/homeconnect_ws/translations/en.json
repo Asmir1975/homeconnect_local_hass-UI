@@ -4059,6 +4059,17 @@
           "color40": "Color 40"
         }
       },
+      "select_hood_color_temperature": {
+        "name": "Light color temperature",
+        "state": {
+          "custom": "Custom",
+          "warm": "Warm",
+          "warmtoneutral": "Warm to neutral",
+          "neutral": "Neutral",
+          "neutraltocold": "Neutral to cold",
+          "cold": "Cold"
+        }
+      },
       "select_hood_light_startup": {
         "name": "Light startup setting",
         "state": {

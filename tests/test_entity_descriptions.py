@@ -872,6 +872,19 @@ def test_hood_ambient_light_color_select_description() -> None:
     assert description.has_state_translation is True
 
 
+def test_hood_color_temperature_select_description() -> None:
+    """Test the light color temperature preset Select uses the raw device enum."""
+    description = next(
+        item
+        for item in COOKING_ENTITY_DESCRIPTIONS["select"]
+        if item.key == "select_hood_color_temperature"
+    )
+
+    assert description.entity == "Cooking.Hood.Setting.ColorTemperature"
+    assert description.has_state_translation is True
+    assert description.entity_category == EntityCategory.CONFIG
+
+
 def test_hood_regenerative_carbon_filter_sensors() -> None:
     """Test the two new regenerative carbon filter percentage sensors."""
     keys = {
