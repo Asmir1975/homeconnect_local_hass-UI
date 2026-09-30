@@ -895,6 +895,9 @@ def test_hood_setting_selects_use_raw_device_enum() -> None:
         "select_hood_ventilation_startup": "Cooking.Hood.Setting.VentilationStartupSetting",
         "select_hood_ventilation_shutdown": "Cooking.Hood.Setting.VentilationShutdownSetting",
         "select_hood_ventilation_profile": "Cooking.Hood.Setting.VentilationProfileOperating",
+        "select_hood_filter_notification": (
+            "Cooking.Hood.Setting.FilterSaturationNotificationInterval"
+        ),
     }
     for key, entity in expected.items():
         assert selects[key].entity == entity

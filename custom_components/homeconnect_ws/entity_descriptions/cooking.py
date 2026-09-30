@@ -695,6 +695,12 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             has_state_translation=True,
             entity_category=EntityCategory.CONFIG,
         ),
+        HCSelectEntityDescription(
+            key="select_hood_filter_notification",
+            entity="Cooking.Hood.Setting.FilterSaturationNotificationInterval",
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        ),
         _generate_hood_favorite_functionality("001"),
         _generate_hood_favorite_functionality("002"),
     ],

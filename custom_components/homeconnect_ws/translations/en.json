@@ -2157,6 +2157,14 @@
       }
     },
     "select": {
+      "select_hood_filter_notification": {
+        "name": "Filter saturation notifications",
+        "state": {
+          "lessfrequent": "Less frequent",
+          "regular": "Default",
+          "morefrequent": "More frequent"
+        }
+      },
       "select_hood_ventilation_profile": {
         "name": "Fan profile",
         "state": {

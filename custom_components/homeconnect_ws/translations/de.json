@@ -2157,6 +2157,14 @@
       }
     },
     "select": {
+      "select_hood_filter_notification": {
+        "name": "Benachrichtigung Filtersättigung",
+        "state": {
+          "lessfrequent": "Seltener anzeigen",
+          "regular": "Standardmäßig anzeigen",
+          "morefrequent": "Häufiger anzeigen"
+        }
+      },
       "select_hood_ventilation_profile": {
         "name": "Lüfterprofil",
         "state": {
