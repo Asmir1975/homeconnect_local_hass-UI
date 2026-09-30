@@ -2157,6 +2157,14 @@
       }
     },
     "select": {
+      "select_hood_ventilation_profile": {
+        "name": "Fan profile",
+        "state": {
+          "defaultprofile": "Standard",
+          "silentprofile": "Silent",
+          "powerprofile": "Power"
+        }
+      },
       "select_hood_ventilation_startup": {
         "name": "Fan at power on",
         "state": {
@@ -2175,22 +2183,22 @@
         "name": "Favorite button short press",
         "state": {
           "off": "Off",
-          "workinglightbrightnesslevel1": "Work light level 1",
-          "workinglightbrightnesslevel2": "Work light level 2",
-          "workinglightbrightnesslevel3": "Work light level 3",
-          "resetgreasefiltersaturation": "Reset grease filter",
-          "externaltrigger": "External trigger"
+          "workinglightbrightnesslevel1": "Brightness slightly reduced",
+          "workinglightbrightnesslevel2": "Brightness moderately reduced",
+          "workinglightbrightnesslevel3": "Brightness strongly reduced",
+          "resetgreasefiltersaturation": "Reset grease filter saturation",
+          "externaltrigger": "Smart home connection"
         }
       },
       "select_hood_favorite_002_functionality": {
         "name": "Favorite button long press",
         "state": {
           "off": "Off",
-          "workinglightbrightnesslevel1": "Work light level 1",
-          "workinglightbrightnesslevel2": "Work light level 2",
-          "workinglightbrightnesslevel3": "Work light level 3",
-          "resetgreasefiltersaturation": "Reset grease filter",
-          "externaltrigger": "External trigger"
+          "workinglightbrightnesslevel1": "Brightness slightly reduced",
+          "workinglightbrightnesslevel2": "Brightness moderately reduced",
+          "workinglightbrightnesslevel3": "Brightness strongly reduced",
+          "resetgreasefiltersaturation": "Reset grease filter saturation",
+          "externaltrigger": "Smart home connection"
         }
       },
       "select_hob_ventilation": {

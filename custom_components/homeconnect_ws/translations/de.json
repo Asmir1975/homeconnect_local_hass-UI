@@ -2157,6 +2157,14 @@
       }
     },
     "select": {
+      "select_hood_ventilation_profile": {
+        "name": "Lüfterprofil",
+        "state": {
+          "defaultprofile": "Standard",
+          "silentprofile": "Leise",
+          "powerprofile": "Leistung"
+        }
+      },
       "select_hood_ventilation_startup": {
         "name": "Lüfter beim Einschalten",
         "state": {
@@ -2172,25 +2180,25 @@
         }
       },
       "select_hood_favorite_001_functionality": {
-        "name": "Favoritentaste kurz",
+        "name": "Favoritentaste kurzes Drücken",
         "state": {
           "off": "Aus",
-          "workinglightbrightnesslevel1": "Arbeitslicht Stufe 1",
-          "workinglightbrightnesslevel2": "Arbeitslicht Stufe 2",
-          "workinglightbrightnesslevel3": "Arbeitslicht Stufe 3",
-          "resetgreasefiltersaturation": "Fettfilter zurücksetzen",
-          "externaltrigger": "Externer Auslöser"
+          "workinglightbrightnesslevel1": "Helligkeit leicht reduziert",
+          "workinglightbrightnesslevel2": "Helligkeit mäßig reduziert",
+          "workinglightbrightnesslevel3": "Helligkeit stark reduziert",
+          "resetgreasefiltersaturation": "Fettfiltersättigung zurücksetzen",
+          "externaltrigger": "Smart Home Anbindung"
         }
       },
       "select_hood_favorite_002_functionality": {
-        "name": "Favoritentaste lang",
+        "name": "Favoritentaste langes Drücken",
         "state": {
           "off": "Aus",
-          "workinglightbrightnesslevel1": "Arbeitslicht Stufe 1",
-          "workinglightbrightnesslevel2": "Arbeitslicht Stufe 2",
-          "workinglightbrightnesslevel3": "Arbeitslicht Stufe 3",
-          "resetgreasefiltersaturation": "Fettfilter zurücksetzen",
-          "externaltrigger": "Externer Auslöser"
+          "workinglightbrightnesslevel1": "Helligkeit leicht reduziert",
+          "workinglightbrightnesslevel2": "Helligkeit mäßig reduziert",
+          "workinglightbrightnesslevel3": "Helligkeit stark reduziert",
+          "resetgreasefiltersaturation": "Fettfiltersättigung zurücksetzen",
+          "externaltrigger": "Smart Home Anbindung"
         }
       },
       "select_drying_assistant_all_programs": {
@@ -4161,7 +4169,7 @@
     },
     "number": {
       "number_hood_automatic_sensitivity": {
-        "name": "Sensibilität Automatik"
+        "name": "Sensibilität im Automatikmodus"
       },
       "number_hood_interval_total_time": {
         "name": "Intervall Gesamtlaufzeit"

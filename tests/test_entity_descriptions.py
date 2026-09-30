@@ -886,6 +886,22 @@ def test_hood_color_temperature_select_description() -> None:
     assert description.entity_category == EntityCategory.CONFIG
 
 
+def test_hood_setting_selects_use_raw_device_enum() -> None:
+    """Test the hood setting Selects map to their Setting with translated states."""
+    selects = {
+        item.key: item for item in COOKING_ENTITY_DESCRIPTIONS["select"] if not callable(item)
+    }
+    expected = {
+        "select_hood_ventilation_startup": "Cooking.Hood.Setting.VentilationStartupSetting",
+        "select_hood_ventilation_shutdown": "Cooking.Hood.Setting.VentilationShutdownSetting",
+        "select_hood_ventilation_profile": "Cooking.Hood.Setting.VentilationProfileOperating",
+    }
+    for key, entity in expected.items():
+        assert selects[key].entity == entity
+        assert selects[key].has_state_translation is True
+        assert selects[key].entity_category == EntityCategory.CONFIG
+
+
 def test_hood_interval_numbers_match_their_setting() -> None:
     """Test the interval on/off Numbers read the Setting their name says."""
     numbers = {item.key: item.entity for item in COOKING_ENTITY_DESCRIPTIONS["number"]}
