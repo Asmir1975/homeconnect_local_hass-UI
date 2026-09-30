@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.light import (
@@ -35,6 +36,10 @@ if TYPE_CHECKING:
     from .entity_descriptions.descriptions_definitions import HCLightEntityDescription
 
 PARALLEL_UPDATES = 0
+
+# Ambient lights make the next color Setting writable only after the previous
+# write took effect (about 50 to 70 ms observed), this bounds the wait for it.
+_SETTING_READY_TIMEOUT = 2.0
 
 
 async def async_setup_entry(
@@ -196,8 +201,56 @@ class HCLight(HCEntity, LightEntity):
             return match_max_scale((255,), rgb)
         return None
 
+    async def _wait_until_usable(self, entity: HcEntity) -> None:
+        """Wait until the Appliance offers `entity`, raise TimeoutError otherwise."""
+        changed = asyncio.Event()
+
+        async def _on_change(_: HcEntity) -> None:
+            changed.set()
+
+        entity.register_callback(_on_change)
+        try:
+            async with asyncio.timeout(_SETTING_READY_TIMEOUT):
+                while True:
+                    changed.clear()
+                    if entity_is_available(entity, self.entity_description.available_access):
+                        return
+                    await changed.wait()
+        finally:
+            entity.unregister_callback(_on_change)
+
+    async def _set_rgb_step_by_step(self, rgb: tuple[int, int, int], brightness: int) -> None:
+        """
+        Set a custom color while the Appliance does not offer the color Setting yet.
+
+        With the light off or a color preset active, the color Setting is
+        unavailable. Power, color mode and color are written one after another,
+        each once the Appliance offers the next Setting.
+        """
+        if self._entity.value is not True:
+            await self._entity.set_value(True)
+            await self._wait_until_usable(self._color_mode_entity)
+        if self._color_mode_entity.value != "CustomColor":
+            await self._color_mode_entity.set_value("CustomColor")
+        await self._wait_until_usable(self._color_entity)
+        rgb_with_brightness = tuple(color * brightness // 255 for color in rgb)
+        await self._color_entity.set_value("#" + color_rgb_to_hex(*rgb_with_brightness))
+
     @error_decorator
     async def async_turn_on(self, **kwargs: Any) -> None:
+        if (
+            self._attr_color_mode == ColorMode.RGB
+            and ATTR_RGB_COLOR in kwargs
+            and not self._rgb_usable
+            and self._color_mode_entity is not None
+            and "CustomColor" in (self._color_mode_entity.enum or {}).values()
+        ):
+            brightness = kwargs.get(ATTR_BRIGHTNESS, self.brightness)
+            await self._set_rgb_step_by_step(
+                kwargs[ATTR_RGB_COLOR], 255 if brightness is None else brightness
+            )
+            return
+
         message = HC_Message(
             resource="/ro/values",
             action=Action.POST,
