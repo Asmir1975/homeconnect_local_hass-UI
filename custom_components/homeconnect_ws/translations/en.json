@@ -76,6 +76,9 @@
   },
   "entity": {
     "switch": {
+      "switch_hood_interval_total_time_limitation": {
+        "name": "Limit interval total run time"
+      },
       "switch_eco_dry": {
         "name": "EcoDry"
       },
@@ -2154,6 +2157,58 @@
       }
     },
     "select": {
+      "select_hood_filter_notification": {
+        "name": "Filter saturation notifications",
+        "state": {
+          "lessfrequent": "Less frequent",
+          "regular": "Default",
+          "morefrequent": "More frequent"
+        }
+      },
+      "select_hood_ventilation_profile": {
+        "name": "Fan profile",
+        "state": {
+          "defaultprofile": "Standard",
+          "silentprofile": "Silent",
+          "powerprofile": "Power"
+        }
+      },
+      "select_hood_ventilation_startup": {
+        "name": "Fan at power on",
+        "state": {
+          "manualventing": "Manual mode",
+          "automaticventing": "Automatic mode"
+        }
+      },
+      "select_hood_ventilation_shutdown": {
+        "name": "Fan at power off",
+        "state": {
+          "off": "Off",
+          "delayedshutoff": "Fan run-on"
+        }
+      },
+      "select_hood_favorite_001_functionality": {
+        "name": "Favorite button short press",
+        "state": {
+          "off": "Off",
+          "workinglightbrightnesslevel1": "Brightness slightly reduced",
+          "workinglightbrightnesslevel2": "Brightness moderately reduced",
+          "workinglightbrightnesslevel3": "Brightness strongly reduced",
+          "resetgreasefiltersaturation": "Reset grease filter saturation",
+          "externaltrigger": "Smart home connection"
+        }
+      },
+      "select_hood_favorite_002_functionality": {
+        "name": "Favorite button long press",
+        "state": {
+          "off": "Off",
+          "workinglightbrightnesslevel1": "Brightness slightly reduced",
+          "workinglightbrightnesslevel2": "Brightness moderately reduced",
+          "workinglightbrightnesslevel3": "Brightness strongly reduced",
+          "resetgreasefiltersaturation": "Reset grease filter saturation",
+          "externaltrigger": "Smart home connection"
+        }
+      },
       "select_hob_ventilation": {
         "name": "Ventilation",
         "state": {
@@ -4038,7 +4093,8 @@
         "state": {
           "none": "None",
           "basiccarbonfilter": "Basic Carbon filter",
-          "regenerativecarbonfilter": "Regenerative Carbon filter"
+          "regenerativecarbonfilter": "Regenerative Carbon filter",
+          "notselected": "Not selected"
         }
       },
       "select_hood_venting_level": {
@@ -4057,6 +4113,17 @@
           "color38": "Color 38",
           "color39": "Color 39",
           "color40": "Color 40"
+        }
+      },
+      "select_hood_color_temperature": {
+        "name": "Light color temperature",
+        "state": {
+          "custom": "Custom",
+          "warm": "Warm",
+          "warmtoneutral": "Warm to neutral",
+          "neutral": "Neutral",
+          "neutraltocold": "Neutral to cold",
+          "cold": "Cold"
         }
       },
       "select_hood_light_startup": {
@@ -4110,6 +4177,12 @@
       }
     },
     "number": {
+      "number_hood_automatic_sensitivity": {
+        "name": "Automatic mode sensitivity"
+      },
+      "number_hood_interval_total_time": {
+        "name": "Interval total run time"
+      },
       "number_silence_on_demand_default_time": {
         "name": "Silence on Demand duration"
       },

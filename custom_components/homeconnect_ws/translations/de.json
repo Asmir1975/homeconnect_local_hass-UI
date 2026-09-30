@@ -76,6 +76,9 @@
   },
   "entity": {
     "switch": {
+      "switch_hood_interval_total_time_limitation": {
+        "name": "Intervall Gesamtlaufzeit begrenzen"
+      },
       "switch_eco_dry": {
         "name": "EcoDry"
       },
@@ -2154,6 +2157,58 @@
       }
     },
     "select": {
+      "select_hood_filter_notification": {
+        "name": "Benachrichtigung Filtersättigung",
+        "state": {
+          "lessfrequent": "Seltener anzeigen",
+          "regular": "Standardmäßig anzeigen",
+          "morefrequent": "Häufiger anzeigen"
+        }
+      },
+      "select_hood_ventilation_profile": {
+        "name": "Lüfterprofil",
+        "state": {
+          "defaultprofile": "Standard",
+          "silentprofile": "Leise",
+          "powerprofile": "Leistung"
+        }
+      },
+      "select_hood_ventilation_startup": {
+        "name": "Lüfter beim Einschalten",
+        "state": {
+          "manualventing": "Manueller Modus",
+          "automaticventing": "Automatik Modus"
+        }
+      },
+      "select_hood_ventilation_shutdown": {
+        "name": "Lüfter beim Ausschalten",
+        "state": {
+          "off": "Aus",
+          "delayedshutoff": "Nachlauf"
+        }
+      },
+      "select_hood_favorite_001_functionality": {
+        "name": "Favoritentaste kurzes Drücken",
+        "state": {
+          "off": "Aus",
+          "workinglightbrightnesslevel1": "Helligkeit leicht reduziert",
+          "workinglightbrightnesslevel2": "Helligkeit mäßig reduziert",
+          "workinglightbrightnesslevel3": "Helligkeit stark reduziert",
+          "resetgreasefiltersaturation": "Fettfiltersättigung zurücksetzen",
+          "externaltrigger": "Smart Home Anbindung"
+        }
+      },
+      "select_hood_favorite_002_functionality": {
+        "name": "Favoritentaste langes Drücken",
+        "state": {
+          "off": "Aus",
+          "workinglightbrightnesslevel1": "Helligkeit leicht reduziert",
+          "workinglightbrightnesslevel2": "Helligkeit mäßig reduziert",
+          "workinglightbrightnesslevel3": "Helligkeit stark reduziert",
+          "resetgreasefiltersaturation": "Fettfiltersättigung zurücksetzen",
+          "externaltrigger": "Smart Home Anbindung"
+        }
+      },
       "select_drying_assistant_all_programs": {
         "name": "Trocknungsassistent Alle Programme",
         "state": {
@@ -4038,7 +4093,8 @@
         "state": {
           "none": "Keine",
           "basiccarbonfilter": "Standard-Kohlefilter",
-          "regenerativecarbonfilter": "Regenerierbarer Kohlefilter"
+          "regenerativecarbonfilter": "Regenerierbarer Kohlefilter",
+          "notselected": "Nicht ausgewählt"
         }
       },
       "select_hood_venting_level": {
@@ -4057,6 +4113,17 @@
           "color38": "Farbe 38",
           "color39": "Farbe 39",
           "color40": "Farbe 40"
+        }
+      },
+      "select_hood_color_temperature": {
+        "name": "Farbtemperatur Licht",
+        "state": {
+          "custom": "Individuell",
+          "warm": "Warm",
+          "warmtoneutral": "Warm bis neutral",
+          "neutral": "Neutral",
+          "neutraltocold": "Neutral bis kalt",
+          "cold": "Kalt"
         }
       },
       "select_hood_light_startup": {
@@ -4110,6 +4177,12 @@
       }
     },
     "number": {
+      "number_hood_automatic_sensitivity": {
+        "name": "Sensibilität im Automatikmodus"
+      },
+      "number_hood_interval_total_time": {
+        "name": "Intervall Gesamtlaufzeit"
+      },
       "number_silence_on_demand_default_time": {
         "name": "Silence on Demand Dauer"
       },

@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from types import SimpleNamespace
 from typing import TYPE_CHECKING
 from unittest.mock import MagicMock, Mock
 
@@ -18,6 +19,7 @@ from custom_components.homeconnect_ws.entity_descriptions import (
     HCSwitchEntityDescription,
 )
 from custom_components.homeconnect_ws.entity_descriptions.common import (
+    COMMON_ENTITY_DESCRIPTIONS,
     generate_elapsed_program_time,
     generate_power_switch,
     generate_program,
@@ -870,6 +872,103 @@ def test_hood_ambient_light_color_select_description() -> None:
 
     assert description.entity == "BSH.Common.Setting.AmbientLightColor"
     assert description.has_state_translation is True
+
+
+def test_hood_color_temperature_select_description() -> None:
+    """Test the light color temperature preset Select uses the raw device enum."""
+    description = next(
+        item
+        for item in COOKING_ENTITY_DESCRIPTIONS["select"]
+        if item.key == "select_hood_color_temperature"
+    )
+
+    assert description.entity == "Cooking.Hood.Setting.ColorTemperature"
+    assert description.has_state_translation is True
+    assert description.entity_category == EntityCategory.CONFIG
+
+
+def test_hood_setting_selects_use_raw_device_enum() -> None:
+    """Test the hood setting Selects map to their Setting with translated states."""
+    selects = {
+        item.key: item for item in COOKING_ENTITY_DESCRIPTIONS["select"] if not callable(item)
+    }
+    expected = {
+        "select_hood_ventilation_startup": "Cooking.Hood.Setting.VentilationStartupSetting",
+        "select_hood_ventilation_shutdown": "Cooking.Hood.Setting.VentilationShutdownSetting",
+        "select_hood_ventilation_profile": "Cooking.Hood.Setting.VentilationProfileOperating",
+        "select_hood_filter_notification": (
+            "Cooking.Hood.Setting.FilterSaturationNotificationInterval"
+        ),
+    }
+    for key, entity in expected.items():
+        assert selects[key].entity == entity
+        assert selects[key].has_state_translation is True
+        assert selects[key].entity_category == EntityCategory.CONFIG
+
+
+def test_hood_interval_numbers_match_their_setting() -> None:
+    """Test the interval on/off Numbers read the Setting their name says."""
+    numbers = {item.key: item.entity for item in COOKING_ENTITY_DESCRIPTIONS["number"]}
+
+    assert numbers["number_hood_interval_on"] == "Cooking.Hood.Setting.IntervalTimeOn"
+    assert numbers["number_hood_interval_off"] == "Cooking.Hood.Setting.IntervalTimeOff"
+
+
+def test_hood_favorite_functionality_select_only_for_hoods() -> None:
+    """Test the favorite button Select is offered for hoods only."""
+    generators = [
+        item
+        for item in COOKING_ENTITY_DESCRIPTIONS["select"]
+        if callable(item) and "favorite" in item.__qualname__
+    ]
+    assert len(generators) == 2
+    entities = {
+        "BSH.Common.Setting.Favorite.001.Functionality": None,
+        "BSH.Common.Setting.Favorite.002.Functionality": None,
+    }
+
+    hood = SimpleNamespace(info={"type": "Hood"}, entities=entities)
+    keys = [generate(hood).key for generate in generators]
+    assert keys == [
+        "select_hood_favorite_001_functionality",
+        "select_hood_favorite_002_functionality",
+    ]
+    assert all(generate(hood).entity_category == EntityCategory.CONFIG for generate in generators)
+
+    for appliance_type in ("Oven", "Dishwasher"):
+        other = SimpleNamespace(info={"type": appliance_type}, entities=entities)
+        assert all(generate(other) is None for generate in generators)
+
+    empty_hood = SimpleNamespace(info={"type": "Hood"}, entities={})
+    assert all(generate(empty_hood) is None for generate in generators)
+
+
+def test_favorite_trigger_sensors_disabled_by_default_for_hoods() -> None:
+    """Test the favorite button Binary Sensors start disabled on hoods only."""
+    generators = [
+        item
+        for item in COMMON_ENTITY_DESCRIPTIONS["binary_sensor"]
+        if callable(item) and "favorite" in item.__qualname__
+    ]
+    assert len(generators) == 2
+    entities = {
+        "BSH.Common.Event.Favorite.001.ExternalTrigger": None,
+        "BSH.Common.Event.Favorite.002.ExternalTrigger": None,
+    }
+
+    hood = SimpleNamespace(info={"type": "Hood"}, entities=entities)
+    hood_descriptions = [generate(hood) for generate in generators]
+    assert [item.key for item in hood_descriptions] == [
+        "binary_sensor_favorite_001",
+        "binary_sensor_favorite_002",
+    ]
+    assert all(item.force_disabled_default for item in hood_descriptions)
+
+    hob = SimpleNamespace(info={"type": "Hob"}, entities=entities)
+    assert not any(generate(hob).force_disabled_default for generate in generators)
+
+    empty = SimpleNamespace(info={"type": "Hood"}, entities={})
+    assert all(generate(empty) is None for generate in generators)
 
 
 def test_hood_regenerative_carbon_filter_sensors() -> None:

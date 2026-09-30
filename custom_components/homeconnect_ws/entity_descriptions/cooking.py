@@ -28,6 +28,8 @@ from .descriptions_definitions import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from homeconnect_websocket import HomeAppliance
 
 
@@ -428,6 +430,27 @@ def generate_oven_cavity_light(appliance: HomeAppliance) -> HCLightEntityDescrip
     )
 
 
+def _generate_hood_favorite_functionality(
+    slot: str,
+) -> Callable[[HomeAppliance], HCSelectEntityDescription | None]:
+    """Get the Select for what a hood favorite button press does."""
+
+    def generate(appliance: HomeAppliance) -> HCSelectEntityDescription | None:
+        # Ovens and dishwashers share this Setting name with other values
+        # (Off/Program), where writing it would drop a saved favorite.
+        entity = f"BSH.Common.Setting.Favorite.{slot}.Functionality"
+        if appliance.info.get("type") != "Hood" or entity not in appliance.entities:
+            return None
+        return HCSelectEntityDescription(
+            key=f"select_hood_favorite_{slot}_functionality",
+            entity=entity,
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        )
+
+    return generate
+
+
 COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     "sensor": [
         HCSensorEntityDescription(
@@ -523,14 +546,14 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         ),
         HCNumberEntityDescription(
             key="number_hood_interval_off",
-            entity="Cooking.Hood.Setting.IntervalTimeOn",
+            entity="Cooking.Hood.Setting.IntervalTimeOff",
             native_unit_of_measurement=UnitOfTime.SECONDS,
             entity_category=EntityCategory.CONFIG,
             mode=NumberMode.AUTO,
         ),
         HCNumberEntityDescription(
             key="number_hood_interval_on",
-            entity="Cooking.Hood.Setting.IntervalTimeOff",
+            entity="Cooking.Hood.Setting.IntervalTimeOn",
             native_unit_of_measurement=UnitOfTime.SECONDS,
             entity_category=EntityCategory.CONFIG,
             mode=NumberMode.AUTO,
@@ -552,6 +575,19 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         HCNumberEntityDescription(
             key="number_hood_sensor_sensitivity",
             entity="Cooking.Hood.Setting.SensorSensitivity",
+            entity_category=EntityCategory.CONFIG,
+            mode=NumberMode.AUTO,
+        ),
+        HCNumberEntityDescription(
+            key="number_hood_automatic_sensitivity",
+            entity="Cooking.Hood.Setting.AutomaticSensitivity",
+            entity_category=EntityCategory.CONFIG,
+            mode=NumberMode.AUTO,
+        ),
+        HCNumberEntityDescription(
+            key="number_hood_interval_total_time",
+            entity="Cooking.Hood.Setting.IntervalTotalExecutionTime",
+            native_unit_of_measurement=UnitOfTime.SECONDS,
             entity_category=EntityCategory.CONFIG,
             mode=NumberMode.AUTO,
         ),
@@ -635,8 +671,46 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             has_state_translation=True,
             entity_category=EntityCategory.CONFIG,
         ),
+        HCSelectEntityDescription(
+            key="select_hood_color_temperature",
+            entity="Cooking.Hood.Setting.ColorTemperature",
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        HCSelectEntityDescription(
+            key="select_hood_ventilation_startup",
+            entity="Cooking.Hood.Setting.VentilationStartupSetting",
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        HCSelectEntityDescription(
+            key="select_hood_ventilation_shutdown",
+            entity="Cooking.Hood.Setting.VentilationShutdownSetting",
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        HCSelectEntityDescription(
+            key="select_hood_ventilation_profile",
+            entity="Cooking.Hood.Setting.VentilationProfileOperating",
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        HCSelectEntityDescription(
+            key="select_hood_filter_notification",
+            entity="Cooking.Hood.Setting.FilterSaturationNotificationInterval",
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        _generate_hood_favorite_functionality("001"),
+        _generate_hood_favorite_functionality("002"),
     ],
     "switch": [
+        HCSwitchEntityDescription(
+            key="switch_hood_interval_total_time_limitation",
+            entity="Cooking.Hood.Setting.IntervalTotalExecutionTimeLimitation",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
+        ),
         HCSwitchEntityDescription(
             key="switch_oven_fast_pre_heat",
             entity="Cooking.Oven.Option.FastPreHeat",

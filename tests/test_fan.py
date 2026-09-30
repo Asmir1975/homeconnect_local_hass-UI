@@ -14,6 +14,7 @@ from homeassistant.components.fan import (
     SERVICE_SET_PERCENTAGE,
     SERVICE_SET_PRESET_MODE,
     SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
     FanEntityFeature,
 )
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
@@ -50,7 +51,10 @@ async def test_setup(
     assert state.name == "Fake_brand HomeAppliance Fan"
     assert state.attributes[ATTR_FRIENDLY_NAME] == "Fake_brand HomeAppliance Fan"
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
-        FanEntityFeature.SET_SPEED | FanEntityFeature.PRESET_MODE | FanEntityFeature.TURN_OFF
+        FanEntityFeature.SET_SPEED
+        | FanEntityFeature.PRESET_MODE
+        | FanEntityFeature.TURN_ON
+        | FanEntityFeature.TURN_OFF
     )
     assert state.attributes[ATTR_PERCENTAGE_STEP] == 25
     assert state.attributes[ATTR_PRESET_MODES] == ["None", "Boost"]
@@ -520,5 +524,96 @@ async def test_turn_off_falls_back_to_zero_write_without_power_state(
             resource="/ro/values",
             action=Action.POST,
             data=[{"uid": 403, "value": 0}, {"uid": 404, "value": 0}],
+        )
+    )
+
+
+async def test_turn_on_without_speed_powers_on(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Turning on without a speed switches the appliance on like its own power button."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/values",
+            action=Action.POST,
+            data={"uid": 205, "value": 2},
+        )
+    )
+
+
+async def test_turn_on_with_speed_starts_program(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Turning on with a speed uses the same Program start as setting the speed."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan", ATTR_PERCENTAGE: 25},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 504,
+                "options": [
+                    {"uid": 403, "value": 1},
+                    {"uid": 404, "value": 0},
+                    {"uid": 506, "value": 1},
+                    {"uid": 507, "value": 0},
+                ],
+            },
+        )
+    )
+
+
+async def test_turn_on_without_power_state_starts_lowest_speed(
+    hass: HomeAssistant,
+    mock_appliance: MockAppliance,
+    patch_entity_description: None,  # noqa: ARG001
+) -> None:
+    """Without a switchable PowerState, turning on starts the lowest speed."""
+    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
+    del mock_appliance.entities["BSH.Common.Setting.PowerState"]
+    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan"},
+        blocking=True,
+    )
+
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 504,
+                "options": [
+                    {"uid": 403, "value": 1},
+                    {"uid": 404, "value": 0},
+                    {"uid": 506, "value": 1},
+                    {"uid": 507, "value": 0},
+                ],
+            },
         )
     )
