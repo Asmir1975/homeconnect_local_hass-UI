@@ -52,7 +52,7 @@ If you have other device types not listed yet, please let us know by opening an 
    - **Sign in with Home Connect account** *(recommended)*: no extra tools needed, works on any device
    - **Upload profile ZIP manually**: use the [bruestel desktop tool](https://github.com/bruestel/homeconnect-profile-downloader) and upload the ZIP
 
-3. **If signing in:**
+3. **If signing in** (step by step with screenshots: [sign-in guide](https://github.com/Asmir1975/homeconnect_local_hass-UI/discussions/102)):
    - Select your region (EU, NA, or CN)
    - Open the link shown, log in with your Home Connect account, and approve access
    - Copy that full URL from the address bar and paste it into the HA form
