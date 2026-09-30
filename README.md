@@ -4,10 +4,10 @@
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=flat-square)](https://github.com/hacs/integration)
 [![Home Assistant](https://img.shields.io/badge/Home%20Assistant-Integration-41BDF5?style=flat-square&logo=home-assistant&logoColor=white)](https://www.home-assistant.io/)
-[![Version](https://img.shields.io/github/v/release/Asmir1975/homeconnect_local_hass-UI?style=flat-square&logo=github&color=41BDF5&logoColor=white&cacheSeconds=15600)](https://github.com/Asmir1975/homeconnect_local_hass-UI/releases)
+[![Version](https://img.shields.io/github/v/release/Asmir1975/homeconnect_local_hass-UI?style=flat-square&logo=github&color=41BDF5&logoColor=white)](https://github.com/Asmir1975/homeconnect_local_hass-UI/releases)
 
-[![GitHub stars](https://img.shields.io/github/stars/Asmir1975/homeconnect_local_hass-UI?style=flat-square&cacheSeconds=15600)](https://github.com/Asmir1975/homeconnect_local_hass-UI/stargazers)
-[![GitHub downloads](https://img.shields.io/github/downloads/Asmir1975/homeconnect_local_hass-UI/total?style=flat-square&cacheSeconds=15600)](https://github.com/Asmir1975/homeconnect_local_hass-UI/releases)
+[![GitHub stars](https://img.shields.io/github/stars/Asmir1975/homeconnect_local_hass-UI?style=flat-square)](https://github.com/Asmir1975/homeconnect_local_hass-UI/stargazers)
+[![GitHub downloads](https://img.shields.io/github/downloads/Asmir1975/homeconnect_local_hass-UI/total?style=flat-square)](https://github.com/Asmir1975/homeconnect_local_hass-UI/releases)
 
 The **Home Connect Local** integration lets you control Bosch, Siemens, and Neff home appliances directly over your local network, with no cloud required after setup.
 
