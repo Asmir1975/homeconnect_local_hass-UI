@@ -19,6 +19,7 @@ from custom_components.homeconnect_ws.entity_descriptions import (
     HCSwitchEntityDescription,
 )
 from custom_components.homeconnect_ws.entity_descriptions.common import (
+    COMMON_ENTITY_DESCRIPTIONS,
     generate_elapsed_program_time,
     generate_power_switch,
     generate_program,
@@ -940,6 +941,34 @@ def test_hood_favorite_functionality_select_only_for_hoods() -> None:
 
     empty_hood = SimpleNamespace(info={"type": "Hood"}, entities={})
     assert all(generate(empty_hood) is None for generate in generators)
+
+
+def test_favorite_trigger_sensors_disabled_by_default_for_hoods() -> None:
+    """Test the favorite button Binary Sensors start disabled on hoods only."""
+    generators = [
+        item
+        for item in COMMON_ENTITY_DESCRIPTIONS["binary_sensor"]
+        if callable(item) and "favorite" in item.__qualname__
+    ]
+    assert len(generators) == 2
+    entities = {
+        "BSH.Common.Event.Favorite.001.ExternalTrigger": None,
+        "BSH.Common.Event.Favorite.002.ExternalTrigger": None,
+    }
+
+    hood = SimpleNamespace(info={"type": "Hood"}, entities=entities)
+    hood_descriptions = [generate(hood) for generate in generators]
+    assert [item.key for item in hood_descriptions] == [
+        "binary_sensor_favorite_001",
+        "binary_sensor_favorite_002",
+    ]
+    assert all(item.force_disabled_default for item in hood_descriptions)
+
+    hob = SimpleNamespace(info={"type": "Hob"}, entities=entities)
+    assert not any(generate(hob).force_disabled_default for generate in generators)
+
+    empty = SimpleNamespace(info={"type": "Hood"}, entities={})
+    assert all(generate(empty) is None for generate in generators)
 
 
 def test_hood_regenerative_carbon_filter_sensors() -> None:

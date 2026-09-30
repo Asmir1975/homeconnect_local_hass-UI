@@ -35,6 +35,8 @@ from .descriptions_definitions import (
 )
 
 if TYPE_CHECKING:
+    from collections.abc import Callable
+
     from homeconnect_websocket import HomeAppliance
 
 
@@ -285,6 +287,27 @@ def generate_program_progress(appliance: HomeAppliance) -> HCSensorEntityDescrip
     )
 
 
+def _generate_favorite_trigger(
+    slot: str,
+) -> Callable[[HomeAppliance], HCBinarySensorEntityDescription | None]:
+    """Get the Binary Sensor for a favorite button press sent to the smart home."""
+
+    def generate(appliance: HomeAppliance) -> HCBinarySensorEntityDescription | None:
+        entity = f"BSH.Common.Event.Favorite.{slot}.ExternalTrigger"
+        if entity not in appliance.entities:
+            return None
+        return HCBinarySensorEntityDescription(
+            key=f"binary_sensor_favorite_{slot}",
+            entity=entity,
+            value_on={"Present", "Confirmed"},
+            value_off={"Off"},
+            # A hood tested locally never sent this event on a button press.
+            force_disabled_default=appliance.info.get("type") == "Hood",
+        )
+
+    return generate
+
+
 COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     "button": [
         HCButtonEntityDescription(
@@ -361,18 +384,8 @@ COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             value_on={"Present", "Confirmed"},
             value_off={"Off"},
         ),
-        HCBinarySensorEntityDescription(
-            key="binary_sensor_favorite_001",
-            entity="BSH.Common.Event.Favorite.001.ExternalTrigger",
-            value_on={"Present", "Confirmed"},
-            value_off={"Off"},
-        ),
-        HCBinarySensorEntityDescription(
-            key="binary_sensor_favorite_002",
-            entity="BSH.Common.Event.Favorite.002.ExternalTrigger",
-            value_on={"Present", "Confirmed"},
-            value_off={"Off"},
-        ),
+        _generate_favorite_trigger("001"),
+        _generate_favorite_trigger("002"),
     ],
     "select": [
         HCSelectEntityDescription(
