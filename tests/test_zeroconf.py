@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from dataclasses import replace
 from ipaddress import ip_address
 from typing import TYPE_CHECKING
 from unittest.mock import ANY, Mock
@@ -189,6 +190,86 @@ async def test_zeroconf_update_manual_host(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config.data[CONF_HOST] == "1.2.3.4"
+    mock_setup_entry.assert_not_awaited()
+
+
+IPV6_ADDRESS = ip_address("2001:db8::1")
+IPV4_ADDRESS = ip_address("192.168.1.23")
+
+
+async def test_zeroconf_keeps_ipv4_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test IPv6 only discovery does not replace a known IPv4 host."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA,
+        unique_id=MOCK_TLS_DEVICE_ID,
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=replace(MOCK_ZEROCONF_DATA, ip_address=IPV6_ADDRESS, ip_addresses=[IPV6_ADDRESS]),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.data[CONF_HOST] == "1.2.3.4"
+    mock_setup_entry.assert_not_awaited()
+
+
+async def test_zeroconf_prefers_ipv4(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test IPv4 is used when the discovery lists IPv6 first."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG_DATA,
+        unique_id=MOCK_TLS_DEVICE_ID,
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=replace(
+            MOCK_ZEROCONF_DATA,
+            ip_address=IPV6_ADDRESS,
+            ip_addresses=[IPV6_ADDRESS, IPV4_ADDRESS],
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.data[CONF_HOST] == "192.168.1.23"
+    mock_setup_entry.assert_not_awaited()
+
+
+async def test_zeroconf_updates_ipv6_host(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+) -> None:
+    """Test an IPv6 host is still updated from an IPv6 only discovery."""
+    mock_config = MockConfigEntry(
+        domain=DOMAIN,
+        data={**MOCK_CONFIG_DATA, CONF_HOST: "2001:db8::2"},
+        unique_id=MOCK_TLS_DEVICE_ID,
+    )
+    mock_config.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=replace(MOCK_ZEROCONF_DATA, ip_address=IPV6_ADDRESS, ip_addresses=[IPV6_ADDRESS]),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config.data[CONF_HOST] == "2001:db8::1"
     mock_setup_entry.assert_not_awaited()
 
 

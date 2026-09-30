@@ -9,6 +9,7 @@ import re
 from asyncio import Event, wait_for
 from binascii import Error as BinasciiError
 from copy import deepcopy
+from ipaddress import ip_address
 from typing import TYPE_CHECKING, Any
 from zipfile import BadZipFile, ZipFile
 
@@ -84,6 +85,22 @@ CONFIG_HOST_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): cv.string,
     }
 )
+
+
+def discovery_host(discovery_info: ZeroconfServiceInfo) -> str:
+    """Return the discovered address, IPv4 preferred."""
+    for address in discovery_info.ip_addresses:
+        if address.version == 4 and not address.is_link_local and not address.is_unspecified:
+            return str(address)
+    return str(discovery_info.ip_address)
+
+
+def is_ipv4(host: str | None) -> bool:
+    """Return True if host is an IPv4 address."""
+    try:
+        return ip_address(host).version == 4
+    except ValueError:
+        return False
 
 
 def process_zip_file(config_path: Path) -> dict[str, dict[str, dict | DeviceDescription]]:
@@ -515,13 +532,19 @@ class HomeConnectConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             await self.async_set_unique_id(discovery_info.properties["id"])
             updates = None
+            host = discovery_host(discovery_info)
             config_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
                 self.handler, self.unique_id
             )
-            if config_entry and not config_entry.data.get(CONF_MANUAL_HOST, False):
-                updates = {CONF_HOST: str(discovery_info.ip_address)}
+            # An appliance announces IPv4 and IPv6 in changing order, keep a known IPv4 host
+            if (
+                config_entry
+                and not config_entry.data.get(CONF_MANUAL_HOST, False)
+                and (is_ipv4(host) or not is_ipv4(config_entry.data.get(CONF_HOST)))
+            ):
+                updates = {CONF_HOST: host}
             self._abort_if_unique_id_configured(updates=updates)
-            self.data[CONF_HOST] = str(discovery_info.ip_address)
+            self.data[CONF_HOST] = host
             self.data[CONF_NAME] = (
                 f"{discovery_info.properties['brand']} {discovery_info.properties['type']}"
             )
