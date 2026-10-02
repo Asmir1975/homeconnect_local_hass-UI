@@ -123,10 +123,8 @@ class HCSelect(HCEntity, SelectEntity):
         elif self._entity.enum:
             entity_min = self._entity.min
             entity_max = self._entity.max
-            # Some enum members are reported but rejected on write, e.g. an
-            # "off" state outside the appliance's writable range. Excluding
-            # them here, and from the reverse lookup below, keeps them from
-            # being offered or written in the first place.
+            # Some enum members are reported but rejected on write (e.g. "off" outside
+            # the writable range); exclude them here and from the reverse lookup below.
             writable_items = [
                 (key, value)
                 for key, value in self._entity.enum.items()
@@ -280,14 +278,12 @@ class HCProgram(HCSelect):
                 options = fill_full_option_set(selected_program, {})
                 await selected_program.start(options, override_options=True)
             elif entity_is_available(self._entity, self.entity_description.available_access):
-                # SelectedProgram is writable, this path already worked before the
-                # read-only fallback above existed. Leave its payload unchanged.
+                # SelectedProgram is writable: this payload predates the fallback below
+                # and stays unchanged.
                 await selected_program.start()
             else:
-                # Reached only via the read-only-SelectedProgram fallback. Suppresses
-                # the library's automatic READ_WRITE option shadows for this call
-                # (Program._build_options); scoped to this path so devices that
-                # already worked keep their existing payload.
+                # Read-only SelectedProgram fallback: suppress the library's READ_WRITE
+                # option shadows (Program._build_options) for this call only.
                 await selected_program.start(override_options=True)
 
 
@@ -296,11 +292,10 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
     Single always-visible Hood level Select.
 
     Venting/Intensive are Program Options, not Settings, so this mirrors HCFan's write path
-    (program.start over /ro/activeProgram, zeroing the other option,
-    PowerState-off fallback for "Off") instead of the generic
-    HCSelect.async_select_option()/entity.set_value(), which would write the
-    wrong resource. Options are the device's own enum names, "Off" is our
-    own addition since the appliance has no selectable off stage.
+    (program.start over /ro/activeProgram, zeroing the other option, PowerState-off for
+    "Off") instead of the generic HCSelect write, which would use the wrong resource.
+    Options are the device's own enum names; "Off" is our addition, the appliance has no
+    selectable off stage.
     """
 
     entity_description: HCFanEntityDescription
@@ -335,9 +330,8 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
         if operation_state is not None and operation_state not in self._entities:
             self._entities.append(operation_state)
 
-        # Boost zeroes both speed options (see HCFan._start_boost in fan.py), so
-        # without this, current_option would fall through to HOOD_LEVEL_OFF while
-        # the hood is actually running Boost.
+        # Boost zeroes both speed options; without this, current_option would show
+        # HOOD_LEVEL_OFF while the hood runs Boost.
         self._venting_boost_entity = self._runtime_data.appliance.options.get(_VENTING_BOOST_ENTITY)
         if self._venting_boost_entity is not None:
             self._attr_options.append(HOOD_LEVEL_BOOST)

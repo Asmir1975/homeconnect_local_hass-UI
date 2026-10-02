@@ -42,11 +42,9 @@ PRESET_NONE = "None"
 PRESET_BOOST = "Boost"
 PRESET_MODES: Final = [PRESET_NONE, PRESET_BOOST]
 
-# The appliance doesn't confirm a boost start/stop right away, and reverts boost on
-# its own once its own timer elapses with no "still pending" signal in between
-# (ported from vemboy200/homeconnect_local_hass PR #55's discussion) - preset_mode
-# below always reads the appliance's own live Boost value, this is just how long a
-# just-requested change is shown immediately rather than waiting on that.
+# The appliance doesn't confirm a boost start/stop right away and reverts boost on its
+# own timer. A requested change is shown for this many seconds; preset_mode otherwise
+# reads the live Boost value.
 _OPTIMISTIC_PRESET_DURATION = 8
 
 
@@ -132,9 +130,7 @@ class HCFan(HCEntity, FanEntity):
 
     @property
     def preset_mode(self) -> str | None:
-        # Optimistic first: bridges the gap until the appliance confirms a
-        # just-requested boost start/stop, or until it reverts boost on its own
-        # once the boost timer elapses - see _OPTIMISTIC_PRESET_DURATION above.
+        # Optimistic value first: bridges the gap until the appliance confirms or reverts boost.
         if self._optimistic_preset_mode is not None:
             return self._optimistic_preset_mode
         if self._venting_boost_entity is None:
@@ -226,8 +222,7 @@ class HCFan(HCEntity, FanEntity):
 
     @error_decorator
     async def async_set_percentage(self, percentage: int) -> None:
-        # Equivalent point to vemboy's async_turn_on reset for "boost display
-        # shouldn't survive a manual speed change or an explicit off".
+        # A manual speed change or an explicit off ends the boost display.
         if self._venting_boost_entity is not None:
             self._set_optimistic_preset(PRESET_NONE)
 
@@ -249,10 +244,8 @@ class HCFan(HCEntity, FanEntity):
                 translation_placeholders={"percentage": str(percentage)},
             )
 
-        # Speed options are children of a Program; writing them via /ro/values
-        # is rejected once no program is active. /ro/activeProgram
-        # (Program.start) is the correct resource regardless of whether a
-        # program is already running.
+        # Speed options belong to a Program: /ro/values rejects them without an active
+        # program, /ro/activeProgram (Program.start) works either way.
         program = self._runtime_data.appliance.programs[self.entity_description.default_program]
         options = {
             entity.uid: (new_speed_value if entity.name == new_speed_entity else 0)
@@ -265,12 +258,9 @@ class HCFan(HCEntity, FanEntity):
 
     @error_decorator
     async def async_turn_off(self, **kwargs: Any) -> None:
-        # Writing 0 to the speed options is rejected by some hoods: the appliance
-        # echoes the option back at its old, non-zero value instead of accepting
-        # 0. Powering the appliance off is the confirmed working stop for those
-        # devices, so prefer it when available; keep the zero-write as a
-        # fallback for appliances without a switchable PowerState so nothing
-        # that works today regresses.
+        # Some hoods reject 0 on the speed options and echo the old value. PowerState off
+        # is the confirmed stop there; the zero write stays as a fallback for appliances
+        # without a switchable PowerState.
         power_state, off_value = self._settable_power_state(POWER_OFF_STATE_NAMES)
 
         if self._venting_boost_entity is not None:

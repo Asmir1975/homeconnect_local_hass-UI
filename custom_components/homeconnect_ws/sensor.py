@@ -33,13 +33,11 @@ PARALLEL_UPDATES = 0
 SCAN_INTERVAL = timedelta(hours=1)
 
 _OPERATION_STATE_ENTITY = "BSH.Common.Status.OperationState"
-# Some appliances (confirmed: an oven, when its post-program display prompt is
-# left unanswered) never reset ProgramProgress/RemainingProgramTime/
-# ElapsedProgramTime once a program ends, unlike e.g. a dishwasher which
-# always resets them itself. "Ready" is excluded here: a freshly selected
-# program legitimately shows its estimated remaining duration as a preview
-# before it has even started. Progress and elapsed time have no such
-# legitimate non-zero preview value, see also_reset_when_ready below.
+# Some appliances (confirmed: an oven whose post-program display prompt is left
+# unanswered) never reset ProgramProgress/RemainingProgramTime/ElapsedProgramTime after
+# a program ends. "Ready" is excluded: a freshly selected program shows its estimated
+# remaining time as a preview. Progress and elapsed time have no such preview, so they
+# reset on "ready" too (also_reset_when_ready).
 _RESET_OPERATION_STATES = frozenset({"finished", "inactive", "error", "aborting"})
 
 
@@ -100,9 +98,8 @@ class HCSensor(HCEntity, SensorEntity):
     @property
     def available(self) -> bool:
         if self._should_reset_to_zero():
-            # The oven can mark this entity available:false on the same terminal
-            # transition (see native_value); bypass just that device-side gate so
-            # the overlaid 0 is shown instead of "unavailable".
+            # The oven can mark this entity unavailable on the same terminal transition;
+            # bypass that device-side gate so the overlaid 0 is shown.
             return (
                 self._runtime_data.coordinator.connected
                 or self._runtime_data.appliance.session.connected

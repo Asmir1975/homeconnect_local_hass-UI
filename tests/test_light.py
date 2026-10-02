@@ -987,9 +987,9 @@ async def test_color_temp_unavailable_falls_back_to_brightness(
     """
     Test an unusable color temperature Setting is not offered as a feature.
 
-    Upstream issue #451: the Neff D98IPT2S0 declares
-    Cooking.Hood.Setting.ColorTemperaturePercent as available="false" but with
-    initValue=50, so the Setting carries a value the appliance will not accept.
+    The Neff D98IPT2S0 declares Cooking.Hood.Setting.ColorTemperaturePercent as
+    available="false" but with initValue=50, so the Setting carries a value the
+    appliance will not accept.
     """
     mock_appliance.entities.pop("Cooking.Hood.Setting.ColorTemperature")
     color_temp = mock_appliance.entities["Test.LightingColorTempPercent"]

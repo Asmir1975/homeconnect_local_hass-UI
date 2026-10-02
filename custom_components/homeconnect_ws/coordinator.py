@@ -93,8 +93,8 @@ class HomeConnectCoordinator(DataUpdateCoordinator):
             try:
                 await self.appliance.connect()
                 if self.appliance.session.connected:
-                    self.connected = True  # FIX
-                    self.async_set_updated_data(None)  # FIX
+                    self.connected = True
+                    self.async_set_updated_data(None)
                     return
             except ConnectionFailedError, HCHandshakeError:
                 await self.appliance.close()

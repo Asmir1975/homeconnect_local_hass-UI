@@ -140,15 +140,13 @@ def ensure_writable(entity: HcEntity | None) -> None:
 
 async def start_coffee_favorite_with_fallback(program: Program) -> None:
     """
-    Start a coffee favorite, retrying once with fewer options after a 400.
+    Start a coffee favorite, retrying once without unavailable options after a 400.
 
-    The first attempt is the unchanged default start, so every start that works
-    today keeps its payload. Some coffee makers answer 400 to a favorite start
-    whose options include values for options that are currently not available
-    (the suspected cause on a Siemens TP713D09). Only after such a 400 on the
-    start resource the request is repeated exactly once, without the unavailable
-    options. Any other error, a timeout or a disconnect is never retried, since
-    the appliance might already have started.
+    The first attempt is the unchanged default start. Some coffee makers answer 400
+    when the favorite's options include values for currently unavailable options
+    (suspected cause on a Siemens TP713D09). Only such a 400 on the start resource is
+    retried, once; any other error, timeout or disconnect is not, since the appliance
+    might already have started.
     """
     try:
         await program.start()

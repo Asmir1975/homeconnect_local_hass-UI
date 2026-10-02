@@ -634,8 +634,8 @@ async def test_dishwasher_additions_materialize(
     """
     Test the 1.10.5 dishwasher descriptions materialize on a real-profile shape.
 
-    uid/access values are taken verbatim from the reporter profiles of upstream
-    #351 and from the SX63HX52BE diagnostics.
+    uid/access values are taken verbatim from reporter profiles and from the
+    SX63HX52BE diagnostics.
     """
     appliance = await mock_homeconnect_appliance(description=SILENCE_ON_DEMAND_PROFILE)
     available = entity_descriptions.get_available_entities(appliance)
@@ -711,10 +711,9 @@ async def test_oven_water_tank_is_an_event_sensor(
     A static HCSensorEntityDescription with entities= instead of entity= leaves
     HCEntity._entity as None. HCSensor.__init__ and HCSensor.native_value both
     read self._entity directly, so the "sensor" platform crashes on setup and
-    again on every state read. Upstream chris-mc1/homeconnect_local_hass hit the
-    same class of bug (commit 3eaaac8). The fix here is architectural, not a
-    None-guard: the description belongs under "event_sensor", like its grouped
-    sibling generated in generate_hob_zones.
+    again on every state read. The fix is architectural, not a None-guard: the
+    description belongs under "event_sensor", like its grouped sibling generated
+    in generate_hob_zones.
     """
     appliance = await mock_homeconnect_appliance(description=OVEN_WATER_TANK_PROFILE)
     appliance.info = {"deviceID": "test_device_id"}
@@ -839,9 +838,8 @@ async def test_speed_perfect_descriptions_have_unique_keys(
     """
     Test a washer reporting both SpeedPerfect options gets two distinct switches.
 
-    Upstream issue #11: both static descriptions used the same key, so both
-    switches collided on the same unique_id and Home Assistant silently
-    dropped the second one.
+    Both static descriptions used the same key, so both switches collided on the
+    same unique_id and Home Assistant silently dropped the second one.
     """
     appliance = await mock_homeconnect_appliance(
         description={
