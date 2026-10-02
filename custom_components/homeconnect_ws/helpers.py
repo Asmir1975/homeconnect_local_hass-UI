@@ -171,36 +171,6 @@ async def start_coffee_favorite_with_fallback(program: Program) -> None:
         await program.start(reduced, override_options=True)
 
 
-def fill_full_option_set(
-    program: Program, options: dict[int, str | int | bool]
-) -> dict[int, str | int | bool]:
-    """
-    Fill in every writable option a full-option-set Program needs but options omits.
-
-    Some appliances validate a program write against the program's complete
-    option set and reject a partial one. Mutates and returns options. value
-    (not value_raw) resolves enum options to their display name, not the
-    protocol value, so only value_shadow/value_raw are usable here.
-    """
-    for option in program.options:
-        if option.uid in options or option.access != Access.READ_WRITE:
-            continue
-        value = option.value_shadow
-        if value is None:
-            value = option.value_raw
-        if value is None:
-            # Never reported by the appliance yet; guessing (e.g. a
-            # minimum) could silently change a setting the user never
-            # touched. Fail clearly instead.
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="full_option_set_incomplete",
-                translation_placeholders={"option": option.name},
-            )
-        options[option.uid] = value
-    return options
-
-
 def error_decorator[T](func: Callable[..., Coroutine[T]]) -> Callable[..., Coroutine[T]]:
     """Catches HomeConnect Errors and raise HomeAssistantError."""
 

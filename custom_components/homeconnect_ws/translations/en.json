@@ -4373,9 +4373,6 @@
     "command_timeout": {
       "message": "The appliance did not answer the command in time"
     },
-    "full_option_set_incomplete": {
-      "message": "Cannot set speed: the appliance has not reported a value for {option} yet"
-    },
     "read_only": {
       "message": "This is currently in read-only mode and can't be changed right now"
     },

@@ -16,7 +16,7 @@ from homeconnect_websocket.message import Action, Message
 from .const import DOMAIN
 from .entity import HCEntity
 from .entity_descriptions.common import POWER_OFF_STATE_NAMES
-from .helpers import create_entities, error_decorator, fill_full_option_set
+from .helpers import create_entities, error_decorator
 
 if TYPE_CHECKING:
     from datetime import datetime
@@ -251,9 +251,6 @@ class HCFan(HCEntity, FanEntity):
             entity.uid: (new_speed_value if entity.name == new_speed_entity else 0)
             for entity in self._speed_entities.values()
         }
-        if program.full_option_set:
-            fill_full_option_set(program, options)
-
         await program.start(options, override_options=True)
 
     @error_decorator

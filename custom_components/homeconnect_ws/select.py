@@ -13,13 +13,7 @@ from .const import CONF_FILTER_UNSAVED_FAVORITES, DOMAIN
 from .entity import HCEntity
 from .entity_descriptions.common import POWER_OFF_STATE_NAMES
 from .fan import SpeedMapping
-from .helpers import (
-    create_entities,
-    ensure_writable,
-    entity_is_available,
-    error_decorator,
-    fill_full_option_set,
-)
+from .helpers import create_entities, ensure_writable, entity_is_available, error_decorator
 from .program_names import (
     favorite_name_settings,
     program_labels,
@@ -260,23 +254,14 @@ class HCProgram(HCSelect):
             # START_ONLY below writes ActiveProgram directly and has its own
             # read-only fallback; only this path actually writes SelectedProgram.
             ensure_writable(self._entity)
-            # Do not carry shared option shadows from the previously selected
-            # program unless this program explicitly requires a full option set.
-            await selected_program.select(override_options=not selected_program.full_option_set)
+            # Don't carry option shadows from the previously selected program.
+            await selected_program.select(override_options=True)
         elif selected_program.execution == Execution.START_ONLY:
             if venting_options := hood_venting_start_options(
                 self._runtime_data.appliance, selected_program
             ):
                 # Same payload as the fan and hood level entities.
-                if selected_program.full_option_set:
-                    fill_full_option_set(selected_program, venting_options)
                 await selected_program.start(venting_options, override_options=True)
-            elif selected_program.full_option_set:
-                # Some appliances validate a program write against the program's
-                # complete option set and reject a partial one — true regardless
-                # of whether SelectedProgram happens to be writable right now.
-                options = fill_full_option_set(selected_program, {})
-                await selected_program.start(options, override_options=True)
             elif entity_is_available(self._entity, self.entity_description.available_access):
                 # SelectedProgram is writable: this payload predates the fallback below
                 # and stays unchanged.
@@ -377,9 +362,6 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
             entity.uid: (new_speed_value if entity.name == new_speed_entity else 0)
             for entity in self._speed_entities.values()
         }
-        if program.full_option_set:
-            fill_full_option_set(program, options)
-
         await program.start(options, override_options=True)
 
     async def _async_turn_off(self) -> None:

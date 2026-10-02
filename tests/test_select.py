@@ -327,41 +327,6 @@ async def test_start_only_program_available_with_read_only_selected_program(
     )
 
 
-async def test_start_only_full_option_set(
-    hass: HomeAssistant,
-    mock_appliance: MockAppliance,
-    patch_entity_description: None,  # noqa: ARG001
-) -> None:
-    """A full-option-set START_ONLY program must fill options, not send an empty set."""
-    entity_id = "select.fake_brand_homeappliance_selectedprogram"
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "test_program_program4",
-        },
-        blocking=True,
-    )
-
-    mock_appliance.session.send_sync.assert_awaited_once_with(
-        Message(
-            resource="/ro/activeProgram",
-            action=Action.POST,
-            data={
-                "program": 505,
-                "options": [
-                    {"uid": 403, "value": 0},
-                    {"uid": 404, "value": 0},
-                    {"uid": 506, "value": 1},
-                ],
-            },
-        )
-    )
-
-
 async def test_start_only_availability_follows_program_execution_updates(
     hass: HomeAssistant,
     mock_appliance: MockAppliance,
@@ -449,39 +414,6 @@ async def test_select_program(
             action=Action.POST,
             data={
                 "program": 502,
-                "options": [{"uid": 401, "value": None}, {"uid": 402, "value": None}],
-            },
-        )
-    )
-
-
-async def test_select_program_preserves_required_full_option_set(
-    hass: HomeAssistant,
-    mock_appliance: MockAppliance,
-    patch_entity_description: None,  # noqa: ARG001
-) -> None:
-    """Programs declaring fullOptionSet keep the existing merged payload."""
-    entity_id = "select.fake_brand_homeappliance_selectedprogram"
-    program = mock_appliance.programs["Test.Program.Program2"]
-    program._full_option_set = True
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-
-    await hass.services.async_call(
-        SELECT_DOMAIN,
-        SERVICE_SELECT_OPTION,
-        {
-            ATTR_ENTITY_ID: entity_id,
-            ATTR_OPTION: "test_program_program2",
-        },
-        blocking=True,
-    )
-
-    mock_appliance.session.send_sync.assert_awaited_once_with(
-        Message(
-            resource="/ro/selectedProgram",
-            action=Action.POST,
-            data={
-                "program": 501,
                 "options": [{"uid": 401, "value": None}, {"uid": 402, "value": None}],
             },
         )
