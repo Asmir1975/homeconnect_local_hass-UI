@@ -321,6 +321,9 @@ def generate_hob_zones(appliance: HomeAppliance) -> HCFanEntityDescription:
                     suggested_unit_of_measurement=UnitOfTime.MINUTES,
                     extra_attributes=[{"name": "Auto Counting", "entity": extra_entity}],
                     force_disabled_default=force_disabled_default,
+                    # A zone switched off alone resets this itself via Ready; the
+                    # whole hob going straight to Inactive keeps the last value.
+                    reset_when_operation_state_terminal=True,
                 )
             )
 

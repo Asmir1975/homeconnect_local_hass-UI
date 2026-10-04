@@ -806,6 +806,55 @@ async def test_non_oven_program_time_sensors_keep_default_behavior(
     assert not generate_elapsed_program_time(appliance).also_reset_when_ready
 
 
+# UIDs and names from the EX851LYV5E profile.
+HOB_ELAPSED_TIME_PROFILE = DeviceDescription(
+    status=[
+        EntityDescription(
+            uid=8203,
+            name="Cooking.Hob.Status.Zone.100.OperationState",
+            available=True,
+            access=Access.READ,
+        ),
+        EntityDescription(
+            uid=8209,
+            name="Cooking.Hob.Status.Zone.100.ElapsedProgramTime",
+            available=True,
+            access=Access.READ,
+        ),
+    ],
+    option=[
+        EntityDescription(
+            uid=528, name="BSH.Common.Option.ElapsedProgramTime", available=True, access=Access.READ
+        ),
+    ],
+)
+
+
+async def test_hob_elapsed_time_resets_on_terminal_state(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """
+    Test the hob elapsed time sensors reset on a terminal state, not on Ready.
+
+    Device log 2026-10-04 10:27:31: the hob went from Run to Inactive and kept
+    sending 1770 s for the zone and the appliance. Via Ready (09:26:23) it sent 0
+    itself, so Ready needs no overlay.
+    """
+    appliance = await mock_homeconnect_appliance(description=HOB_ELAPSED_TIME_PROFILE)
+
+    elapsed = generate_elapsed_program_time(appliance)
+    assert elapsed.reset_when_operation_state_terminal
+    assert not elapsed.also_reset_when_ready
+
+    zone_descriptions = {item.key: item for item in generate_hob_zones(appliance)["sensor"]}
+    zone_elapsed = zone_descriptions["sensor_hob_zone_100_elapsed_program_time"]
+    assert zone_elapsed.reset_when_operation_state_terminal
+    assert not zone_elapsed.also_reset_when_ready
+    assert not zone_descriptions[
+        "sensor_hob_zone_100_operationstate"
+    ].reset_when_operation_state_terminal
+
+
 def _speed_perfect_option(name: str, uid: int) -> dict:
     return {
         "access": "readwrite",

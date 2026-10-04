@@ -230,6 +230,14 @@ def _has_oven_cavity(appliance: HomeAppliance) -> bool:
     return any(_OVEN_CAVITY_PATTERN.match(entity) for entity in appliance.entities)
 
 
+_HOB_ZONE_PATTERN = re.compile(r"^Cooking\.Hob\.Status\.Zone\.\d+\..*$")
+
+
+def _has_hob_zone(appliance: HomeAppliance) -> bool:
+    """Detect a hob by its zone-scoped status entities."""
+    return any(_HOB_ZONE_PATTERN.match(entity) for entity in appliance.entities)
+
+
 def generate_remaining_program_time(appliance: HomeAppliance) -> HCSensorEntityDescription | None:
     """Get RemainingProgramTime sensor description."""
     if "BSH.Common.Option.RemainingProgramTime" not in appliance.entities:
@@ -263,8 +271,10 @@ def generate_elapsed_program_time(appliance: HomeAppliance) -> HCSensorEntityDes
         entity="BSH.Common.Option.ElapsedProgramTime",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        reset_when_operation_state_terminal=is_oven,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        # Confirmed on a hob: switched off straight from Run to Inactive, it keeps
+        # the last elapsed time. Via Ready it resets it itself.
+        reset_when_operation_state_terminal=is_oven or _has_hob_zone(appliance),
         # Unlike remaining time, elapsed time has no legitimate non-zero
         # value before a program starts.
         also_reset_when_ready=is_oven,
