@@ -40,8 +40,8 @@ _SELECTED_PROGRAM_SUFFIX = ".SelectedProgram"
 _OPERATION_STATE_ENTITY = "BSH.Common.Status.OperationState"
 _INACTIVE_OPERATION_STATES = frozenset({"inactive", "ready"})
 _POWER_STATE_ENTITY = "BSH.Common.Setting.PowerState"
-HOOD_LEVEL_OFF = "Off"
-HOOD_LEVEL_BOOST = "Boost"
+HOOD_LEVEL_OFF = "off"
+HOOD_LEVEL_BOOST = "boost"
 _VENTING_BOOST_ENTITY = "Cooking.Common.Option.Hood.Boost"
 _HOOD_VENTING_PROGRAM = "Cooking.Common.Program.Hood.Venting"
 _HOOD_VENTING_LEVEL = "Cooking.Common.Option.Hood.VentingLevel"
@@ -279,8 +279,8 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
     Venting/Intensive are Program Options, not Settings, so this mirrors HCFan's write path
     (program.start over /ro/activeProgram, zeroing the other option, PowerState-off for
     "Off") instead of the generic HCSelect write, which would use the wrong resource.
-    Options are the device's own enum names; "Off" is our addition, the appliance has no
-    selectable off stage.
+    Options are the device's own enum names in lower case; "off" is our addition, the
+    appliance has no selectable off stage.
     """
 
     entity_description: HCFanEntityDescription
@@ -307,7 +307,7 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
         self._attr_options = [
             HOOD_LEVEL_OFF,
             *(
-                self._speed_entities[m.entity_name].enum[m.entity_value]
+                self._speed_entities[m.entity_name].enum[m.entity_value].lower()
                 for m in self._speed_mapping
             ),
         ]
@@ -334,7 +334,7 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
         for speed in self._speed_mapping:
             entity = self._speed_entities[speed.entity_name]
             if entity.value_raw == speed.entity_value:
-                return entity.enum[speed.entity_value]
+                return entity.enum[speed.entity_value].lower()
         if self._venting_boost_entity is not None and self._venting_boost_entity.value_raw:
             return HOOD_LEVEL_BOOST
         return HOOD_LEVEL_OFF
@@ -352,7 +352,7 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
         new_speed_value: int | None = None
         for speed in self._speed_mapping:
             entity = self._speed_entities[speed.entity_name]
-            if entity.enum[speed.entity_value] == option:
+            if entity.enum[speed.entity_value].lower() == option:
                 new_speed_entity = speed.entity_name
                 new_speed_value = speed.entity_value
                 break

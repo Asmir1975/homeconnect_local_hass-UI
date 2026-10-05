@@ -598,13 +598,13 @@ async def test_hood_level_select_setup(
 
     state = hass.states.get("select.fake_brand_homeappliance_hoodlevel")
     assert state
-    assert state.state == "Off"
+    assert state.state == "off"
     assert state.attributes[ATTR_OPTIONS] == [
-        "Off",
-        "FanStage01",
-        "FanStage02",
-        "IntensiveStage1",
-        "Boost",
+        "off",
+        "fanstage01",
+        "fanstage02",
+        "intensivestage1",
+        "boost",
     ]
 
 
@@ -620,7 +620,7 @@ async def test_hood_level_select_venting(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "FanStage02"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "fanstage02"},
         blocking=True,
     )
 
@@ -637,7 +637,7 @@ async def test_hood_level_select_venting(
 
     await mock_appliance.entities["Test.HoodLevelVenting"].update({"value": 2})
     await hass.async_block_till_done()
-    assert hass.states.get(entity_id).state == "FanStage02"
+    assert hass.states.get(entity_id).state == "fanstage02"
 
 
 async def test_hood_level_select_intensive_zeroes_venting(
@@ -652,7 +652,7 @@ async def test_hood_level_select_intensive_zeroes_venting(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "IntensiveStage1"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "intensivestage1"},
         blocking=True,
     )
 
@@ -680,7 +680,7 @@ async def test_hood_level_select_off_uses_power_state(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Off"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "off"},
         blocking=True,
     )
 
@@ -701,17 +701,17 @@ async def test_hood_level_select_shows_boost(
     """Boost zeroes both speed options; current_option must show Boost, not Off."""
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
     entity_id = "select.fake_brand_homeappliance_hoodlevel"
-    assert "Boost" in hass.states.get(entity_id).attributes[ATTR_OPTIONS]
+    assert "boost" in hass.states.get(entity_id).attributes[ATTR_OPTIONS]
 
     await mock_appliance.entities["Cooking.Common.Option.Hood.Boost"].update({"value": True})
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "Boost"
+    assert hass.states.get(entity_id).state == "boost"
 
     await mock_appliance.entities["Cooking.Common.Option.Hood.Boost"].update({"value": False})
     await hass.async_block_till_done()
 
-    assert hass.states.get(entity_id).state == "Off"
+    assert hass.states.get(entity_id).state == "off"
 
 
 async def test_hood_level_select_boost_sends_expected_payload(
@@ -726,7 +726,7 @@ async def test_hood_level_select_boost_sends_expected_payload(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "Boost"},
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: "boost"},
         blocking=True,
     )
 

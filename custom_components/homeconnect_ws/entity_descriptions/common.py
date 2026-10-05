@@ -132,6 +132,23 @@ def generate_power_switch(appliance: HomeAppliance) -> EntityDescriptions:
     return entity_descriptions
 
 
+def generate_child_lock(appliance: HomeAppliance) -> HCSwitchEntityDescription | None:
+    """Get the ChildLock switch, unless the appliance configures its child lock as a select."""
+    if "BSH.Common.Setting.ChildLock" not in appliance.entities or any(
+        name in appliance.entities
+        for name in (
+            "Cooking.Hob.Setting.AutomaticKeyLock",
+            "Cooking.Oven.Setting.ConfigureChildLock",
+        )
+    ):
+        return None
+    return HCSwitchEntityDescription(
+        key="switch_child_lock",
+        entity="BSH.Common.Setting.ChildLock",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+
+
 def generate_door_state(appliance: HomeAppliance) -> HCSensorEntityDescription | None:
     """Get Door sensor description."""
     entity = appliance.entities.get("BSH.Common.Status.DoorState")
@@ -512,13 +529,7 @@ COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         generate_door_state,
     ],
     "start_button": [generate_start_button],
-    "switch": [
-        HCSwitchEntityDescription(
-            key="switch_child_lock",
-            entity="BSH.Common.Setting.ChildLock",
-            device_class=SwitchDeviceClass.SWITCH,
-        ),
-    ],
+    "switch": [generate_child_lock],
     "number": [
         HCNumberEntityDescription(
             key="number_duration",
