@@ -2160,6 +2160,9 @@
           "poor": "Poor",
           "filled": "Gefüllt"
         }
+      },
+      "sensor_host": {
+        "name": "IP-Adresse"
       }
     },
     "select": {

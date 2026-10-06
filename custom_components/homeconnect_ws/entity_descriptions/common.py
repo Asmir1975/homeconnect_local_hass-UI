@@ -565,5 +565,12 @@ COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         ),
     ],
     "wifi": [generate_wifi],
+    "host": [
+        HCSensorEntityDescription(
+            key="sensor_host",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            force_disabled_default=True,
+        ),
+    ],
     "dynamic": [generate_power_switch, generate_program],
 }

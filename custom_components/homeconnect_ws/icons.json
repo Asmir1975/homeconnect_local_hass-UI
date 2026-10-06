@@ -370,6 +370,9 @@
             "sensor_wifi_signal_strength": {
                 "default": "mdi:wifi"
             },
+            "sensor_host": {
+                "default": "mdi:ip-network"
+            },
             "sensor_grease_filter_saturation": {
                 "default": "mdi:air-filter"
             },

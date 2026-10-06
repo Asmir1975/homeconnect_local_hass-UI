@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 
 from aiohttp.client_exceptions import ClientConnectionResetError
 from homeassistant.components.sensor import SensorEntity
+from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeconnect_websocket import DisconnectedError, NotConnectedError
 
@@ -53,6 +54,7 @@ async def async_setup_entry(
             "event_sensor": HCEventSensor,
             "active_program": HCActiveProgram,
             "wifi": HCWiFI,
+            "host": HCHost,
         },
         config_entry.runtime_data,
     )
@@ -231,3 +233,15 @@ class HCWiFI(HCEntity, SensorEntity):
             _LOGGER.debug("WiFi update failed: Not connected")
         except TimeoutError, DisconnectedError:
             _LOGGER.debug("WiFi update failed: Timed out waiting for a response")
+
+
+class HCHost(HCEntity, SensorEntity):
+    """Address Home Assistant uses to reach the appliance."""
+
+    @property
+    def available(self) -> bool:
+        return True
+
+    @property
+    def native_value(self) -> str:
+        return self._runtime_data.coordinator.config_entry.data[CONF_HOST]
