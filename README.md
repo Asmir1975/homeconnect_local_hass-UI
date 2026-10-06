@@ -1,5 +1,3 @@
-<div align="center">
-
 ![Home Connect Local: local control for Bosch, Siemens and Neff dishwasher, hob and oven, no cloud required](https://raw.githubusercontent.com/Asmir1975/homeconnect_local_hass-UI/main/assets/banner.png)
 
 [![HACS Custom](https://img.shields.io/badge/HACS-Custom-41BDF5.svg?style=flat-square)](https://github.com/hacs/integration)
@@ -9,82 +7,75 @@
 [![GitHub stars](https://img.shields.io/github/stars/Asmir1975/homeconnect_local_hass-UI?style=flat-square)](https://github.com/Asmir1975/homeconnect_local_hass-UI/stargazers)
 [![GitHub downloads](https://img.shields.io/github/downloads/Asmir1975/homeconnect_local_hass-UI/total?style=flat-square)](https://github.com/Asmir1975/homeconnect_local_hass-UI/releases)
 
-The **Home Connect Local** integration lets you control Bosch, Siemens, and Neff home appliances directly over your local network, with no cloud required after setup.
+<div align="center">
 
-<sub>Independently developed, forked from [chris-mc1/homeconnect_local_hass](https://github.com/chris-mc1/homeconnect_local_hass).</sub>
+Control Bosch, Siemens and Neff appliances from Home Assistant over your local network.<br>
+After setup, no cloud is involved.
+
+⭐ If this fork helps you, a star makes it easier for others to find.
 
 </div>
 
-- 📥 **Cloud sign-in built into HA setup.** No desktop tool, works on any device including Android and iOS.
-- 🔌 **Fully local control after setup.** No cloud round-trip once your appliance profile is downloaded.
-- 🔄 **Independently maintained.** Its own ongoing bug fixes and features on top of the upstream codebase.
+<sub>Independently developed, forked from [chris-mc1/homeconnect_local_hass](https://github.com/chris-mc1/homeconnect_local_hass).</sub>
 
-⭐ If this fork is useful to you, leaving a star helps others find it.
 
-## 🆚 What's different in this fork?
+## 💡 Why this fork
 
-| | Original integration | This fork |
-|---|---|---|
-| Profile download | Separate desktop app (Windows/macOS/Linux only) | 🔷 Built into the HA setup flow, works on any device |
-| Auth flow | — | 🔷 Same Authorization Code + PKCE as the bruestel tool, no developer portal registration |
+- 📥 Sign in to Home Connect during setup. You don't need the desktop tool, and it works on any device.
+- 🔌 Local after setup: your appliances talk to Home Assistant directly.
+- 🛠️ Actively maintained, with regular bug fixes and new features.
 
-## 📋 Supported Device Types
+## 📋 Supported devices
 
-![Supported device types: Dishwasher, Hob, Oven, Washing machine, Refrigerator / Freezer and Extraction hood are supported. Coffee machine and Dryer are in testing.](assets/supported-devices-matrix.png)
-
-If you have other device types not listed yet, please let us know by opening an issue.
-
-## 🧩 Install via HACS
-
-1. Go to **HACS → Custom Repositories** and add:
-   ```
-   https://github.com/Asmir1975/homeconnect_local_hass-UI
-   ```
-   as type **Integration**.
-2. Click **Download** to install.
-3. Restart Home Assistant.
-
-## ⚙️ Setup
-
-1. Go to **Settings → Devices & Services → Add Integration** and search for **Home Connect Local**.
-
-2. Choose your setup method:
-   - **Sign in with Home Connect account** *(recommended)*: no extra tools needed, works on any device
-   - **Upload profile ZIP manually**: use the [bruestel desktop tool](https://github.com/bruestel/homeconnect-profile-downloader) and upload the ZIP
-
-3. **If signing in** (step by step with screenshots: [sign-in guide](https://github.com/Asmir1975/homeconnect_local_hass-UI/discussions/102)):
-   - Select your region (EU, NA, or CN)
-   - Open the link shown, log in with your Home Connect account, and approve access
-   - Copy that full URL from the address bar and paste it into the HA form
-   - HA will automatically download your appliance profile
-
-   > [!TIP]
-   > Your browser will try to open a dead link after approving access. That's expected, it doesn't need to load.
-
-4. Select the appliance to set up.
-
-5. If the connection test fails, enter your appliance's IP address manually.
-
-6. Repeat from step 1 to add more appliances.
-
-## 📝 Notes
+| Device | Status | Device | Status |
+|---|---|---|---|
+| 🍽️ Dishwasher | ✅ Supported | 🧺 Washing machine | ✅ Supported |
+| 🔥 Hob | ✅ Supported | 🧊 Fridge / Freezer | ✅ Supported |
+| ♨️ Oven | ✅ Supported | ☕ Coffee machine | 🧪 In testing |
+| 💨 Hood | ✅ Supported | 👕 Dryer | 🧪 In testing |
 
 > [!NOTE]
-> - Your credentials are not stored. Only the downloaded appliance profile (encryption key + device description) is saved in HA.
-> - If your appliance is not discovered automatically, find its IP in your router's DHCP table.
-> - The `hcauth://` redirect URL step is a known limitation of the authorization flow. A future improvement could automate this step.
+> Two washing machines, hoods or ovens can behave quite differently. If yours doesn't work as expected, open an issue with a debug log and your model number. That's the only way we can track it down.
 
-## 🐛 Reporting Issues
+## 🚀 Get started
 
-[Open an issue here](https://github.com/Asmir1975/homeconnect_local_hass-UI/issues) for anything you run into with this fork, whether it's the profile download / sign-in flow or the core integration itself.
+1. Add the repository to HACS, download it and restart Home Assistant.
 
-## 🙏 Credits
+   [![Open your Home Assistant instance and open this repository in HACS.](https://my.home-assistant.io/badges/hacs_repository.svg)](https://my.home-assistant.io/redirect/hacs_repository/?owner=Asmir1975&repository=homeconnect_local_hass-UI&category=integration)
 
-- [chris-mc1](https://github.com/chris-mc1) for the [Home Connect Local](https://github.com/chris-mc1/homeconnect_local_hass) integration and the [homeconnect-websocket](https://github.com/chris-mc1/homeconnect_websocket) library this fork is built on.
-- [bruestel](https://github.com/bruestel) for the [homeconnect-profile-downloader](https://github.com/bruestel/homeconnect-profile-downloader) and the Authorization Code + PKCE flow the built-in downloader reuses.
-- [SamJongenelen](https://github.com/SamJongenelen) for bringing the profile download into the setup flow (upstream PR 405).
+   <sub>Or add it by hand: HACS → Custom repositories → `https://github.com/Asmir1975/homeconnect_local_hass-UI`, type Integration.</sub>
+
+2. Add the integration and choose **Sign in with Home Connect**.
+
+   [![Open your Home Assistant instance and start setting up Home Connect Local.](https://my.home-assistant.io/badges/config_flow_start.svg)](https://my.home-assistant.io/redirect/config_flow_start/?domain=homeconnect_ws)
+
+   <sub>Or upload a profile ZIP from the [profile downloader](https://github.com/bruestel/homeconnect-profile-downloader).</sub>
+
+   <sub>If Home Assistant already found your appliance, click **Add** on it under Settings → Devices & Services instead.</sub>
+
+3. Approve access, copy the full URL from your browser's address bar into the form, then pick your appliance. The page after approval won't load. That's normal. [Guide with screenshots](https://github.com/Asmir1975/homeconnect_local_hass-UI/discussions/102)
+
+   <sub>You log in on the Home Connect page. Home Assistant only keeps the appliance profile.</sub>
+
+4. If your appliance isn't found, enter its IP address. Your router lists it.
+
+## 🐛 Issues & feature requests
+
+[Open an issue](https://github.com/Asmir1975/homeconnect_local_hass-UI/issues) and attach:
+
+- a **debug log** (see below)
+- the **diagnostics** of the appliance: Settings → Devices & Services → Home Connect Local → your appliance → **Download diagnostics**. The file contains the appliance profile and current values. Keys, serial number and MAC address are removed.
+
+  <img src="assets/diagnostics_button.png" alt="Download diagnostics" width="300">
+- your **model number**
 
 ## 🪵 Debug logging
+
+**In the UI**: Settings → Devices & Services → Home Connect Local → ⋮ → **Enable debug logging**. Reproduce the problem and disable it again. The log downloads automatically.
+
+<img src="assets/debug_menu.png" alt="Enable debug logging" width="220">
+
+To include startup, add this to `configuration.yaml`, restart Home Assistant and download the full log:
 
 ```yaml
 logger:
@@ -92,3 +83,11 @@ logger:
     custom_components.homeconnect_ws: debug
     homeconnect_websocket: debug
 ```
+
+[![Open your Home Assistant instance and show your logs.](https://my.home-assistant.io/badges/logs.svg)](https://my.home-assistant.io/redirect/logs/)
+
+## 🙏 Credits
+
+- [chris-mc1](https://github.com/chris-mc1) for [Home Connect Local](https://github.com/chris-mc1/homeconnect_local_hass) and the [homeconnect-websocket](https://github.com/chris-mc1/homeconnect_websocket) library.
+- [bruestel](https://github.com/bruestel) for the [profile downloader](https://github.com/bruestel/homeconnect-profile-downloader). Our sign-in uses the same flow.
+- [SamJongenelen](https://github.com/SamJongenelen) for the idea of downloading the profile during setup.
