@@ -585,20 +585,6 @@ DEVICE_DESCRIPTION = DeviceDescription(
             default=0,
         ),
         EntityDescription(
-            uid=506,
-            name="Test.HoodExtraOption",
-            available=True,
-            access=Access.READ_WRITE,
-            enumeration={"0": "Off", "1": "On"},
-            default=1,
-        ),
-        EntityDescription(
-            uid=507,
-            name="Test.HoodExtraOptionNoValue",
-            available=True,
-            access=Access.READ_WRITE,
-        ),
-        EntityDescription(
             uid=508,
             name="Cooking.Common.Option.Hood.Boost",
             available=True,
@@ -662,12 +648,9 @@ DEVICE_DESCRIPTION = DeviceDescription(
         EntityDescription(
             uid=504,
             name="Test.Program.HoodVenting",
-            fullOptionSet=True,
             options=[
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=403),
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=404),
-                OptionDescription(access=Access.READ_WRITE, available=True, refUID=506),
-                OptionDescription(access=Access.READ_WRITE, available=True, refUID=507),
             ],
         ),
         EntityDescription(
@@ -684,10 +667,8 @@ DEVICE_DESCRIPTION = DeviceDescription(
             options=[
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=403),
                 OptionDescription(access=Access.READ_WRITE, available=True, refUID=404),
-                OptionDescription(access=Access.READ_WRITE, available=True, refUID=506),
             ],
             execution=Execution.START_ONLY,
-            fullOptionSet=True,
         ),
     ],
     selectedProgram=EntityDescription(

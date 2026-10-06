@@ -62,6 +62,7 @@ def get_available_entities(appliance: HomeAppliance) -> EntityDescriptions:
         "start_button": [],
         "switch": [],
         "wifi": [],
+        "host": [],
         "light": [],
         "fan": [],
         "hood_level": [],

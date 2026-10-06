@@ -31,7 +31,12 @@
           "switch_hygiene_plus": {
             "default": "mdi:thermometer-plus"
           },
-          "switch_info_light": {},
+          "switch_info_light": {
+            "default": "mdi:lightbulb-on-outline",
+            "state": {
+              "off": "mdi:lightbulb-off-outline"
+            }
+          },
           "switch_intensiv_zone": {
             "default": "mdi:pot-steam"
           },
@@ -88,6 +93,30 @@
           },
           "switch_vario_speed_plus": {
             "default": "mdi:timer-play-outline"
+          },
+          "switch_oven_fast_pre_heat": {
+            "default": "mdi:thermometer-chevron-up"
+          },
+          "switch_oven_fast_pre_heat_setting": {
+            "default": "mdi:thermometer-chevron-up"
+          },
+          "switch_oven_button_tones": {
+            "default": "mdi:volume-high",
+            "state": {
+              "off": "mdi:volume-off"
+            }
+          },
+          "switch_oven_telescopic_slide_out": {
+            "default": "mdi:tray-arrow-down"
+          },
+          "switch_oven_display_brand_logo": {
+            "default": "mdi:image-outline",
+            "state": {
+              "off": "mdi:image-off-outline"
+            }
+          },
+          "switch_hood_interval_total_time_limitation": {
+            "default": "mdi:timer-lock-outline"
           }
         },
         "binary_sensor": {
@@ -219,6 +248,30 @@
                     "off": "mdi:snowflake-off",
                     "on": "mdi:snowflake-melt"
                 }
+            },
+            "binary_sensor_program_finished": {
+                "default": "mdi:check-circle-outline",
+                "state": {
+                    "on": "mdi:check-circle"
+                }
+            },
+            "binary_sensor_alarm_clock_elapsed": {
+                "default": "mdi:alarm",
+                "state": {
+                    "on": "mdi:alarm-light"
+                }
+            },
+            "binary_sensor_oven_alarm_clock_elapsed": {
+                "default": "mdi:alarm",
+                "state": {
+                    "on": "mdi:alarm-light"
+                }
+            },
+            "binary_sensor_favorite_001": {
+                "default": "mdi:gesture-tap"
+            },
+            "binary_sensor_favorite_002": {
+                "default": "mdi:gesture-tap-hold"
             }
         },
         "sensor": {
@@ -249,9 +302,15 @@
             "sensor_program_phase": {
                 "default": "mdi:progress-check"
             },
-            "sensor_active_program": {},
-            "sensor_rinse_aid": {},
-            "sensor_salt": {},
+            "sensor_active_program": {
+                "default": "mdi:play-box-outline"
+            },
+            "sensor_rinse_aid": {
+                "default": "mdi:water-check-outline"
+            },
+            "sensor_salt": {
+                "default": "mdi:shaker-outline"
+            },
             "sensor_water_tank": {
                 "default": "mdi:water",
                 "state": {
@@ -269,8 +328,12 @@
                 }
             },
             "sensor_start_in": {},
-            "sensor_count_started": {},
-            "sensor_end_trigger": {},
+            "sensor_count_started": {
+                "default": "mdi:counter"
+            },
+            "sensor_end_trigger": {
+                "default": "mdi:flag-checkered"
+            },
             "sensor_interval_time_off": {
                 "default": "mdi:timer-pause-outline"
             },
@@ -306,6 +369,9 @@
             },
             "sensor_wifi_signal_strength": {
                 "default": "mdi:wifi"
+            },
+            "sensor_host": {
+                "default": "mdi:ip-network"
             },
             "sensor_grease_filter_saturation": {
                 "default": "mdi:air-filter"
@@ -354,6 +420,27 @@
             },
             "sensor_coffeemaker_process_phase": {
                 "default": "mdi:state-machine"
+            },
+            "sensor_hob_zone_state": {
+                "default": "mdi:radiobox-marked"
+            },
+            "sensor_hob_zone_operationstate": {
+                "default": "mdi:state-machine"
+            },
+            "sensor_hob_zone_power_level": {
+                "default": "mdi:fire"
+            },
+            "sensor_hob_zone_frying_sensor_level": {
+                "default": "mdi:thermometer"
+            },
+            "sensor_hob_zone_program_progress": {
+                "default": "mdi:progress-check"
+            },
+            "sensor_machine_care_reminder": {
+                "default": "mdi:wrench-clock"
+            },
+            "sensor_regenerative_carbon_filter_saturation": {
+                "default": "mdi:air-filter"
             }
         },
         "select": {
@@ -361,7 +448,9 @@
             "select_hot_water": {
                 "default": "mdi:water-thermometer-outline"
             },
-            "select_rinse_aid": {},
+            "select_rinse_aid": {
+                "default": "mdi:water-plus-outline"
+            },
             "select_sound_level_signal": {
                 "default": "mdi:volume-high",
                 "state": {
@@ -371,7 +460,9 @@
                     "off": "mdi:volume-off"
                 }
             },
-            "select_water_hardness": {},
+            "select_water_hardness": {
+                "default": "mdi:water-opacity"
+            },
             "select_shot_count": {
                 "default": "mdi:coffee"
             },
@@ -386,11 +477,15 @@
                     "permanentremotestart": "mdi:remote"
                 }
             },
-            "select_program": {},
+            "select_program": {
+                "default": "mdi:playlist-play"
+            },
             "select_sensitivity_turbidity": {
                 "default": "mdi:water-opacity"
             },
-            "select_eco_as_default": {},
+            "select_eco_as_default": {
+                "default": "mdi:playlist-star"
+            },
             "select_power_state": {
                 "default": "mdi:power"
             },
@@ -413,6 +508,129 @@
                     "celsius": "mdi:temperature-celsius",
                     "fahrenheit": "mdi:temperature-fahrenheit"
                 }
+            },
+            "select_hob_automatic_key_lock": {
+                "default": "mdi:lock"
+            },
+            "select_hob_buzzer_beep_level": {
+                "default": "mdi:volume-high"
+            },
+            "select_hob_end_timer_signal_duration": {
+                "default": "mdi:bell-ring-outline"
+            },
+            "select_hob_bridge_zone_mode": {
+                "default": "mdi:vector-combine"
+            },
+            "select_hob_power_management": {
+                "default": "mdi:lightning-bolt"
+            },
+            "select_hob_energy_consumption_indication": {
+                "default": "mdi:meter-electric-outline"
+            },
+            "select_hob_hood_automatic_start": {
+                "default": "mdi:fan-auto"
+            },
+            "select_hob_hood_after_run": {
+                "default": "mdi:fan-clock"
+            },
+            "select_hob_hood_automatic_light_on": {
+                "default": "mdi:lightbulb-on-outline"
+            },
+            "select_hob_hood_automatic_light_off": {
+                "default": "mdi:lightbulb-off-outline"
+            },
+            "select_hob_power_move_front_left": {
+                "default": "mdi:pot-steam-outline"
+            },
+            "select_hob_power_move_middle_left": {
+                "default": "mdi:pot-steam-outline"
+            },
+            "select_hob_power_move_rear_left": {
+                "default": "mdi:pot-steam-outline"
+            },
+            "select_hob_power_move_front_right": {
+                "default": "mdi:pot-steam-outline"
+            },
+            "select_hob_power_move_middle_right": {
+                "default": "mdi:pot-steam-outline"
+            },
+            "select_hob_power_move_rear_right": {
+                "default": "mdi:pot-steam-outline"
+            },
+            "select_oven_level": {
+                "default": "mdi:format-list-numbered"
+            },
+            "select_pyrolysis_level": {
+                "default": "mdi:fire"
+            },
+            "select_oven_child_lock_setting": {
+                "default": "mdi:lock"
+            },
+            "select_oven_cooling_fan_runtime": {
+                "default": "mdi:fan-clock"
+            },
+            "select_oven_signal_duration": {
+                "default": "mdi:bell-ring-outline"
+            },
+            "select_oven_clock_display": {
+                "default": "mdi:clock-digital"
+            },
+            "select_oven_clock_prompt": {
+                "default": "mdi:clock-outline"
+            },
+            "select_oven_dishes": {
+                "default": "mdi:food"
+            },
+            "select_oven_regional_dishes": {
+                "default": "mdi:earth"
+            },
+            "select_oven_count_up_timer": {
+                "default": "mdi:timer-outline"
+            },
+            "select_oven_startup_menu": {
+                "default": "mdi:menu"
+            },
+            "select_oven_cavity_illumination": {
+                "default": "mdi:lightbulb-auto-outline"
+            },
+            "select_hood_venting_level": {
+                "default": "mdi:fan"
+            },
+            "select_hood_interval_stage": {
+                "default": "mdi:fan-clock"
+            },
+            "select_hood_delayed_shutoff_stage": {
+                "default": "mdi:fan-chevron-down"
+            },
+            "select_hood_carbon_filter_type": {
+                "default": "mdi:air-filter"
+            },
+            "select_hood_light_startup": {
+                "default": "mdi:lightbulb-auto-outline"
+            },
+            "select_hood_light_shutdown": {
+                "default": "mdi:lightbulb-off-outline"
+            },
+            "select_hood_color_temperature": {
+                "default": "mdi:temperature-kelvin"
+            },
+            "select_hood_ventilation_startup": {
+                "default": "mdi:fan-auto"
+            },
+            "select_hood_ventilation_shutdown": {
+                "default": "mdi:fan-off"
+            },
+            "select_hood_ventilation_profile": {
+                "default": "mdi:tune-variant"
+            },
+            "select_hood_filter_notification": {
+                "default": "mdi:bell-cog-outline"
+            },
+            "select_hood_favorite_001_functionality": {
+                "default": "mdi:star-cog-outline"
+            },
+            "select_hood_favorite_002_functionality": {
+                "default": "mdi:star-cog-outline"
             }
         },
         "button": {
@@ -460,6 +678,27 @@
             },
             "number_light_internal_brightness": {
                 "default": "mdi:lightbulb"
+            },
+            "number_hob_automatic_timer": {
+                "default": "mdi:timer-cog-outline"
+            },
+            "number_oven_display_brightness": {
+                "default": "mdi:brightness-6"
+            },
+            "number_hood_interval_on": {
+                "default": "mdi:timer-play-outline"
+            },
+            "number_hood_interval_off": {
+                "default": "mdi:timer-pause-outline"
+            },
+            "number_hood_delayed_shutoff_time": {
+                "default": "mdi:timer-stop-outline"
+            },
+            "number_hood_interval_total_time": {
+                "default": "mdi:timer-sand"
+            },
+            "number_hood_automatic_sensitivity": {
+                "default": "mdi:tune-vertical"
             }
         },
         "light": {

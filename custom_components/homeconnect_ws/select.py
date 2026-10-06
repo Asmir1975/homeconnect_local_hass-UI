@@ -13,13 +13,7 @@ from .const import CONF_FILTER_UNSAVED_FAVORITES, DOMAIN
 from .entity import HCEntity
 from .entity_descriptions.common import POWER_OFF_STATE_NAMES
 from .fan import SpeedMapping
-from .helpers import (
-    create_entities,
-    ensure_writable,
-    entity_is_available,
-    error_decorator,
-    fill_full_option_set,
-)
+from .helpers import create_entities, ensure_writable, entity_is_available, error_decorator
 from .program_names import (
     favorite_name_settings,
     program_labels,
@@ -46,8 +40,8 @@ _SELECTED_PROGRAM_SUFFIX = ".SelectedProgram"
 _OPERATION_STATE_ENTITY = "BSH.Common.Status.OperationState"
 _INACTIVE_OPERATION_STATES = frozenset({"inactive", "ready"})
 _POWER_STATE_ENTITY = "BSH.Common.Setting.PowerState"
-HOOD_LEVEL_OFF = "Off"
-HOOD_LEVEL_BOOST = "Boost"
+HOOD_LEVEL_OFF = "off"
+HOOD_LEVEL_BOOST = "boost"
 _VENTING_BOOST_ENTITY = "Cooking.Common.Option.Hood.Boost"
 _HOOD_VENTING_PROGRAM = "Cooking.Common.Program.Hood.Venting"
 _HOOD_VENTING_LEVEL = "Cooking.Common.Option.Hood.VentingLevel"
@@ -123,10 +117,8 @@ class HCSelect(HCEntity, SelectEntity):
         elif self._entity.enum:
             entity_min = self._entity.min
             entity_max = self._entity.max
-            # Some enum members are reported but rejected on write, e.g. an
-            # "off" state outside the appliance's writable range. Excluding
-            # them here, and from the reverse lookup below, keeps them from
-            # being offered or written in the first place.
+            # Some enum members are reported but rejected on write (e.g. "off" outside
+            # the writable range); exclude them here and from the reverse lookup below.
             writable_items = [
                 (key, value)
                 for key, value in self._entity.enum.items()
@@ -262,32 +254,21 @@ class HCProgram(HCSelect):
             # START_ONLY below writes ActiveProgram directly and has its own
             # read-only fallback; only this path actually writes SelectedProgram.
             ensure_writable(self._entity)
-            # Do not carry shared option shadows from the previously selected
-            # program unless this program explicitly requires a full option set.
-            await selected_program.select(override_options=not selected_program.full_option_set)
+            # Don't carry option shadows from the previously selected program.
+            await selected_program.select(override_options=True)
         elif selected_program.execution == Execution.START_ONLY:
             if venting_options := hood_venting_start_options(
                 self._runtime_data.appliance, selected_program
             ):
                 # Same payload as the fan and hood level entities.
-                if selected_program.full_option_set:
-                    fill_full_option_set(selected_program, venting_options)
                 await selected_program.start(venting_options, override_options=True)
-            elif selected_program.full_option_set:
-                # Some appliances validate a program write against the program's
-                # complete option set and reject a partial one — true regardless
-                # of whether SelectedProgram happens to be writable right now.
-                options = fill_full_option_set(selected_program, {})
-                await selected_program.start(options, override_options=True)
             elif entity_is_available(self._entity, self.entity_description.available_access):
-                # SelectedProgram is writable, this path already worked before the
-                # read-only fallback above existed. Leave its payload unchanged.
+                # SelectedProgram is writable: this payload predates the fallback below
+                # and stays unchanged.
                 await selected_program.start()
             else:
-                # Reached only via the read-only-SelectedProgram fallback. Suppresses
-                # the library's automatic READ_WRITE option shadows for this call
-                # (Program._build_options); scoped to this path so devices that
-                # already worked keep their existing payload.
+                # Read-only SelectedProgram fallback: suppress the library's READ_WRITE
+                # option shadows (Program._build_options) for this call only.
                 await selected_program.start(override_options=True)
 
 
@@ -296,11 +277,10 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
     Single always-visible Hood level Select.
 
     Venting/Intensive are Program Options, not Settings, so this mirrors HCFan's write path
-    (program.start over /ro/activeProgram, zeroing the other option,
-    PowerState-off fallback for "Off") instead of the generic
-    HCSelect.async_select_option()/entity.set_value(), which would write the
-    wrong resource. Options are the device's own enum names, "Off" is our
-    own addition since the appliance has no selectable off stage.
+    (program.start over /ro/activeProgram, zeroing the other option, PowerState-off for
+    "Off") instead of the generic HCSelect write, which would use the wrong resource.
+    Options are the device's own enum names in lower case; "off" is our addition, the
+    appliance has no selectable off stage.
     """
 
     entity_description: HCFanEntityDescription
@@ -327,7 +307,7 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
         self._attr_options = [
             HOOD_LEVEL_OFF,
             *(
-                self._speed_entities[m.entity_name].enum[m.entity_value]
+                self._speed_entities[m.entity_name].enum[m.entity_value].lower()
                 for m in self._speed_mapping
             ),
         ]
@@ -335,9 +315,8 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
         if operation_state is not None and operation_state not in self._entities:
             self._entities.append(operation_state)
 
-        # Boost zeroes both speed options (see HCFan._start_boost in fan.py), so
-        # without this, current_option would fall through to HOOD_LEVEL_OFF while
-        # the hood is actually running Boost.
+        # Boost zeroes both speed options; without this, current_option would show
+        # HOOD_LEVEL_OFF while the hood runs Boost.
         self._venting_boost_entity = self._runtime_data.appliance.options.get(_VENTING_BOOST_ENTITY)
         if self._venting_boost_entity is not None:
             self._attr_options.append(HOOD_LEVEL_BOOST)
@@ -355,7 +334,7 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
         for speed in self._speed_mapping:
             entity = self._speed_entities[speed.entity_name]
             if entity.value_raw == speed.entity_value:
-                return entity.enum[speed.entity_value]
+                return entity.enum[speed.entity_value].lower()
         if self._venting_boost_entity is not None and self._venting_boost_entity.value_raw:
             return HOOD_LEVEL_BOOST
         return HOOD_LEVEL_OFF
@@ -373,7 +352,7 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
         new_speed_value: int | None = None
         for speed in self._speed_mapping:
             entity = self._speed_entities[speed.entity_name]
-            if entity.enum[speed.entity_value] == option:
+            if entity.enum[speed.entity_value].lower() == option:
                 new_speed_entity = speed.entity_name
                 new_speed_value = speed.entity_value
                 break
@@ -383,9 +362,6 @@ class HCHoodLevelSelect(HCEntity, SelectEntity):
             entity.uid: (new_speed_value if entity.name == new_speed_entity else 0)
             for entity in self._speed_entities.values()
         }
-        if program.full_option_set:
-            fill_full_option_set(program, options)
-
         await program.start(options, override_options=True)
 
     async def _async_turn_off(self) -> None:

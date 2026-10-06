@@ -111,13 +111,13 @@
         "name": "Glanz Trocknen"
       },
       "switch_extra_dry": {
-        "name": "Extra Trocken"
+        "name": "Extratrocknen"
       },
       "switch_speed_on_demand": {
         "name": "Schnell auf Knopfdruck"
       },
       "switch_info_light": {
-        "name": "Info-Licht"
+        "name": "infoLight"
       },
       "switch_multiple_beverages": {
         "name": "Mehrere Getränke"
@@ -183,7 +183,7 @@
         "name": "Schnelles Vorheizen"
       },
       "switch_oven_button_tones": {
-        "name": "Tastentöne"
+        "name": "Tastenton"
       },
       "switch_oven_light_during_operation": {
         "name": "Ofenlicht während Betrieb"
@@ -251,9 +251,6 @@
       "switch_refrigeration_light_theater_mode": {
         "name": "Innenbeleuchtung Theatermodus"
       },
-      "switch_hob_energy_consumption_indication": {
-        "name": "Energieverbrauchsanzeige"
-      },
       "switch_hood_silence_mode": {
         "name": "Leisemodus"
       },
@@ -265,6 +262,15 @@
       },
       "switch_pretreatment": {
         "name": "Vorspülen"
+      },
+      "switch_oven_fast_pre_heat_setting": {
+        "name": "Schnellaufheizen"
+      },
+      "switch_oven_telescopic_slide_out": {
+        "name": "Teleskopauszug"
+      },
+      "switch_oven_display_brand_logo": {
+        "name": "Markenlogo"
       }
     },
     "binary_sensor": {
@@ -562,7 +568,7 @@
     },
     "sensor": {
       "sensor_silence_on_demand_remaining_time": {
-        "name": "Silence on Demand Restzeit"
+        "name": "Jetzt Leise Restzeit"
       },
       "sensor_water_filter_saturation": {
         "name": "Wasserfilter-Sättigung"
@@ -1775,13 +1781,13 @@
         }
       },
       "sensor_interval_time_off": {
-        "name": "Intervall Aus"
+        "name": "Intervall Lüfter aus"
       },
       "sensor_interval_time_on": {
-        "name": "Intervall An"
+        "name": "Intervall Lüfter an"
       },
       "sensor_delayed_shutoff_time": {
-        "name": "Verzögerte Abschaltung"
+        "name": "Nachlaufzeit"
       },
       "sensor_power_state": {
         "name": "Status",
@@ -2154,11 +2160,14 @@
           "poor": "Poor",
           "filled": "Gefüllt"
         }
+      },
+      "sensor_host": {
+        "name": "IP-Adresse"
       }
     },
     "select": {
       "select_hood_filter_notification": {
-        "name": "Benachrichtigung Filtersättigung",
+        "name": "Benachrichtigungseinstellungen für Filtersättigung",
         "state": {
           "lessfrequent": "Seltener anzeigen",
           "regular": "Standardmäßig anzeigen",
@@ -2166,7 +2175,7 @@
         }
       },
       "select_hood_ventilation_profile": {
-        "name": "Lüfterprofil",
+        "name": "Lüfter Profil",
         "state": {
           "defaultprofile": "Standard",
           "silentprofile": "Leise",
@@ -2218,50 +2227,50 @@
         }
       },
       "select_hot_water": {
-        "name": "Wassertemperatur",
+        "name": "Wasseranschluss",
         "state": {
           "coldwater": "Kaltwasser",
           "hotwater": "Warmwasser"
         }
       },
       "select_rinse_aid": {
-        "name": "Klarspüler",
+        "name": "Klarspülereinstellungen",
         "state": {
-          "off": "Stufe 0 (Aus)",
-          "r01": "Stufe 1 (Niedrigste)",
-          "r02": "Stufe 2 (Niedrig)",
-          "r03": "Stufe 3 (Mittel)",
-          "r04": "Stufe 4 (Mittel/Hoch)",
-          "r05": "Stufe 5 (Hoch)",
-          "r06": "Stufe 6 (Höchste)"
+          "off": "Stufe 0",
+          "r01": "Stufe 1",
+          "r02": "Stufe 2",
+          "r03": "Stufe 3",
+          "r04": "Stufe 4",
+          "r05": "Stufe 5",
+          "r06": "Stufe 6"
         }
       },
       "select_sound_level_signal": {
-        "name": "Signaltonlautstärke",
+        "name": "Signallautstärke",
         "state": {
-          "high": "Hoch",
-          "low": "Niedrig",
-          "medium": "Mittel",
-          "off": "Aus"
+          "off": "Aus",
+          "low": "Stufe 1",
+          "medium": "Stufe 2",
+          "high": "Stufe 3"
         }
       },
       "select_water_hardness": {
-        "name": "Wasserhärte",
+        "name": "Wasserhärteeinstellung",
         "state": {
-          "h00": "°E 0-8 soft (0-1.1 mmol/l)",
-          "h01": "°E 9-10 soft (1.2-1.4 mmol/l)",
-          "h02": "°E 11-12 medium (1.5-1.8 mmol/l)",
-          "h03": "°E 13-15 medium (1.9-2.1 mmol/l)",
-          "h04": "°E 16-20 medium (2.2-2.9 mmol/l)",
-          "h05": "°E 21-26 hard (3.0-3.7 mmol/l)",
-          "h06": "°E 27-38 hard (3.8-5.4 mmol/l)",
-          "h07": "°E 39-62 hard (5.5-8.9 mmol/l)"
+          "h00": "°dH 0-6 weich",
+          "h01": "°dH 7-8 weich",
+          "h02": "°dH 9-10 mittel",
+          "h03": "°dH 11-12 mittel",
+          "h04": "°dH 13-16 mittel",
+          "h05": "°dH 17-21 hart",
+          "h06": "°dH 22-30 hart",
+          "h07": "°dH 31-50 hart"
         }
       },
       "select_remote_control_level": {
-        "name": "Fernbedienung",
+        "name": "Fernsteuerung Level",
         "state": {
-          "monitoring": "Aus",
+          "monitoring": "Überwachung",
           "manualremotestart": "Manueller Fernstart",
           "permanentremotestart": "Permanenter Fernstart"
         }
@@ -3390,7 +3399,7 @@
         }
       },
       "select_sensitivity_turbidity": {
-        "name": "Trübungssensor-Empfindlichkeit",
+        "name": "Sensoreinstellung",
         "state": {
           "standard": "Standard",
           "sensitive": "Empfindlich",
@@ -3398,10 +3407,10 @@
         }
       },
       "select_eco_as_default": {
-        "name": "Standardprogramm",
+        "name": "Startprogramm",
         "state": {
-          "lastprogram": "Letztes Programm",
-          "ecoasdefault": "Eco 50°C"
+          "lastprogram": "Letzte Programmwahl",
+          "ecoasdefault": "Eco 50°"
         }
       },
       "select_power_state": {
@@ -3742,9 +3751,9 @@
       "select_oven_child_lock_setting": {
         "name": "Kindersicherung",
         "state": {
-          "deactivated": "Aus",
-          "activated": "An",
-          "activatedwithdoorlock": "An mit Türverriegelung"
+          "deactivated": "Deaktiviert",
+          "activated": "Nur Tastensperre",
+          "activatedwithdoorlock": "Türverriegelung + Tastensperre"
         }
       },
       "select_oven_switch_on_delay": {
@@ -3756,22 +3765,22 @@
         }
       },
       "select_oven_cooling_fan_runtime": {
-        "name": "Kühllüfter Laufzeit",
+        "name": "Gebläse-Nachlaufzeit",
         "state": {
-          "short": "Kurz",
+          "short": "Minimal",
+          "middle": "Mitte",
           "long": "Lang",
-          "verylong": "Sehr Lang",
-          "recommended": "Empfohlen",
-          "middle": "Mittel"
+          "verylong": "Sehr lang",
+          "recommended": "Empfohlen"
         }
       },
       "select_oven_signal_duration": {
-        "name": "Tondauer",
+        "name": "Signalton",
         "state": {
           "short": "Kurz",
           "medium": "Mittel",
           "long": "Lang",
-          "onlyonetime": "Nur einmal"
+          "onlyonetime": "Sehr kurze Dauer"
         }
       },
       "select_hob_ventilation": {
@@ -4064,21 +4073,21 @@
         }
       },
       "select_hood_interval_stage": {
-        "name": "Intervallstufe",
+        "name": "Intervall Funktion",
         "state": {
           "fanoff": "Aus",
-          "fanstage01": "1",
-          "fanstage02": "2",
-          "fanstage03": "3"
+          "fanstage01": "Stufe 1",
+          "fanstage02": "Stufe 2",
+          "fanstage03": "Stufe 3"
         }
       },
       "select_hood_delayed_shutoff_stage": {
-        "name": "Verzögerte Abschaltstufe",
+        "name": "Nachlaufstufe",
         "state": {
           "fanoff": "Aus",
-          "fanstage01": "1",
-          "fanstage02": "2",
-          "fanstage03": "3"
+          "fanstage01": "Stufe 1",
+          "fanstage02": "Stufe 2",
+          "fanstage03": "Stufe 3"
         }
       },
       "select_temperature_unit": {
@@ -4089,16 +4098,27 @@
         }
       },
       "select_hood_carbon_filter_type": {
-        "name": "Kohlefiltertyp",
+        "name": "Aktivkohlefilter",
         "state": {
-          "none": "Keine",
-          "basiccarbonfilter": "Standard-Kohlefilter",
-          "regenerativecarbonfilter": "Regenerierbarer Kohlefilter",
-          "notselected": "Nicht ausgewählt"
+          "none": "Kein Aktivkohlefilter",
+          "basiccarbonfilter": "Aktivkohlefilter",
+          "regenerativecarbonfilter": "Regenerierbarer Aktivkohlefilter",
+          "notselected": "Kein Filtertyp ausgewählt"
         }
       },
       "select_hood_venting_level": {
-        "name": "Haubenstufe"
+        "name": "Haubenstufe",
+        "state": {
+          "off": "Aus",
+          "fanstage01": "Stufe 1",
+          "fanstage02": "Stufe 2",
+          "fanstage03": "Stufe 3",
+          "fanstage04": "Stufe 4",
+          "fanstage05": "Stufe 5",
+          "intensivestage1": "Intensiv 1",
+          "intensivestage2": "Intensiv 2",
+          "boost": "Boost"
+        }
       },
       "select_hood_ambient_light_color": {
         "name": "Ambientelicht Farbe",
@@ -4116,7 +4136,7 @@
         }
       },
       "select_hood_color_temperature": {
-        "name": "Farbtemperatur Licht",
+        "name": "Farbtemperatur",
         "state": {
           "custom": "Individuell",
           "warm": "Warm",
@@ -4127,17 +4147,304 @@
         }
       },
       "select_hood_light_startup": {
-        "name": "Licht beim Einschalten",
+        "name": "Licht Automatik beim Einschalten",
         "state": {
-          "turnonlight": "Einschalten",
-          "keeplightoff": "Aus lassen"
+          "turnonlight": "Aktiviert",
+          "keeplightoff": "Deaktiviert"
         }
       },
       "select_hood_light_shutdown": {
-        "name": "Licht beim Ausschalten",
+        "name": "Licht Automatik beim Ausschalten",
         "state": {
-          "turnofflight": "Ausschalten",
-          "keeplighton": "An lassen"
+          "turnofflight": "Aktiviert",
+          "keeplighton": "Deaktiviert"
+        }
+      },
+      "select_hob_automatic_key_lock": {
+        "name": "Kindersicherung",
+        "state": {
+          "deactivated": "Manuell",
+          "activated": "Automatisch beim Ausschalten",
+          "keylockfunctiondeactivated": "Nicht verfügbar"
+        }
+      },
+      "select_hob_buzzer_beep_level": {
+        "name": "Signaltöne",
+        "state": {
+          "alloff": "Alle aus",
+          "acknowledgeoff": "Tastentöne aus",
+          "warningmaloff": "Fehlbedienungssignale aus",
+          "allactive": "Alle an"
+        }
+      },
+      "select_hob_end_timer_signal_duration": {
+        "name": "Signaldauer",
+        "state": {
+          "10seconds": "10 Sekunden",
+          "30seconds": "30 Sekunden",
+          "60seconds": "60 Sekunden"
+        }
+      },
+      "select_hob_power_management": {
+        "name": "Max. Leistungsaufnahme",
+        "state": {
+          "off": "Ohne Begrenzung",
+          "1000w": "1000 W",
+          "1500w": "1500 W",
+          "2000w": "2000 W",
+          "2500w": "2500 W",
+          "3000w": "3000 W",
+          "3500w": "3500 W",
+          "4000w": "4000 W",
+          "4500w": "4500 W",
+          "5000w": "5000 W",
+          "5500w": "5500 W",
+          "6000w": "6000 W",
+          "6500w": "6500 W",
+          "7000w": "7000 W",
+          "7500w": "7500 W",
+          "8000w": "8000 W",
+          "8500w": "8500 W",
+          "9000w": "9000 W"
+        }
+      },
+      "select_hob_energy_consumption_indication": {
+        "name": "Energieverbrauchsanzeige",
+        "state": {
+          "indicationoff": "Nicht anzeigen",
+          "indicationon": "Anzeigen"
+        }
+      },
+      "select_hob_hood_automatic_start": {
+        "name": "Lüftersteuerung",
+        "state": {
+          "off": "Lüfter aus",
+          "automaticmode": "Automatischer Betrieb",
+          "manualmode": "Standardbetrieb"
+        }
+      },
+      "select_hob_hood_after_run": {
+        "name": "Lüfternachlauf",
+        "state": {
+          "off": "Lüfter aus",
+          "automaticmode": "Automatischer Betrieb",
+          "manualmode": "Standard-Lüfternachlauf",
+          "donothing": "Lüfter unverändert"
+        }
+      },
+      "select_hob_hood_automatic_light_on": {
+        "name": "Licht An Automatik",
+        "state": {
+          "off": "Deaktiviert",
+          "on": "Aktiviert"
+        }
+      },
+      "select_hob_hood_automatic_light_off": {
+        "name": "Licht Aus Automatik",
+        "state": {
+          "off": "Deaktiviert",
+          "on": "Aktiviert"
+        }
+      },
+      "select_oven_clock_display": {
+        "name": "Uhrtyp",
+        "state": {
+          "analogclock": "Analog",
+          "digitalclock": "Digital",
+          "digitalclockanddate": "Digital + Datum"
+        }
+      },
+      "select_oven_dishes": {
+        "name": "Gerichte",
+        "state": {
+          "all": "Alle Gerichte",
+          "nopork": "Gerichte ohne Bestandteile vom Schwein",
+          "kosheronly": "Koshere Gerichte"
+        }
+      },
+      "select_oven_regional_dishes": {
+        "name": "Regionale Gerichte",
+        "state": {
+          "all": "Alle Gerichte",
+          "european": "Europäische Gerichte",
+          "british": "Britische Gerichte"
+        }
+      },
+      "select_oven_count_up_timer": {
+        "name": "Verstrichene Garzeit",
+        "state": {
+          "notshown": "Nicht anzeigen",
+          "fromstart": "Anzeigen"
+        }
+      },
+      "select_oven_startup_menu": {
+        "name": "Betrieb nach Einschalten",
+        "state": {
+          "mainmenue": "Hauptmenü",
+          "heatingmodes": "Heizarten",
+          "dishes": "Gerichte",
+          "favorites": "Favoriten"
+        }
+      },
+      "select_oven_cavity_illumination": {
+        "name": "Beleuchtung",
+        "state": {
+          "on": "Beim Garen und bei Türöffnung",
+          "restrictedon": "Nur bei Türöffnung",
+          "off": "Immer aus"
+        }
+      },
+      "select_hob_power_move_front_left": {
+        "name": "powerMove-Stufe vorne links",
+        "state": {
+          "keepwarm": "Warmhalten",
+          "10": "1.0",
+          "15": "1.5",
+          "20": "2.0",
+          "25": "2.5",
+          "30": "3.0",
+          "35": "3.5",
+          "40": "4.0",
+          "45": "4.5",
+          "50": "5.0",
+          "55": "5.5",
+          "60": "6.0",
+          "65": "6.5",
+          "70": "7.0",
+          "75": "7.5",
+          "80": "8.0",
+          "85": "8.5",
+          "90": "9.0"
+        }
+      },
+      "select_hob_power_move_middle_left": {
+        "name": "powerMove-Stufe Mitte links",
+        "state": {
+          "keepwarm": "Warmhalten",
+          "10": "1.0",
+          "15": "1.5",
+          "20": "2.0",
+          "25": "2.5",
+          "30": "3.0",
+          "35": "3.5",
+          "40": "4.0",
+          "45": "4.5",
+          "50": "5.0",
+          "55": "5.5",
+          "60": "6.0",
+          "65": "6.5",
+          "70": "7.0",
+          "75": "7.5",
+          "80": "8.0",
+          "85": "8.5",
+          "90": "9.0"
+        }
+      },
+      "select_hob_power_move_rear_left": {
+        "name": "powerMove-Stufe hinten links",
+        "state": {
+          "keepwarm": "Warmhalten",
+          "10": "1.0",
+          "15": "1.5",
+          "20": "2.0",
+          "25": "2.5",
+          "30": "3.0",
+          "35": "3.5",
+          "40": "4.0",
+          "45": "4.5",
+          "50": "5.0",
+          "55": "5.5",
+          "60": "6.0",
+          "65": "6.5",
+          "70": "7.0",
+          "75": "7.5",
+          "80": "8.0",
+          "85": "8.5",
+          "90": "9.0"
+        }
+      },
+      "select_hob_power_move_front_right": {
+        "name": "powerMove-Stufe vorne rechts",
+        "state": {
+          "keepwarm": "Warmhalten",
+          "10": "1.0",
+          "15": "1.5",
+          "20": "2.0",
+          "25": "2.5",
+          "30": "3.0",
+          "35": "3.5",
+          "40": "4.0",
+          "45": "4.5",
+          "50": "5.0",
+          "55": "5.5",
+          "60": "6.0",
+          "65": "6.5",
+          "70": "7.0",
+          "75": "7.5",
+          "80": "8.0",
+          "85": "8.5",
+          "90": "9.0"
+        }
+      },
+      "select_hob_power_move_middle_right": {
+        "name": "powerMove-Stufe Mitte rechts",
+        "state": {
+          "keepwarm": "Warmhalten",
+          "10": "1.0",
+          "15": "1.5",
+          "20": "2.0",
+          "25": "2.5",
+          "30": "3.0",
+          "35": "3.5",
+          "40": "4.0",
+          "45": "4.5",
+          "50": "5.0",
+          "55": "5.5",
+          "60": "6.0",
+          "65": "6.5",
+          "70": "7.0",
+          "75": "7.5",
+          "80": "8.0",
+          "85": "8.5",
+          "90": "9.0"
+        }
+      },
+      "select_hob_power_move_rear_right": {
+        "name": "powerMove-Stufe hinten rechts",
+        "state": {
+          "keepwarm": "Warmhalten",
+          "10": "1.0",
+          "15": "1.5",
+          "20": "2.0",
+          "25": "2.5",
+          "30": "3.0",
+          "35": "3.5",
+          "40": "4.0",
+          "45": "4.5",
+          "50": "5.0",
+          "55": "5.5",
+          "60": "6.0",
+          "65": "6.5",
+          "70": "7.0",
+          "75": "7.5",
+          "80": "8.0",
+          "85": "8.5",
+          "90": "9.0"
+        }
+      },
+      "select_hob_bridge_zone_mode": {
+        "name": "varioInduktion",
+        "state": {
+          "splitmode": "Getrennt",
+          "joinmode": "Zusammengeschaltet"
+        }
+      },
+      "select_oven_clock_prompt": {
+        "name": "Uhranzeige",
+        "state": {
+          "off": "Aus",
+          "on": "Ein",
+          "onenergysaving": "Ein, zeitlich begrenzt"
         }
       }
     },
@@ -4164,10 +4471,10 @@
         "name": "Ausschalten"
       },
       "button_hood_carbon_filter_reset": {
-        "name": "Kohlefilter zurücksetzen"
+        "name": "Aktivkohlefilter zurücksetzen"
       },
       "button_hood_grease_filter_reset": {
-        "name": "Fettfilter zurücksetzen"
+        "name": "Fettfilter Status zurücksetzen"
       },
       "button_hood_regenerative_carbon_filter_reset": {
         "name": "Regenerierbaren Kohlefilter zurücksetzen"
@@ -4184,7 +4491,7 @@
         "name": "Intervall Gesamtlaufzeit"
       },
       "number_silence_on_demand_default_time": {
-        "name": "Silence on Demand Dauer"
+        "name": "Jetzt Leise"
       },
       "number_finish_in": {
         "name": "Fertig in"
@@ -4235,19 +4542,22 @@
         "name": "Innenbeleuchtung Helligkeit"
       },
       "number_hood_interval_off": {
-        "name": "Intervallzeit aus"
+        "name": "Intervall Lüfter aus"
       },
       "number_hood_interval_on": {
-        "name": "Intervallzeit ein"
+        "name": "Intervall Lüfter an"
       },
       "number_hood_delayed_shutoff_time": {
-        "name": "Verzögerte Abschaltzeit"
+        "name": "Nachlaufzeit"
       },
       "number_hood_boost_time": {
         "name": "Boost-Dauer"
       },
       "number_hood_sensor_sensitivity": {
         "name": "Automatische Sensorempfindlichkeit"
+      },
+      "number_hob_automatic_timer": {
+        "name": "Automatischer Timer"
       }
     },
     "light": {
@@ -4264,7 +4574,7 @@
         "name": "Logo-Licht"
       },
       "light_cooking_lighting": {
-        "name": "Funktionslicht"
+        "name": "Arbeitslicht"
       },
       "light_cooking_ambient_lighting": {
         "name": "Umgebungslicht"
@@ -4372,9 +4682,6 @@
     },
     "command_timeout": {
       "message": "Das Gerät hat den Befehl nicht rechtzeitig beantwortet"
-    },
-    "full_option_set_incomplete": {
-      "message": "Geschwindigkeit kann nicht gesetzt werden: Das Gerät hat noch keinen Wert für {option} gemeldet"
     },
     "read_only": {
       "message": "Dies ist aktuell im Nur-Lese-Modus und kann gerade nicht geändert werden"

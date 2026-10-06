@@ -5,7 +5,6 @@ from __future__ import annotations
 from datetime import timedelta
 from typing import TYPE_CHECKING
 
-import pytest
 from homeassistant.components.fan import (
     ATTR_PERCENTAGE,
     ATTR_PERCENTAGE_STEP,
@@ -25,7 +24,6 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.util import dt as dt_util
 from homeconnect_websocket.message import Action, Message
 from pytest_homeassistant_custom_component.common import async_fire_time_changed
@@ -107,73 +105,8 @@ async def test_set_speed(
     mock_appliance: MockAppliance,
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
-    """Test setting a speed starts the owning Program with the full option set."""
+    """Test setting a speed starts the owning Program with the chosen speed."""
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {
-            ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan",
-            ATTR_PERCENTAGE: 25,
-        },
-        blocking=True,
-    )
-
-    mock_appliance.session.send_sync.assert_awaited_once_with(
-        Message(
-            resource="/ro/activeProgram",
-            action=Action.POST,
-            data={
-                "program": 504,
-                "options": [
-                    {"uid": 403, "value": 1},
-                    {"uid": 404, "value": 0},
-                    {"uid": 506, "value": 1},
-                    {"uid": 507, "value": 0},
-                ],
-            },
-        )
-    )
-    mock_appliance.session.send_sync.reset_mock()
-
-    await hass.services.async_call(
-        FAN_DOMAIN,
-        SERVICE_SET_PERCENTAGE,
-        {
-            ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan",
-            ATTR_PERCENTAGE: 75,
-        },
-        blocking=True,
-    )
-
-    mock_appliance.session.send_sync.assert_awaited_once_with(
-        Message(
-            resource="/ro/activeProgram",
-            action=Action.POST,
-            data={
-                "program": 504,
-                "options": [
-                    {"uid": 403, "value": 0},
-                    {"uid": 404, "value": 1},
-                    {"uid": 506, "value": 1},
-                    {"uid": 507, "value": 0},
-                ],
-            },
-        )
-    )
-
-
-async def test_set_speed_without_full_option_set_sends_known_options_only(
-    hass: HomeAssistant,
-    mock_appliance: MockAppliance,
-    patch_entity_description: None,  # noqa: ARG001
-) -> None:
-    """Appliances without the fullOptionSet flag keep the minimal payload."""
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    # Deliberate test-only introspection: no public API flips this after setup.
-    mock_appliance.programs["Test.Program.HoodVenting"]._full_option_set = False
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -195,26 +128,28 @@ async def test_set_speed_without_full_option_set_sends_known_options_only(
             },
         )
     )
+    mock_appliance.session.send_sync.reset_mock()
 
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {
+            ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan",
+            ATTR_PERCENTAGE: 75,
+        },
+        blocking=True,
+    )
 
-async def test_set_speed_aborts_when_required_option_has_no_value(
-    hass: HomeAssistant,
-    mock_appliance: MockAppliance,  # noqa: ARG001
-    patch_entity_description: None,  # noqa: ARG001
-) -> None:
-    """Guessing a value for an option the appliance never reported is unsafe."""
-    assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-
-    with pytest.raises(ServiceValidationError):
-        await hass.services.async_call(
-            FAN_DOMAIN,
-            SERVICE_SET_PERCENTAGE,
-            {
-                ATTR_ENTITY_ID: "fan.fake_brand_homeappliance_fan",
-                ATTR_PERCENTAGE: 25,
+    mock_appliance.session.send_sync.assert_awaited_once_with(
+        Message(
+            resource="/ro/activeProgram",
+            action=Action.POST,
+            data={
+                "program": 504,
+                "options": [{"uid": 403, "value": 0}, {"uid": 404, "value": 1}],
             },
-            blocking=True,
         )
+    )
 
 
 async def test_set_speed_zero_delegates_to_turn_off(
@@ -479,12 +414,11 @@ async def test_turn_off_resets_optimistic_boost_preset(
 
 async def test_set_speed_resets_optimistic_boost_preset(
     hass: HomeAssistant,
-    mock_appliance: MockAppliance,
+    mock_appliance: MockAppliance,  # noqa: ARG001
     patch_entity_description: None,  # noqa: ARG001
 ) -> None:
     """Manually picking a speed must not leave a stale optimistic Boost preset behind."""
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
     await hass.services.async_call(
         FAN_DOMAIN,
         SERVICE_SET_PRESET_MODE,
@@ -559,7 +493,6 @@ async def test_turn_on_with_speed_starts_program(
 ) -> None:
     """Turning on with a speed uses the same Program start as setting the speed."""
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
-    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -574,12 +507,7 @@ async def test_turn_on_with_speed_starts_program(
             action=Action.POST,
             data={
                 "program": 504,
-                "options": [
-                    {"uid": 403, "value": 1},
-                    {"uid": 404, "value": 0},
-                    {"uid": 506, "value": 1},
-                    {"uid": 507, "value": 0},
-                ],
+                "options": [{"uid": 403, "value": 1}, {"uid": 404, "value": 0}],
             },
         )
     )
@@ -593,7 +521,6 @@ async def test_turn_on_without_power_state_starts_lowest_speed(
     """Without a switchable PowerState, turning on starts the lowest speed."""
     assert await setup_config_entry(hass, MOCK_CONFIG_DATA)
     del mock_appliance.entities["BSH.Common.Setting.PowerState"]
-    await mock_appliance.entities["Test.HoodExtraOptionNoValue"].update({"value": 0})
 
     await hass.services.async_call(
         FAN_DOMAIN,
@@ -608,12 +535,7 @@ async def test_turn_on_without_power_state_starts_lowest_speed(
             action=Action.POST,
             data={
                 "program": 504,
-                "options": [
-                    {"uid": 403, "value": 1},
-                    {"uid": 404, "value": 0},
-                    {"uid": 506, "value": 1},
-                    {"uid": 507, "value": 0},
-                ],
+                "options": [{"uid": 403, "value": 1}, {"uid": 404, "value": 0}],
             },
         )
     )

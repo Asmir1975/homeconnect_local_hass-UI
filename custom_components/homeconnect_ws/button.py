@@ -8,12 +8,7 @@ from homeassistant.components.button import ButtonEntity
 from homeconnect_websocket.entities import Execution
 
 from .entity import HCEntity
-from .helpers import (
-    create_entities,
-    error_decorator,
-    fill_full_option_set,
-    start_coffee_favorite_with_fallback,
-)
+from .helpers import create_entities, error_decorator, start_coffee_favorite_with_fallback
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
@@ -73,11 +68,7 @@ class HCStartButton(HCEntity, ButtonEntity):
     async def async_press(self) -> None:
         program = self._runtime_data.appliance.selected_program
         is_coffee_maker = self._runtime_data.appliance.info.get("type") == COFFEE_MAKER_TYPE
-        if program.full_option_set:
-            # Some appliances validate a program write against the program's
-            # complete option set and reject a partial one.
-            await program.start(fill_full_option_set(program, {}), override_options=True)
-        elif is_coffee_maker and program.name.startswith(COFFEE_FAVORITE_PREFIX):
+        if is_coffee_maker and program.name.startswith(COFFEE_FAVORITE_PREFIX):
             # A Siemens coffee maker answered 400 to the start of a favorite that
             # carried values for unavailable options. Only favorites on coffee
             # makers get the single retry, everything else keeps the plain start.

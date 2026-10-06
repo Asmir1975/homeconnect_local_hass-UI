@@ -132,6 +132,23 @@ def generate_power_switch(appliance: HomeAppliance) -> EntityDescriptions:
     return entity_descriptions
 
 
+def generate_child_lock(appliance: HomeAppliance) -> HCSwitchEntityDescription | None:
+    """Get the ChildLock switch, unless the appliance configures its child lock as a select."""
+    if "BSH.Common.Setting.ChildLock" not in appliance.entities or any(
+        name in appliance.entities
+        for name in (
+            "Cooking.Hob.Setting.AutomaticKeyLock",
+            "Cooking.Oven.Setting.ConfigureChildLock",
+        )
+    ):
+        return None
+    return HCSwitchEntityDescription(
+        key="switch_child_lock",
+        entity="BSH.Common.Setting.ChildLock",
+        device_class=SwitchDeviceClass.SWITCH,
+    )
+
+
 def generate_door_state(appliance: HomeAppliance) -> HCSensorEntityDescription | None:
     """Get Door sensor description."""
     entity = appliance.entities.get("BSH.Common.Status.DoorState")
@@ -230,6 +247,14 @@ def _has_oven_cavity(appliance: HomeAppliance) -> bool:
     return any(_OVEN_CAVITY_PATTERN.match(entity) for entity in appliance.entities)
 
 
+_HOB_ZONE_PATTERN = re.compile(r"^Cooking\.Hob\.Status\.Zone\.\d+\..*$")
+
+
+def _has_hob_zone(appliance: HomeAppliance) -> bool:
+    """Detect a hob by its zone-scoped status entities."""
+    return any(_HOB_ZONE_PATTERN.match(entity) for entity in appliance.entities)
+
+
 def generate_remaining_program_time(appliance: HomeAppliance) -> HCSensorEntityDescription | None:
     """Get RemainingProgramTime sensor description."""
     if "BSH.Common.Option.RemainingProgramTime" not in appliance.entities:
@@ -263,8 +288,10 @@ def generate_elapsed_program_time(appliance: HomeAppliance) -> HCSensorEntityDes
         entity="BSH.Common.Option.ElapsedProgramTime",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
-        suggested_unit_of_measurement=UnitOfTime.HOURS,
-        reset_when_operation_state_terminal=is_oven,
+        suggested_unit_of_measurement=UnitOfTime.MINUTES,
+        # Confirmed on a hob: switched off straight from Run to Inactive, it keeps
+        # the last elapsed time. Via Ready it resets it itself.
+        reset_when_operation_state_terminal=is_oven or _has_hob_zone(appliance),
         # Unlike remaining time, elapsed time has no legitimate non-zero
         # value before a program starts.
         also_reset_when_ready=is_oven,
@@ -502,13 +529,7 @@ COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         generate_door_state,
     ],
     "start_button": [generate_start_button],
-    "switch": [
-        HCSwitchEntityDescription(
-            key="switch_child_lock",
-            entity="BSH.Common.Setting.ChildLock",
-            device_class=SwitchDeviceClass.SWITCH,
-        ),
-    ],
+    "switch": [generate_child_lock],
     "number": [
         HCNumberEntityDescription(
             key="number_duration",
@@ -544,5 +565,12 @@ COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         ),
     ],
     "wifi": [generate_wifi],
+    "host": [
+        HCSensorEntityDescription(
+            key="sensor_host",
+            entity_category=EntityCategory.DIAGNOSTIC,
+            force_disabled_default=True,
+        ),
+    ],
     "dynamic": [generate_power_switch, generate_program],
 }

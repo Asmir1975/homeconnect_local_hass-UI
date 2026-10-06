@@ -77,10 +77,8 @@ type HCConfigEntry = ConfigEntry[HCData]
 
 HC_KEY: HassKey[HCConfig] = HassKey(DOMAIN)
 
-# Roughly one broadcast cycle - some appliances report ActiveProgram's access
-# as READ_WRITE only for a narrow window on their own schedule. Long enough to
-# catch the next window, short enough to fail fast if the appliance stops
-# broadcasting it at all.
+# Roughly one broadcast cycle: some appliances report ActiveProgram as READ_WRITE only
+# for a narrow window on their own schedule. Fails fast if it is never broadcast.
 _ACTIVE_PROGRAM_WRITABLE_TIMEOUT = 35
 
 

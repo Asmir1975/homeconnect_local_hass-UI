@@ -109,21 +109,6 @@ def test_dishwasher_pretreatment_switch_description() -> None:
     assert description.device_class is SwitchDeviceClass.SWITCH
 
 
-def test_hob_energy_consumption_indication_switch_description() -> None:
-    """Test the hob Energy Consumption Indication Setting is mapped as an enum switch."""
-    description = next(
-        item
-        for item in COOKING_ENTITY_DESCRIPTIONS["switch"]
-        if item.key == "switch_hob_energy_consumption_indication"
-    )
-
-    assert description.entity == "Cooking.Hob.Setting.EnergyConsumptionIndication"
-    assert description.device_class is SwitchDeviceClass.SWITCH
-    assert description.entity_category is EntityCategory.CONFIG
-    # Enumeration Setting, so the on/off values have to be mapped explicitly
-    assert description.value_mapping == ("IndicationOn", "IndicationOff")
-
-
 def test_not_selectable_hob_zones_disabled_by_default() -> None:
     """Test that unavailable hob extension zones start disabled."""
     appliance = MagicMock()
@@ -634,8 +619,8 @@ async def test_dishwasher_additions_materialize(
     """
     Test the 1.10.5 dishwasher descriptions materialize on a real-profile shape.
 
-    uid/access values are taken verbatim from the reporter profiles of upstream
-    #351 and from the SX63HX52BE diagnostics.
+    uid/access values are taken verbatim from reporter profiles and from the
+    SX63HX52BE diagnostics.
     """
     appliance = await mock_homeconnect_appliance(description=SILENCE_ON_DEMAND_PROFILE)
     available = entity_descriptions.get_available_entities(appliance)
@@ -711,10 +696,9 @@ async def test_oven_water_tank_is_an_event_sensor(
     A static HCSensorEntityDescription with entities= instead of entity= leaves
     HCEntity._entity as None. HCSensor.__init__ and HCSensor.native_value both
     read self._entity directly, so the "sensor" platform crashes on setup and
-    again on every state read. Upstream chris-mc1/homeconnect_local_hass hit the
-    same class of bug (commit 3eaaac8). The fix here is architectural, not a
-    None-guard: the description belongs under "event_sensor", like its grouped
-    sibling generated in generate_hob_zones.
+    again on every state read. The fix is architectural, not a None-guard: the
+    description belongs under "event_sensor", like its grouped sibling generated
+    in generate_hob_zones.
     """
     appliance = await mock_homeconnect_appliance(description=OVEN_WATER_TANK_PROFILE)
     appliance.info = {"deviceID": "test_device_id"}
@@ -807,6 +791,55 @@ async def test_non_oven_program_time_sensors_keep_default_behavior(
     assert not generate_elapsed_program_time(appliance).also_reset_when_ready
 
 
+# UIDs and names from the EX851LYV5E profile.
+HOB_ELAPSED_TIME_PROFILE = DeviceDescription(
+    status=[
+        EntityDescription(
+            uid=8203,
+            name="Cooking.Hob.Status.Zone.100.OperationState",
+            available=True,
+            access=Access.READ,
+        ),
+        EntityDescription(
+            uid=8209,
+            name="Cooking.Hob.Status.Zone.100.ElapsedProgramTime",
+            available=True,
+            access=Access.READ,
+        ),
+    ],
+    option=[
+        EntityDescription(
+            uid=528, name="BSH.Common.Option.ElapsedProgramTime", available=True, access=Access.READ
+        ),
+    ],
+)
+
+
+async def test_hob_elapsed_time_resets_on_terminal_state(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """
+    Test the hob elapsed time sensors reset on a terminal state, not on Ready.
+
+    Device log 2026-10-04 10:27:31: the hob went from Run to Inactive and kept
+    sending 1770 s for the zone and the appliance. Via Ready (09:26:23) it sent 0
+    itself, so Ready needs no overlay.
+    """
+    appliance = await mock_homeconnect_appliance(description=HOB_ELAPSED_TIME_PROFILE)
+
+    elapsed = generate_elapsed_program_time(appliance)
+    assert elapsed.reset_when_operation_state_terminal
+    assert not elapsed.also_reset_when_ready
+
+    zone_descriptions = {item.key: item for item in generate_hob_zones(appliance)["sensor"]}
+    zone_elapsed = zone_descriptions["sensor_hob_zone_100_elapsed_program_time"]
+    assert zone_elapsed.reset_when_operation_state_terminal
+    assert not zone_elapsed.also_reset_when_ready
+    assert not zone_descriptions[
+        "sensor_hob_zone_100_operationstate"
+    ].reset_when_operation_state_terminal
+
+
 def _speed_perfect_option(name: str, uid: int) -> dict:
     return {
         "access": "readwrite",
@@ -839,9 +872,8 @@ async def test_speed_perfect_descriptions_have_unique_keys(
     """
     Test a washer reporting both SpeedPerfect options gets two distinct switches.
 
-    Upstream issue #11: both static descriptions used the same key, so both
-    switches collided on the same unique_id and Home Assistant silently
-    dropped the second one.
+    Both static descriptions used the same key, so both switches collided on the
+    same unique_id and Home Assistant silently dropped the second one.
     """
     appliance = await mock_homeconnect_appliance(
         description={
@@ -1024,3 +1056,183 @@ def test_hood_filter_event_binary_sensors_disabled_by_default() -> None:
         assert description.value_off == {"Off"}
         assert description.force_disabled_default is True
         assert description.entity_category is EntityCategory.DIAGNOSTIC
+
+
+def _settings(*entries: tuple) -> DeviceDescription:
+    return DeviceDescription(
+        setting=[
+            EntityDescription(
+                uid=uid,
+                name=name,
+                available=True,
+                access=Access.READ_WRITE,
+                **({"enumeration": enumeration} if enumeration else {}),
+            )
+            for uid, name, enumeration in entries
+        ]
+    )
+
+
+# UIDs, names and enumerations from the EX851LYV5E profile.
+HOB_SETTINGS_PROFILE = _settings(
+    (524, "BSH.Common.Setting.ChildLock", None),
+    (
+        4352,
+        "Cooking.Hob.Setting.AutomaticKeyLock",
+        {"0": "Deactivated", "1": "Activated", "2": "KeyLockFunctionDeactivated"},
+    ),
+    (
+        4353,
+        "Cooking.Hob.Setting.BuzzerBeepLevel",
+        {"0": "AllOff", "1": "AcknowledgeOff", "2": "WarningMalOff", "3": "AllActive"},
+    ),
+    (
+        4354,
+        "Cooking.Hob.Setting.EnergyConsumptionIndication",
+        {"0": "IndicationOff", "1": "IndicationOn"},
+    ),
+    (4356, "Cooking.Hob.Setting.AutomaticTimer", None),
+    (
+        4358,
+        "Cooking.Hob.Setting.EndTimerSignalduration",
+        {"1": "10seconds", "2": "30seconds", "3": "60seconds"},
+    ),
+    (4369, "Cooking.Hob.Setting.BridgeZoneMode", {"0": "SplitMode", "1": "JoinMode"}),
+    (4360, "Cooking.Hob.Setting.PowerManagement", {"0": "Off", "10": "1000W", "90": "9000W"}),
+    (
+        4375,
+        "Cooking.Hob.Setting.HoodAutomaticStart",
+        {"0": "Off", "1": "AutomaticMode", "2": "ManualMode"},
+    ),
+    (
+        4377,
+        "Cooking.Hob.Setting.HoodAfterRun",
+        {"0": "Off", "1": "AutomaticMode", "2": "ManualMode", "3": "DoNothing"},
+    ),
+    (4378, "Cooking.Hob.Setting.HoodAutomaticLightOn", {"0": "Off", "1": "On"}),
+    (4379, "Cooking.Hob.Setting.HoodAutomaticLightOff", {"0": "Off", "1": "On"}),
+    (
+        4380,
+        "Cooking.Hob.Setting.PowerMoveModeDefaultValueFrontLeft",
+        {"0": "Off", "1": "KeepWarm", "2": "10", "10": "50", "18": "90", "20": "Boost1"},
+    ),
+    (
+        4381,
+        "Cooking.Hob.Setting.PowerMoveModeDefaultValueMiddleLeft",
+        {"0": "Off", "1": "KeepWarm", "2": "10", "10": "50", "18": "90", "20": "Boost1"},
+    ),
+    (
+        4382,
+        "Cooking.Hob.Setting.PowerMoveModeDefaultValueRearLeft",
+        {"0": "Off", "1": "KeepWarm", "2": "10", "10": "50", "18": "90", "20": "Boost1"},
+    ),
+    (
+        4383,
+        "Cooking.Hob.Setting.PowerMoveModeDefaultValueFrontRight",
+        {"0": "Off", "1": "KeepWarm", "2": "10", "10": "50", "18": "90", "20": "Boost1"},
+    ),
+    (
+        4384,
+        "Cooking.Hob.Setting.PowerMoveModeDefaultValueMiddleRight",
+        {"0": "Off", "1": "KeepWarm", "2": "10", "10": "50", "18": "90", "20": "Boost1"},
+    ),
+    (
+        4385,
+        "Cooking.Hob.Setting.PowerMoveModeDefaultValueRearRight",
+        {"0": "Off", "1": "KeepWarm", "2": "10", "10": "50", "18": "90", "20": "Boost1"},
+    ),
+)
+
+# UIDs, names and enumerations from the HB774G1B1 profile.
+OVEN_SETTINGS_PROFILE = _settings(
+    (524, "BSH.Common.Setting.ChildLock", None),
+    (
+        4354,
+        "Cooking.Oven.Setting.ClockDisplay",
+        {"3": "AnalogClock", "5": "DigitalClock", "6": "DigitalClockAndDate"},
+    ),
+    (4357, "Cooking.Oven.Setting.DisplayBrandLogo", None),
+    (4366, "Cooking.Oven.Setting.TeloscopicSlideOutRefited", None),
+    (4425, "Cooking.Oven.Setting.ClockPrompt", {"0": "Off", "1": "On", "2": "OnEnergySaving"}),
+    (4392, "Cooking.Oven.Setting.CountUpTimer", {"0": "NotShown", "1": "FromStart"}),
+    (4394, "Cooking.Oven.Setting.Dishes", {"0": "All", "1": "NoPork", "2": "KosherOnly"}),
+    (
+        4398,
+        "Cooking.Oven.Setting.ConfigureChildLock",
+        {"0": "Deactivated", "1": "Activated", "2": "ActivatedWithDoorlock"},
+    ),
+    (4411, "Cooking.Oven.Setting.FastPreHeat", None),
+    (4427, "Cooking.Oven.Setting.RegionalDishes", {"0": "All", "1": "European", "2": "British"}),
+    (
+        4428,
+        "Cooking.Oven.Setting.StartupMenu",
+        {"0": "MainMenue", "1": "HeatingModes", "5": "Dishes", "10": "Favorites"},
+    ),
+    (4432, "Cooking.Oven.Setting.CavityIllumination", {"0": "On", "1": "RestrictedOn", "2": "Off"}),
+)
+
+
+async def test_hob_settings_follow_the_app(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test the hob settings become config entities, the child lock as a select only."""
+    appliance = await mock_homeconnect_appliance(description=HOB_SETTINGS_PROFILE)
+    entities = entity_descriptions.get_available_entities(appliance)
+
+    assert {item.key for item in entities["select"]} == {
+        "select_hob_automatic_key_lock",
+        "select_hob_bridge_zone_mode",
+        "select_hob_buzzer_beep_level",
+        "select_hob_energy_consumption_indication",
+        "select_hob_end_timer_signal_duration",
+        "select_hob_power_management",
+        "select_hob_hood_automatic_start",
+        "select_hob_hood_after_run",
+        "select_hob_hood_automatic_light_on",
+        "select_hob_hood_automatic_light_off",
+        "select_hob_power_move_front_left",
+        "select_hob_power_move_middle_left",
+        "select_hob_power_move_rear_left",
+        "select_hob_power_move_front_right",
+        "select_hob_power_move_middle_right",
+        "select_hob_power_move_rear_right",
+    }
+    assert not entities.get("switch")
+    timer = next(item for item in entities["number"] if item.key == "number_hob_automatic_timer")
+    assert timer.mode is NumberMode.SLIDER
+
+
+async def test_oven_settings_follow_the_app(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test the oven settings become config entities, the child lock as a select only."""
+    appliance = await mock_homeconnect_appliance(description=OVEN_SETTINGS_PROFILE)
+    entities = entity_descriptions.get_available_entities(appliance)
+
+    assert {item.key for item in entities["select"]} == {
+        "select_oven_child_lock_setting",
+        "select_oven_clock_display",
+        "select_oven_clock_prompt",
+        "select_oven_count_up_timer",
+        "select_oven_dishes",
+        "select_oven_regional_dishes",
+        "select_oven_startup_menu",
+        "select_oven_cavity_illumination",
+    }
+    assert {item.key for item in entities["switch"]} == {
+        "switch_oven_display_brand_logo",
+        "switch_oven_fast_pre_heat_setting",
+        "switch_oven_telescopic_slide_out",
+    }
+
+
+async def test_child_lock_switch_without_child_lock_select(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test appliances without a child lock select keep the ChildLock switch."""
+    appliance = await mock_homeconnect_appliance(
+        description=_settings((524, "BSH.Common.Setting.ChildLock", None))
+    )
+    entities = entity_descriptions.get_available_entities(appliance)
+
+    assert [item.key for item in entities["switch"]] == ["switch_child_lock"]

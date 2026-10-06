@@ -10,7 +10,7 @@ from custom_components.homeconnect_ws import HCData
 from custom_components.homeconnect_ws.entity_descriptions.descriptions_definitions import (
     HCSensorEntityDescription,
 )
-from custom_components.homeconnect_ws.sensor import HCWiFI
+from custom_components.homeconnect_ws.sensor import HCHost, HCWiFI
 from homeassistant.components.sensor import ATTR_OPTIONS
 from homeassistant.const import ATTR_FRIENDLY_NAME
 from homeconnect_websocket import DisconnectedError
@@ -462,3 +462,22 @@ async def test_wifi_removal_cancels_pending_update_after_connect_task(
     await hass.async_block_till_done()
 
     assert task.cancelled()
+
+
+def test_host_sensor_shows_config_entry_host() -> None:
+    """The host sensor shows the address from the config entry, also while disconnected."""
+    appliance = MagicMock()
+    appliance.info = {"deviceID": "test_device_id"}
+    appliance.session.connected = False
+    coordinator = MagicMock()
+    coordinator.config_entry.data = {"host": "192.168.188.148"}
+    runtime_data = HCData(
+        appliance=appliance,
+        device_info=MagicMock(),
+        available_entity_descriptions=MagicMock(),
+        coordinator=coordinator,
+    )
+    entity = HCHost(HCSensorEntityDescription(key="sensor_host"), runtime_data)
+
+    assert entity.native_value == "192.168.188.148"
+    assert entity.available
