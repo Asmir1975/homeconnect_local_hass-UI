@@ -4593,6 +4593,24 @@
     }
   },
   "services": {
+    "start_program_with_options": {
+      "name": "Start program with options",
+      "description": "Start a program with explicit options in one local request, without automatic retries.",
+      "fields": {
+        "device_id": {
+          "name": "Appliance",
+          "description": "Appliance"
+        },
+        "program": {
+          "name": "Program",
+          "description": "Full program key from the appliance catalog."
+        },
+        "options": {
+          "name": "Options",
+          "description": "Option keys and typed values; only supported options."
+        }
+      }
+    },
     "start_program": {
       "name": "Start Program",
       "description": "Start the selected Program",

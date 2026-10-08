@@ -59,6 +59,26 @@
       "download_failed": "Download del profilo non riuscito: {error}"
     }
   },
+  "services": {
+    "start_program_with_options": {
+      "name": "Avvia programma con opzioni",
+      "description": "Avvia un programma con opzioni esplicite in una sola richiesta locale, senza tentativi automatici.",
+      "fields": {
+        "device_id": {
+          "name": "Elettrodomestico",
+          "description": "Elettrodomestico"
+        },
+        "program": {
+          "name": "Programma",
+          "description": "Chiave completa del programma nel catalogo dell’apparecchio."
+        },
+        "options": {
+          "name": "Opzioni",
+          "description": "Chiavi e valori tipizzati delle opzioni; solo opzioni supportate."
+        }
+      }
+    }
+  },
   "entity": {
     "switch": {
       "switch_power_state": {

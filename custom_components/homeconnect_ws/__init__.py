@@ -5,6 +5,7 @@ from __future__ import annotations
 import asyncio
 import logging
 from dataclasses import dataclass
+from functools import partial
 from typing import TYPE_CHECKING, Never
 
 import voluptuous as vol
@@ -31,7 +32,7 @@ from .const import (
 )
 from .coordinator import HomeConnectCoordinator
 from .entity_descriptions import get_available_entities
-from .helpers import error_decorator, get_config_entry_from_call
+from .helpers import error_decorator, get_config_entry_from_call, prepare_program_start
 
 if TYPE_CHECKING:
     from homeassistant.core import Event, HomeAssistant, ServiceCall, ServiceResponse
@@ -249,9 +250,43 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         )
 
     hass.services.async_register(DOMAIN, "start_program", handle_start_program)
+    hass.services.async_register(
+        DOMAIN,
+        "start_program_with_options",
+        partial(_handle_start_program_with_options, hass),
+        schema=vol.Schema(
+            {
+                vol.Required("device_id"): str,
+                vol.Required("program"): str,
+                vol.Required("options"): {str: vol.Any(str, int, float, bool)},
+            }
+        ),
+    )
     hass.services.async_register(DOMAIN, "set_start_in", handle_set_start_in)
     hass.services.async_register(DOMAIN, "set_finish_in", handle_set_finish_in)
     return True
+
+
+@error_decorator
+async def _handle_start_program_with_options(
+    hass: HomeAssistant, call: ServiceCall
+) -> ServiceResponse:
+    """Send one explicit start request, without selection or shadow options."""
+    config_entry = await get_config_entry_from_call(hass, call)
+    appliance = config_entry.runtime_data.appliance
+    try:
+        program, options = prepare_program_start(
+            appliance,
+            config_entry.data[CONF_DESCRIPTION],
+            call.data["program"],
+            call.data["options"],
+        )
+    except ValueError as exc:
+        raise ServiceValidationError(str(exc)) from exc
+    try:
+        await program.start(options, override_options=True)
+    except CodeResponsError as exc:
+        _raise_start_error(exc)
 
 
 async def async_setup_entry(

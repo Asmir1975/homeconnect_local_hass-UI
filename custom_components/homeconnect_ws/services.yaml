@@ -14,6 +14,30 @@ start_program:
       selector:
         duration:
 
+start_program_with_options:
+  name: Start program with explicit options
+  description: >-
+    Start with one local request, without selecting first or adding cached options.
+    All option values are explicit. Do not automatically retry after a timeout.
+  fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: homeconnect_ws
+    program:
+      name: Program key
+      description: Full program key from the appliance description.
+      required: true
+      selector:
+        text:
+    options:
+      name: Explicit program options
+      description: Mapping of full option keys to values; durations are in seconds.
+      required: true
+      selector:
+        object:
+
 set_start_in:
   fields:
     device_id:

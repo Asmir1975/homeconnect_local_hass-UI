@@ -4593,6 +4593,24 @@
     }
   },
   "services": {
+    "start_program_with_options": {
+      "name": "Programm mit Optionen starten",
+      "description": "Startet ein Programm mit expliziten Optionen in einer lokalen Anfrage, ohne automatische Wiederholungen.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Gerät"
+        },
+        "program": {
+          "name": "Programm",
+          "description": "Vollständiger Programmschlüssel aus dem Gerätekatalog."
+        },
+        "options": {
+          "name": "Optionen",
+          "description": "Optionsschlüssel und typisierte Werte; nur unterstützte Optionen."
+        }
+      }
+    },
     "start_program": {
       "name": "Programm starten",
       "description": "Startet das ausgewählte Programm",
