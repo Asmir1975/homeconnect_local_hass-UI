@@ -1236,3 +1236,21 @@ async def test_child_lock_switch_without_child_lock_select(
     entities = entity_descriptions.get_available_entities(appliance)
 
     assert [item.key for item in entities["switch"]] == ["switch_child_lock"]
+
+
+async def test_allow_backend_connection_switch(
+    mock_homeconnect_appliance: MockApplianceType,
+) -> None:
+    """Test AllowBackendConnection becomes a config switch."""
+    # UID and name from the SX63HX52BE profile.
+    appliance = await mock_homeconnect_appliance(
+        description=_settings((3, "BSH.Common.Setting.AllowBackendConnection", None))
+    )
+    entities = entity_descriptions.get_available_entities(appliance)
+
+    switch = next(
+        item for item in entities["switch"] if item.key == "switch_allow_backend_connection"
+    )
+    assert switch.entity == "BSH.Common.Setting.AllowBackendConnection"
+    assert switch.entity_category is EntityCategory.CONFIG
+    assert switch.force_disabled_default

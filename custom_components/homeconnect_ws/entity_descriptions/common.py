@@ -529,7 +529,16 @@ COMMON_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         generate_door_state,
     ],
     "start_button": [generate_start_button],
-    "switch": [generate_child_lock],
+    "switch": [
+        generate_child_lock,
+        HCSwitchEntityDescription(
+            key="switch_allow_backend_connection",
+            entity="BSH.Common.Setting.AllowBackendConnection",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
+            force_disabled_default=True,
+        ),
+    ],
     "number": [
         HCNumberEntityDescription(
             key="number_duration",

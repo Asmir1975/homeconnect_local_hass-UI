@@ -131,6 +131,9 @@
       "switch_half_load": {
         "name": "Half load"
       },
+      "switch_allow_backend_connection": {
+        "name": "Allow cloud connection"
+      },
       "switch_child_lock": {
         "name": "Child lock"
       },

@@ -4,6 +4,12 @@
           "switch_brilliance_dry": {
             "default": "mdi:shimmer"
           },
+          "switch_allow_backend_connection": {
+            "default": "mdi:cloud",
+            "state": {
+              "off": "mdi:cloud-off-outline"
+            }
+          },
           "switch_child_lock": {
             "default": "mdi:lock",
             "state": {
