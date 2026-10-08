@@ -7,8 +7,8 @@ Two optional LAN select entities use the appliance's own catalog:
 
 They are created only when the corresponding entity exists. Options and numeric
 codes are derived from the appliance enumeration; no fixed UID or fabricated
-intermediate steam level is used by the integration. English and Italian labels
-are included. Existing access/availability checks continue to apply.
+intermediate steam level is used by the integration. Labels are included in all
+nine available languages. Existing access/availability checks continue to apply.
 
 On NEFF B5AVM7AG7, the observed enum codes are steam Off=0, Low=1, High=3 and
 hardness Softened=0, Soft=1, Medium=2, Hard=3, VeryHard=4. Captured official-app
@@ -27,26 +27,9 @@ The B5AVM7AG7 manual limits steam assistance to compatible heating modes and
 80–240 °C with a full tank. Model-specific cooking constraints are not hardcoded
 into the generic select entity. Water hardness must match the actual water used.
 
-## Pending release work
+## Validation
 
-- After the remaining integration changes, add/review translations for every
-  language present in `translations/`, not just English and Italian, and check
-  consistency of names and enum labels. Requested by Andrea on 2026-10-07.
-
-## Installation on the existing HA instance
-
-Copy these files from the repository into the corresponding
-`/homeassistant/custom_components/homeconnect_ws/` paths:
-
-1. `entity_descriptions/cooking.py`
-2. `translations/en.json`
-3. `translations/it.json`
-
-Restart HA to load code and translations, then inspect the oven's local
-integration device page for the two new selects. No new credential or pairing is
-needed. This local repository change has not been copied to the HA host.
-
-Offline validation:
+Standalone validation:
 
 ```sh
 python tests/test_oven_selects_standalone.py

@@ -125,9 +125,7 @@ def test_freezer_auto_super_description() -> None:
 def test_oven_steam_and_water_hardness_descriptions() -> None:
     """Expose device-provided enums without inventing intermediate steam levels."""
     descriptions = {
-        item.key: item
-        for item in COOKING_ENTITY_DESCRIPTIONS["select"]
-        if not callable(item)
+        item.key: item for item in COOKING_ENTITY_DESCRIPTIONS["select"] if not callable(item)
     }
     steam = descriptions["select_oven_steam_assist_level"]
     hardness = descriptions["select_oven_water_hardness"]

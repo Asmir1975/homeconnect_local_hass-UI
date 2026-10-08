@@ -14,14 +14,8 @@ Italian names added for the existing `light_internal` and
 IDs are not explicitly renamed; existing custom names may override translations.
 No appliance setting is changed by installing this code.
 
-Deployment: copy `entity_descriptions/refrigeration.py`, `translations/en.json`
-and `translations/it.json` into the existing HA component and restart HA.
-These edits have not been deployed to HA by the agent. Check the new switch and
-lighting labels after restart, without needing new pairing.
+The new AutoSuper label is translated in all nine available project languages.
+Existing entity keys remain unchanged; no new pairing is required.
 
-Remaining release work: add/review all new translation keys in every language
-present in the project after the integration work is complete.
-
-Checks: standalone fridge/oven mapping suites, explicit-start validation, Ruff.
-The full Home Assistant fixture-based suite requires separate dependencies and
-has not been executed in this local validation environment.
+Checks include standalone fridge/oven wire tests, explicit-start validation,
+HA descriptor tests, and translation coverage/duplicate-key validation.
