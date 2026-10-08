@@ -119,6 +119,9 @@
       "switch_speed_on_demand": {
         "name": "Speed On Demand"
       },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Status light"
+      },
       "switch_info_light": {
         "name": "infoLight"
       },
@@ -247,6 +250,9 @@
       },
       "switch_refrigerator_door_assistant_fridge": {
         "name": "Fridge Door Assistant"
+      },
+      "switch_freezer_auto_super": {
+        "name": "Automatic Super Freeze"
       },
       "switch_refrigeration_light_theater_mode": {
         "name": "Internal Light TheaterMode"
@@ -3941,6 +3947,31 @@
           "plus3": "Plus 3"
         }
       },
+      "select_oven_steam_assist_level": {
+        "name": "Steam assist level",
+        "state": {
+          "off": "Off",
+          "low": "Level 1 (low)",
+          "high": "Level 3 (high)"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Water hardness",
+        "state": {
+          "softened": "Softened",
+          "soft": "Soft",
+          "medium": "Medium",
+          "hard": "Hard",
+          "veryhard": "Very hard"
+        }
+      },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Interior light mode",
+        "state": {
+          "applianceondooropen": "When appliance is on and door open",
+          "alwaysondooropen": "Whenever door is open"
+        }
+      },
       "select_oven_level": {
         "name": "Level",
         "state": {
@@ -4590,6 +4621,24 @@
     }
   },
   "services": {
+    "start_program_with_options": {
+      "name": "Start program with options",
+      "description": "Start a program with explicit options in one local request, without automatic retries.",
+      "fields": {
+        "device_id": {
+          "name": "Appliance",
+          "description": "Appliance"
+        },
+        "program": {
+          "name": "Program",
+          "description": "Full program key from the appliance catalog."
+        },
+        "options": {
+          "name": "Options",
+          "description": "Option keys and typed values; only supported options."
+        }
+      }
+    },
     "start_program": {
       "name": "Start Program",
       "description": "Start the selected Program",
@@ -4693,4 +4742,4 @@
       "message": "Value not allowed: use a multiple of {step} {unit} from {min} to {max} {unit}"
     }
   }
-}
+}

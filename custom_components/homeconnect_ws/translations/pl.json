@@ -69,6 +69,12 @@
       "switch_speed_on_demand": {
         "name": "Prędkość na żądanie"
       },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Oświetlenie statusu"
+      },
+      "switch_freezer_auto_super": {
+        "name": "Automatyczne superzamrażanie"
+      },
       "switch_info_light": {
         "name": "Lampka informacyjna"
       },
@@ -2288,6 +2294,31 @@
           "plus3": "plus 3"
         }
       },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Tryb oświetlenia wnętrza",
+        "state": {
+          "applianceondooropen": "Gdy urządzenie jest włączone i drzwi otwarte",
+          "alwaysondooropen": "Zawsze przy otwartych drzwiach"
+        }
+      },
+      "select_oven_steam_assist_level": {
+        "name": "Poziom wspomagania parą",
+        "state": {
+          "off": "Wyłączone",
+          "low": "Poziom 1 (niski)",
+          "high": "Poziom 3 (wysoki)"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Twardość wody",
+        "state": {
+          "softened": "Zmiękczona",
+          "soft": "Miękka",
+          "medium": "Średnia",
+          "hard": "Twarda",
+          "veryhard": "Bardzo twarda"
+        }
+      },
       "select_oven_level": {
         "name": "Poziom",
         "state": {
@@ -2560,6 +2591,24 @@
     }
   },
   "services": {
+    "start_program_with_options": {
+      "name": "Uruchom program z opcjami",
+      "description": "Uruchamia program z jawnymi opcjami w jednym lokalnym żądaniu, bez automatycznych ponowień.",
+      "fields": {
+        "device_id": {
+          "name": "Urządzenie",
+          "description": "Urządzenie"
+        },
+        "program": {
+          "name": "Program",
+          "description": "Pełny klucz programu z katalogu urządzenia."
+        },
+        "options": {
+          "name": "Opcje",
+          "description": "Klucze opcji i wartości o określonym typie; tylko obsługiwane opcje."
+        }
+      }
+    },
     "start_program": {
       "name": "Uruchom program",
       "description": "Uruchamia wybrany program",

@@ -88,6 +88,12 @@
       "switch_speed_on_demand": {
         "name": "Speed On Demand"
       },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Statusverlichting"
+      },
+      "switch_freezer_auto_super": {
+        "name": "Automatisch supervriezen"
+      },
       "switch_info_light": {
         "name": "Infolicht"
       },
@@ -1850,6 +1856,31 @@
           "business": "Overhemd"
         }
       },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Modus binnenverlichting",
+        "state": {
+          "applianceondooropen": "Bij ingeschakeld apparaat en geopende deur",
+          "alwaysondooropen": "Altijd bij geopende deur"
+        }
+      },
+      "select_oven_steam_assist_level": {
+        "name": "Niveau stoomondersteuning",
+        "state": {
+          "off": "Uit",
+          "low": "Niveau 1 (laag)",
+          "high": "Niveau 3 (hoog)"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Waterhardheid",
+        "state": {
+          "softened": "Onthard",
+          "soft": "Zacht",
+          "medium": "Gemiddeld",
+          "hard": "Hard",
+          "veryhard": "Zeer hard"
+        }
+      },
       "select_oven_level": {
         "name": "Niveau",
         "state": {
@@ -2078,6 +2109,24 @@
     }
   },
   "services": {
+    "start_program_with_options": {
+      "name": "Programma met opties starten",
+      "description": "Start een programma met expliciete opties in één lokaal verzoek, zonder automatische herhalingen.",
+      "fields": {
+        "device_id": {
+          "name": "Apparaat",
+          "description": "Apparaat"
+        },
+        "program": {
+          "name": "Programma",
+          "description": "Volledige programmasleutel uit de apparaatcatalogus."
+        },
+        "options": {
+          "name": "Opties",
+          "description": "Optiesleutels en getypeerde waarden; alleen ondersteunde opties."
+        }
+      }
+    },
     "start_program": {
       "name": "Start programma",
       "description": "Start het geselecteerde programma",

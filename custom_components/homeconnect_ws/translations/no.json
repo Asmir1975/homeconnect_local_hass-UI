@@ -88,6 +88,12 @@
       "switch_speed_on_demand": {
         "name": "Hastighet på krav"
       },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Statuslys"
+      },
+      "switch_freezer_auto_super": {
+        "name": "Automatisk superfrysing"
+      },
       "switch_info_light": {
         "name": "Info-lys"
       },
@@ -1654,6 +1660,31 @@
           "plus3": "Plus 3"
         }
       },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Modus for innvendig lys",
+        "state": {
+          "applianceondooropen": "Når apparatet er på og døren er åpen",
+          "alwaysondooropen": "Alltid når døren er åpen"
+        }
+      },
+      "select_oven_steam_assist_level": {
+        "name": "Nivå for damptilførsel",
+        "state": {
+          "off": "Av",
+          "low": "Nivå 1 (lavt)",
+          "high": "Nivå 3 (høyt)"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Vannhardhet",
+        "state": {
+          "softened": "Avherdet",
+          "soft": "Bløtt",
+          "medium": "Middels",
+          "hard": "Hardt",
+          "veryhard": "Svært hardt"
+        }
+      },
       "select_oven_level": {
         "name": "Nivå",
         "state": {
@@ -1894,6 +1925,24 @@
     }
   },
   "services": {
+    "start_program_with_options": {
+      "name": "Start program med alternativer",
+      "description": "Starter et program med eksplisitte alternativer i én lokal forespørsel, uten automatiske nye forsøk.",
+      "fields": {
+        "device_id": {
+          "name": "Apparat",
+          "description": "Apparat"
+        },
+        "program": {
+          "name": "Program",
+          "description": "Fullstendig programnøkkel fra apparatets katalog."
+        },
+        "options": {
+          "name": "Alternativer",
+          "description": "Alternativnøkler og typede verdier; bare støttede alternativer."
+        }
+      }
+    },
     "start_program": {
       "name": "Start program",
       "description": "Start det valgte programmet",

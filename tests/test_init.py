@@ -187,6 +187,35 @@ async def test_set_start_in_calls_set_value(
     entity.set_value.assert_awaited_once_with(300)
 
 
+async def test_atomic_start_service_calls_start_once_without_selection(
+    hass: HomeAssistant,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The new service forwards only explicit options via the atomic path."""
+    _, device_id = await _setup_entry_with_device(hass, monkeypatch)
+    program = Mock(start=AsyncMock(), select=AsyncMock())
+    with patch(
+        "custom_components.homeconnect_ws.prepare_program_start",
+        return_value=(program, {548: 30, 5120: 180}),
+    ) as prepare:
+        await hass.services.async_call(
+            DOMAIN,
+            "start_program_with_options",
+            {
+                "device_id": device_id,
+                "program": "Cooking.Oven.Program.HeatingMode.AirFry",
+                "options": {
+                    "BSH.Common.Option.Duration": 30,
+                    "Cooking.Oven.Option.SetpointTemperature": 180,
+                },
+            },
+            blocking=True,
+        )
+    prepare.assert_called_once()
+    program.start.assert_awaited_once_with({548: 30, 5120: 180}, override_options=True)
+    program.select.assert_not_called()
+
+
 async def test_set_finish_in_calls_set_value(
     hass: HomeAssistant,
     monkeypatch: pytest.MonkeyPatch,

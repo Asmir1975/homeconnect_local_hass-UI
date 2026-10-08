@@ -116,6 +116,12 @@
       "switch_speed_on_demand": {
         "name": "Schnell auf Knopfdruck"
       },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Statusbeleuchtung"
+      },
+      "switch_freezer_auto_super": {
+        "name": "Automatisches Super-Gefrieren"
+      },
       "switch_info_light": {
         "name": "infoLight"
       },
@@ -3701,6 +3707,31 @@
           "business": "Business"
         }
       },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Innenbeleuchtungsmodus",
+        "state": {
+          "applianceondooropen": "Bei eingeschaltetem Gerät und offener Tür",
+          "alwaysondooropen": "Immer bei offener Tür"
+        }
+      },
+      "select_oven_steam_assist_level": {
+        "name": "Dampfunterstützung",
+        "state": {
+          "off": "Aus",
+          "low": "Stufe 1 (niedrig)",
+          "high": "Stufe 3 (hoch)"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Wasserhärte",
+        "state": {
+          "softened": "Enthärtet",
+          "soft": "Weich",
+          "medium": "Mittel",
+          "hard": "Hart",
+          "veryhard": "Sehr hart"
+        }
+      },
       "select_oven_level": {
         "name": "Stufe",
         "state": {
@@ -4590,6 +4621,24 @@
     }
   },
   "services": {
+    "start_program_with_options": {
+      "name": "Programm mit Optionen starten",
+      "description": "Startet ein Programm mit expliziten Optionen in einer lokalen Anfrage, ohne automatische Wiederholungen.",
+      "fields": {
+        "device_id": {
+          "name": "Gerät",
+          "description": "Gerät"
+        },
+        "program": {
+          "name": "Programm",
+          "description": "Vollständiger Programmschlüssel aus dem Gerätekatalog."
+        },
+        "options": {
+          "name": "Optionen",
+          "description": "Optionsschlüssel und typisierte Werte; nur unterstützte Optionen."
+        }
+      }
+    },
     "start_program": {
       "name": "Programm starten",
       "description": "Startet das ausgewählte Programm",

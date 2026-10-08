@@ -373,6 +373,12 @@ REFRIGERATION_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     ],
     "switch": [
         HCSwitchEntityDescription(
+            key="switch_freezer_auto_super",
+            entity="Refrigeration.Common.Setting.Appliance.AutoSuper",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        HCSwitchEntityDescription(
             key="switch_super_freezer",
             entity="Refrigeration.FridgeFreezer.Setting.SuperModeFreezer",
             device_class=SwitchDeviceClass.SWITCH,

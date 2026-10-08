@@ -36,6 +36,7 @@ from custom_components.homeconnect_ws.entity_descriptions.dishcare import (
     DISHCARE_ENTITY_DESCRIPTIONS,
 )
 from custom_components.homeconnect_ws.entity_descriptions.refrigeration import (
+    REFRIGERATION_ENTITY_DESCRIPTIONS,
     generate_internal_light,
     generate_internal_light_brightness,
 )
@@ -107,6 +108,38 @@ def test_dishwasher_pretreatment_switch_description() -> None:
 
     assert description.entity == "Dishcare.Dishwasher.Option.Pretreatment"
     assert description.device_class is SwitchDeviceClass.SWITCH
+
+
+def test_freezer_auto_super_description() -> None:
+    """Automatic activation permission is distinct from manual Super Freeze."""
+    description = next(
+        item
+        for item in REFRIGERATION_ENTITY_DESCRIPTIONS["switch"]
+        if item.key == "switch_freezer_auto_super"
+    )
+    assert description.entity == "Refrigeration.Common.Setting.Appliance.AutoSuper"
+    assert description.device_class is SwitchDeviceClass.SWITCH
+    assert description.entity_category is EntityCategory.CONFIG
+
+
+def test_oven_steam_and_water_hardness_descriptions() -> None:
+    """Expose device-provided enums without inventing intermediate steam levels."""
+    descriptions = {
+        item.key: item
+        for item in COOKING_ENTITY_DESCRIPTIONS["select"]
+        if not callable(item)
+    }
+    steam = descriptions["select_oven_steam_assist_level"]
+    hardness = descriptions["select_oven_water_hardness"]
+
+    assert steam.entity == "Cooking.Oven.Option.SteamAssistLevel"
+    assert steam.has_state_translation
+    assert steam.options is None
+    assert steam.entity_category is None
+    assert hardness.entity == "Cooking.Oven.Setting.WaterHardness"
+    assert hardness.has_state_translation
+    assert hardness.options is None
+    assert hardness.entity_category is EntityCategory.CONFIG
 
 
 def test_not_selectable_hob_zones_disabled_by_default() -> None:

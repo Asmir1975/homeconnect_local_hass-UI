@@ -59,6 +59,26 @@
       "download_failed": "Profilnedladdning misslyckades: {error}"
     }
   },
+  "services": {
+    "start_program_with_options": {
+      "name": "Starta program med alternativ",
+      "description": "Startar ett program med uttryckliga alternativ i en lokal begäran, utan automatiska återförsök.",
+      "fields": {
+        "device_id": {
+          "name": "Apparat",
+          "description": "Apparat"
+        },
+        "program": {
+          "name": "Program",
+          "description": "Fullständig programnyckel från apparatens katalog."
+        },
+        "options": {
+          "name": "Alternativ",
+          "description": "Alternativnycklar och typade värden; endast alternativ som stöds."
+        }
+      }
+    }
+  },
   "entity": {
     "switch": {
       "switch_power_state": {
@@ -90,6 +110,12 @@
       },
       "switch_speed_on_demand": {
         "name": "Snabbläge vid behov"
+      },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Statusbelysning"
+      },
+      "switch_freezer_auto_super": {
+        "name": "Automatisk superfrysning"
       },
       "switch_info_light": {
         "name": "Info‑ljus"
@@ -1660,6 +1686,31 @@
           "shirt1": "Skjorta 1",
           "shirt5": "Skjorta 5",
           "business": "Business"
+        }
+      },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Läge för invändig belysning",
+        "state": {
+          "applianceondooropen": "När apparaten är på och dörren är öppen",
+          "alwaysondooropen": "Alltid när dörren är öppen"
+        }
+      },
+      "select_oven_steam_assist_level": {
+        "name": "Nivå för ångtillsats",
+        "state": {
+          "off": "Av",
+          "low": "Nivå 1 (låg)",
+          "high": "Nivå 3 (hög)"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Vattenhårdhet",
+        "state": {
+          "softened": "Avhärdat",
+          "soft": "Mjukt",
+          "medium": "Medelhårt",
+          "hard": "Hårt",
+          "veryhard": "Mycket hårt"
         }
       },
       "select_oven_level": {

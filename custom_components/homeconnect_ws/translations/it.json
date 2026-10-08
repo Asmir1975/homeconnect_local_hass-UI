@@ -59,6 +59,26 @@
       "download_failed": "Download del profilo non riuscito: {error}"
     }
   },
+  "services": {
+    "start_program_with_options": {
+      "name": "Avvia programma con opzioni",
+      "description": "Avvia un programma con opzioni esplicite in una sola richiesta locale, senza tentativi automatici.",
+      "fields": {
+        "device_id": {
+          "name": "Elettrodomestico",
+          "description": "Elettrodomestico"
+        },
+        "program": {
+          "name": "Programma",
+          "description": "Chiave completa del programma nel catalogo dell’apparecchio."
+        },
+        "options": {
+          "name": "Opzioni",
+          "description": "Chiavi e valori tipizzati delle opzioni; solo opzioni supportate."
+        }
+      }
+    }
+  },
   "entity": {
     "switch": {
       "switch_power_state": {
@@ -87,6 +107,9 @@
       },
       "switch_speed_on_demand": {
         "name": "Velocità su richiesta"
+      },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Luce di stato"
       },
       "switch_info_light": {
         "name": "Luce informazione"
@@ -195,6 +218,17 @@
       },
       "switch_oven_sabbath_mode": {
         "name": "Modalità Sabbath"
+      },
+      "switch_freezer_auto_super": {
+        "name": "Super Freeze automatico"
+      },
+      "switch_refrigeration_light_theater_mode": {
+        "name": "Illuminazione interna graduale"
+      }
+    },
+    "light": {
+      "light_internal": {
+        "name": "Illuminazione interna"
       }
     },
     "binary_sensor": {
@@ -1331,6 +1365,31 @@
           "plus1": "+ 1",
           "plus2": "+ 2",
           "plus3": "+ 3"
+        }
+      },
+      "select_oven_steam_assist_level": {
+        "name": "Livello aggiunta di vapore",
+        "state": {
+          "off": "Disattivato",
+          "low": "Livello 1 (ridotto)",
+          "high": "Livello 3 (elevato)"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Durezza dell'acqua",
+        "state": {
+          "softened": "Addolcita",
+          "soft": "Dolce",
+          "medium": "Media",
+          "hard": "Dura",
+          "veryhard": "Molto dura"
+        }
+      },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Modalità illuminazione interna",
+        "state": {
+          "applianceondooropen": "Con apparecchio acceso e porta aperta",
+          "alwaysondooropen": "Sempre con porta aperta"
         }
       },
       "select_oven_level": {

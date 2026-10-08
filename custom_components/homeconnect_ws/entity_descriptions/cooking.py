@@ -613,6 +613,17 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     ],
     "select": [
         HCSelectEntityDescription(
+            key="select_oven_steam_assist_level",
+            entity="Cooking.Oven.Option.SteamAssistLevel",
+            has_state_translation=True,
+        ),
+        HCSelectEntityDescription(
+            key="select_oven_water_hardness",
+            entity="Cooking.Oven.Setting.WaterHardness",
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        ),
+        HCSelectEntityDescription(
             key="select_oven_level",
             entity="Cooking.Oven.Option.Level",
             has_state_translation=True,

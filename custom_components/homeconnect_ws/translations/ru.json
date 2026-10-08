@@ -88,6 +88,12 @@
       "switch_speed_on_demand": {
         "name": "Скорость по требованию"
       },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Индикатор состояния"
+      },
+      "switch_freezer_auto_super": {
+        "name": "Автоматическая суперзаморозка"
+      },
       "switch_info_light": {
         "name": "Индикатор"
       },
@@ -1543,6 +1549,31 @@
           "business": "Деловая"
         }
       },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Режим внутреннего освещения",
+        "state": {
+          "applianceondooropen": "При включённом приборе и открытой двери",
+          "alwaysondooropen": "Всегда при открытой двери"
+        }
+      },
+      "select_oven_steam_assist_level": {
+        "name": "Уровень подачи пара",
+        "state": {
+          "off": "Выключено",
+          "low": "Уровень 1 (низкий)",
+          "high": "Уровень 3 (высокий)"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Жёсткость воды",
+        "state": {
+          "softened": "Умягчённая",
+          "soft": "Мягкая",
+          "medium": "Средняя",
+          "hard": "Жёсткая",
+          "veryhard": "Очень жёсткая"
+        }
+      },
       "select_oven_level": {
         "name": "Уровень",
         "state": {
@@ -1748,6 +1779,24 @@
     }
   },
   "services": {
+    "start_program_with_options": {
+      "name": "Запустить программу с параметрами",
+      "description": "Запускает программу с явными параметрами одним локальным запросом, без автоматических повторов.",
+      "fields": {
+        "device_id": {
+          "name": "Прибор",
+          "description": "Прибор"
+        },
+        "program": {
+          "name": "Программа",
+          "description": "Полный ключ программы из каталога прибора."
+        },
+        "options": {
+          "name": "Параметры",
+          "description": "Ключи и типизированные значения параметров; только поддерживаемые параметры."
+        }
+      }
+    },
     "start_program": {
       "name": "Запустить программу",
       "description": "Запустить выбранную программу",

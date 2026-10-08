@@ -88,6 +88,12 @@
       "switch_speed_on_demand": {
         "name": "Vitesse à la demande"
       },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Voyant d’état"
+      },
+      "switch_freezer_auto_super": {
+        "name": "Super congélation automatique"
+      },
       "switch_info_light": {
         "name": "Voyant d'information"
       },
@@ -1698,6 +1704,31 @@
           "plus3": "Plus 3"
         }
       },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Mode d’éclairage intérieur",
+        "state": {
+          "applianceondooropen": "Appareil allumé et porte ouverte",
+          "alwaysondooropen": "Toujours lorsque la porte est ouverte"
+        }
+      },
+      "select_oven_steam_assist_level": {
+        "name": "Niveau d’ajout de vapeur",
+        "state": {
+          "off": "Arrêt",
+          "low": "Niveau 1 (faible)",
+          "high": "Niveau 3 (élevé)"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Dureté de l’eau",
+        "state": {
+          "softened": "Adoucie",
+          "soft": "Douce",
+          "medium": "Moyenne",
+          "hard": "Dure",
+          "veryhard": "Très dure"
+        }
+      },
       "select_oven_level": {
         "name": "Niveau",
         "state": {
@@ -1940,6 +1971,24 @@
     }
   },
   "services": {
+    "start_program_with_options": {
+      "name": "Démarrer un programme avec options",
+      "description": "Démarre un programme avec des options explicites dans une seule requête locale, sans nouvelle tentative automatique.",
+      "fields": {
+        "device_id": {
+          "name": "Appareil",
+          "description": "Appareil"
+        },
+        "program": {
+          "name": "Programme",
+          "description": "Clé complète du programme dans le catalogue de l’appareil."
+        },
+        "options": {
+          "name": "Options",
+          "description": "Clés et valeurs typées des options ; uniquement les options prises en charge."
+        }
+      }
+    },
     "start_program": {
       "name": "Démarrer le programme",
       "description": "Démarre le programme sélectionné",
