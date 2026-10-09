@@ -40,6 +40,11 @@ _SELECTED_PROGRAM_SUFFIX = ".SelectedProgram"
 _OPERATION_STATE_ENTITY = "BSH.Common.Status.OperationState"
 _INACTIVE_OPERATION_STATES = frozenset({"inactive", "ready"})
 _POWER_STATE_ENTITY = "BSH.Common.Setting.PowerState"
+_STEAM_ASSIST_LEVEL_ENTITY = "Cooking.Oven.Option.SteamAssistLevel"
+_STEAM_STANDALONE_ERROR = (
+    "Steam level cannot be written separately. Include it in "
+    "start_program_with_options for a compatible cooking program."
+)
 HOOD_LEVEL_OFF = "off"
 HOOD_LEVEL_BOOST = "boost"
 _VENTING_BOOST_ENTITY = "Cooking.Common.Option.Hood.Boost"
@@ -141,6 +146,14 @@ class HCSelect(HCEntity, SelectEntity):
                 self._rev_options[str(value).lower()] = value
 
     @property
+    def extra_state_attributes(self) -> dict:
+        """Expose steam as read-only even when the appliance advertises write access."""
+        attributes = super().extra_state_attributes
+        if self.entity_description.entity == _STEAM_ASSIST_LEVEL_ENTITY:
+            attributes["readonly"] = True
+        return attributes
+
+    @property
     def current_option(self) -> str:
         if self.entity_description.has_state_translation:
             value = str(self._entity.value).lower()
@@ -153,6 +166,12 @@ class HCSelect(HCEntity, SelectEntity):
 
     @error_decorator
     async def async_select_option(self, option: str) -> None:
+        # A NEFF B5AVM7AG7 accepted a standalone write, then immediately reset
+        # the level and entered an E01 error requiring a power cycle. Access
+        # READ_WRITE is not sufficient: send steam only in an atomic program
+        # start request. Never turn this select into an implicit program start.
+        if self.entity_description.entity == _STEAM_ASSIST_LEVEL_ENTITY:
+            raise ServiceValidationError(_STEAM_STANDALONE_ERROR)
         ensure_writable(self._entity)
         if self._rev_options:
             option = self._rev_options[option]

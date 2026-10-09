@@ -150,6 +150,12 @@
       "switch_laundry_hygiene": {
         "name": "Igiene"
       },
+      "switch_freezer_auto_super": {
+        "name": "Impostazione automatica super freeze"
+      },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Luce di stato"
+      },
       "switch_super_freezer": {
         "name": "Modalità super congelatore"
       },
@@ -1351,6 +1357,32 @@
           "plus1": "+ 1",
           "plus2": "+ 2",
           "plus3": "+ 3"
+        }
+      },
+      "select_oven_steam_assist_level": {
+        "name": "Aggiunta di vapore",
+        "state": {
+          "off": "Off",
+          "low": "Basso",
+          "medium": "Medio",
+          "high": "Alto"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Durezza dell'acqua",
+        "state": {
+          "softened": "Addolcita",
+          "soft": "Dolce",
+          "medium": "Media",
+          "hard": "Dura",
+          "veryhard": "Molto dura"
+        }
+      },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Emotion Light",
+        "state": {
+          "applianceondooropen": "Con apparecchio acceso e porta aperta",
+          "alwaysondooropen": "Sempre con porta aperta"
         }
       },
       "select_oven_level": {
