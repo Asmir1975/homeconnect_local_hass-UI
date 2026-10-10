@@ -576,6 +576,15 @@
       }
     },
     "sensor": {
+      "sensor_oven_steam_assist_level": {
+        "name": "Add steam",
+        "state": {
+          "off": "Off",
+          "low": "Low",
+          "medium": "Medium",
+          "high": "High"
+        }
+      },
       "sensor_silence_on_demand_remaining_time": {
         "name": "Silence on Demand remaining"
       },
@@ -3948,15 +3957,6 @@
           "plus1": "Plus 1",
           "plus2": "Plus 2",
           "plus3": "Plus 3"
-        }
-      },
-      "select_oven_steam_assist_level": {
-        "name": "Add steam",
-        "state": {
-          "off": "Off",
-          "low": "Low",
-          "medium": "Medium",
-          "high": "High"
         }
       },
       "select_oven_water_hardness": {

@@ -576,6 +576,15 @@
       }
     },
     "sensor": {
+      "sensor_oven_steam_assist_level": {
+        "name": "Dampfzugabe",
+        "state": {
+          "off": "Aus",
+          "low": "Gering",
+          "medium": "Mittel",
+          "high": "Stark"
+        }
+      },
       "sensor_silence_on_demand_remaining_time": {
         "name": "Jetzt Leise Restzeit"
       },
@@ -3708,15 +3717,6 @@
           "shirt1": "Hemd 1",
           "shirt5": "Hemd 5",
           "business": "Business"
-        }
-      },
-      "select_oven_steam_assist_level": {
-        "name": "Dampfzugabe",
-        "state": {
-          "off": "Aus",
-          "low": "Gering",
-          "medium": "Mittel",
-          "high": "Stark"
         }
       },
       "select_oven_water_hardness": {

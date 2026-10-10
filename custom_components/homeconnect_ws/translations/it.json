@@ -409,6 +409,15 @@
       }
     },
     "sensor": {
+      "sensor_oven_steam_assist_level": {
+        "name": "Aggiunta di vapore",
+        "state": {
+          "off": "Off",
+          "low": "Basso",
+          "medium": "Medio",
+          "high": "Alto"
+        }
+      },
       "sensor_remaining_program_time": {
         "name": "Tempo programma rimanente"
       },
@@ -1357,15 +1366,6 @@
           "plus1": "+ 1",
           "plus2": "+ 2",
           "plus3": "+ 3"
-        }
-      },
-      "select_oven_steam_assist_level": {
-        "name": "Aggiunta di vapore",
-        "state": {
-          "off": "Off",
-          "low": "Basso",
-          "medium": "Medio",
-          "high": "Alto"
         }
       },
       "select_oven_water_hardness": {

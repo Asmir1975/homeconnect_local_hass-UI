@@ -2,7 +2,7 @@
 
 import json
 from pathlib import Path
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 import pytest
 from custom_components.homeconnect_ws import HCData
@@ -16,16 +16,16 @@ from custom_components.homeconnect_ws.entity_descriptions.dishcare import (
 from custom_components.homeconnect_ws.entity_descriptions.refrigeration import (
     REFRIGERATION_ENTITY_DESCRIPTIONS,
 )
-from custom_components.homeconnect_ws.select import HCSelect
+from custom_components.homeconnect_ws.sensor import HCSensor
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import EntityCategory
-from homeassistant.exceptions import ServiceValidationError
 
 TRANSLATIONS = Path(__file__).parents[1] / "custom_components/homeconnect_ws/translations"
 MAPPINGS = (
     (
         COOKING_ENTITY_DESCRIPTIONS,
-        "select",
-        "select_oven_steam_assist_level",
+        "sensor",
+        "sensor_oven_steam_assist_level",
         "Cooking.Oven.Option.SteamAssistLevel",
         None,
     ),
@@ -73,6 +73,9 @@ def test_part_b_mapping(
     if platform == "select":
         assert description.options is None
         assert description.has_state_translation
+    elif platform == "sensor":
+        assert description.device_class == SensorDeviceClass.ENUM
+        assert description.has_state_translation
 
 
 @pytest.mark.parametrize(
@@ -102,8 +105,8 @@ def test_steam_options_come_from_device_not_translation() -> None:
     """A generic medium translation cannot invent a NEFF steam level 2."""
     description = next(
         item
-        for item in COOKING_ENTITY_DESCRIPTIONS["select"]
-        if not callable(item) and item.key == "select_oven_steam_assist_level"
+        for item in COOKING_ENTITY_DESCRIPTIONS["sensor"]
+        if not callable(item) and item.key == "sensor_oven_steam_assist_level"
     )
     wire_entity = MagicMock()
     wire_entity.enum = {0: "Off", 1: "Low", 3: "High"}
@@ -118,7 +121,17 @@ def test_steam_options_come_from_device_not_translation() -> None:
         available_entity_descriptions=MagicMock(),
         coordinator=MagicMock(),
     )
-    assert HCSelect(description, runtime).options == ["off", "low", "high"]
+    entity = HCSensor(description, runtime)
+    assert entity.options == ["off", "low", "high"]
+    assert not any(
+        not callable(item) and item.entity == description.entity
+        for item in COOKING_ENTITY_DESCRIPTIONS["select"]
+    )
+    for value in ("Off", "Low", "High"):
+        wire_entity.value = value
+        assert entity.native_value == value.lower()
+    wire_entity.value = None
+    assert entity.native_value is None
 
 
 def _unique_pairs(pairs: list[tuple[str, object]]) -> dict:
@@ -127,36 +140,6 @@ def _unique_pairs(pairs: list[tuple[str, object]]) -> dict:
         assert key not in result, f"Duplicate JSON key: {key}"
         result[key] = value
     return result
-
-
-@pytest.mark.parametrize("option", ["off", "low", "high"])
-async def test_steam_standalone_write_is_blocked(option: str) -> None:
-    """No standalone steam write may reach the oven, even if writable."""
-    description = next(
-        item
-        for item in COOKING_ENTITY_DESCRIPTIONS["select"]
-        if not callable(item) and item.key == "select_oven_steam_assist_level"
-    )
-    wire_entity = MagicMock()
-    wire_entity.enum = {0: "Off", 1: "Low", 3: "High"}
-    wire_entity.min = None
-    wire_entity.max = None
-    wire_entity.set_value = AsyncMock()
-    appliance = MagicMock()
-    appliance.info = {"deviceID": "test_oven"}
-    appliance.entities = {description.entity: wire_entity}
-    runtime = HCData(
-        appliance=appliance,
-        device_info=MagicMock(),
-        available_entity_descriptions=MagicMock(),
-        coordinator=MagicMock(),
-    )
-    entity = HCSelect(description, runtime)
-    assert entity.extra_state_attributes["readonly"] is True
-    with pytest.raises(ServiceValidationError, match="cannot be written separately"):
-        await entity.async_select_option(option)
-    wire_entity.set_value.assert_not_awaited()
-    appliance.session.send_sync.assert_not_called()
 
 
 @pytest.mark.parametrize("language", ["en", "de", "it"])
@@ -168,10 +151,20 @@ def test_part_b_translation_keys(language: str) -> None:
     for _, platform, key, _, _ in MAPPINGS:
         assert data["entity"][platform][key]["name"]
     expected = {
-        "select_oven_steam_assist_level": {"off", "low", "medium", "high"},
-        "select_oven_water_hardness": {"softened", "soft", "medium", "hard", "veryhard"},
-        "select_dishwasher_interior_light_mode": {"applianceondooropen", "alwaysondooropen"},
+        ("sensor", "sensor_oven_steam_assist_level"): {"off", "low", "medium", "high"},
+        ("select", "select_oven_water_hardness"): {
+            "softened",
+            "soft",
+            "medium",
+            "hard",
+            "veryhard",
+        },
+        ("select", "select_dishwasher_interior_light_mode"): {
+            "applianceondooropen",
+            "alwaysondooropen",
+        },
     }
-    for key, states in expected.items():
-        assert set(data["entity"]["select"][key]["state"]) == states
-        assert all(data["entity"]["select"][key]["state"].values())
+    for (platform, key), states in expected.items():
+        assert set(data["entity"][platform][key]["state"]) == states
+        assert all(data["entity"][platform][key]["state"].values())
+    assert "select_oven_steam_assist_level" not in data["entity"]["select"]
