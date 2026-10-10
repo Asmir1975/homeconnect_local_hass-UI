@@ -457,6 +457,12 @@ def _generate_hood_favorite_functionality(
 COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     "sensor": [
         HCSensorEntityDescription(
+            key="sensor_oven_steam_assist_level",
+            entity="Cooking.Oven.Option.SteamAssistLevel",
+            device_class=SensorDeviceClass.ENUM,
+            has_state_translation=True,
+        ),
+        HCSensorEntityDescription(
             key="sensor_interval_time_off",
             entity="Cooking.Hood.Setting.IntervalTimeOff",
             device_class=SensorDeviceClass.DURATION,
@@ -612,6 +618,12 @@ COOKING_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
         ),
     ],
     "select": [
+        HCSelectEntityDescription(
+            key="select_oven_water_hardness",
+            entity="Cooking.Oven.Setting.WaterHardness",
+            has_state_translation=True,
+            entity_category=EntityCategory.CONFIG,
+        ),
         HCSelectEntityDescription(
             key="select_oven_level",
             entity="Cooking.Oven.Option.Level",

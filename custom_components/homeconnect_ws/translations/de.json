@@ -164,6 +164,12 @@
       "switch_laundry_hygiene": {
         "name": "Hygiene"
       },
+      "switch_freezer_auto_super": {
+        "name": "Automatische Superfrost-Einstellung"
+      },
+      "switch_dishwasher_gap_illumination": {
+        "name": "Gap Illumination"
+      },
       "switch_super_freezer": {
         "name": "Super Modus Gefrierschrank"
       },
@@ -570,6 +576,15 @@
       }
     },
     "sensor": {
+      "sensor_oven_steam_assist_level": {
+        "name": "Dampfzugabe",
+        "state": {
+          "off": "Aus",
+          "low": "Gering",
+          "medium": "Mittel",
+          "high": "Stark"
+        }
+      },
       "sensor_silence_on_demand_remaining_time": {
         "name": "Jetzt Leise Restzeit"
       },
@@ -3702,6 +3717,23 @@
           "shirt1": "Hemd 1",
           "shirt5": "Hemd 5",
           "business": "Business"
+        }
+      },
+      "select_oven_water_hardness": {
+        "name": "Wasserhärte",
+        "state": {
+          "softened": "Enthärtet",
+          "soft": "Weich",
+          "medium": "Mittel",
+          "hard": "Hart",
+          "veryhard": "Sehr hart"
+        }
+      },
+      "select_dishwasher_interior_light_mode": {
+        "name": "Emotion Light Modus",
+        "state": {
+          "applianceondooropen": "Gerät an und Türe auf",
+          "alwaysondooropen": "Türe geöffnet"
         }
       },
       "select_oven_level": {

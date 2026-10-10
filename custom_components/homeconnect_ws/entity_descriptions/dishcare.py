@@ -164,6 +164,14 @@ DISHCARE_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
     ],
     "select": [
         HCSelectEntityDescription(
+            key="select_dishwasher_interior_light_mode",
+            entity="Dishcare.Dishwasher.Setting.InteriorLightMode",
+            entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
+            force_disabled_default=True,
+            has_state_translation=True,
+        ),
+        HCSelectEntityDescription(
             key="select_drying_assistant_all_programs",
             entity="Dishcare.Dishwasher.Setting.DryingAssistantAllPrograms",
             entity_category=EntityCategory.CONFIG,
@@ -366,6 +374,14 @@ DISHCARE_ENTITY_DESCRIPTIONS: _EntityDescriptionsDefinitionsType = {
             device_class=SwitchDeviceClass.SWITCH,
             entity_category=EntityCategory.CONFIG,
             entity_registry_enabled_default=False,
+        ),
+        HCSwitchEntityDescription(
+            key="switch_dishwasher_gap_illumination",
+            entity="Dishcare.Dishwasher.Setting.GapIllumination",
+            device_class=SwitchDeviceClass.SWITCH,
+            entity_category=EntityCategory.CONFIG,
+            entity_registry_enabled_default=False,
+            force_disabled_default=True,
         ),
         HCSwitchEntityDescription(
             key="switch_half_load",
